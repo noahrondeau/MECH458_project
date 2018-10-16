@@ -2,6 +2,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
+#include "main.h"
 
 /* ====== Structure Definitions ====== */
 
@@ -44,5 +45,10 @@ int QUEUE_size(Queue* q);
 int QUEUE_isEmpty(Queue* q);
 Queue* QUEUE_create(void);
 void QUEUE_destroy(Queue** q);
+
+#if UNITTEST_MODE == 1
+#include "unittest.h"
+void QUEUE_unitTest(void);
+#endif
 
 #endif
