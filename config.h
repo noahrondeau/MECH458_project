@@ -2,13 +2,26 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <stdint.h>
+
 /* ====== BUILD MODE CONFIG ====== */
-#define UNITTEST_MODE	(1)
+#define PROGRAM_MODE	(1)
+#define UNITTEST_MODE	(!PROGRAM_MODE)
 #define DEBUG_MODE 		(0)
+
+#define MODE_ENABLED(__mode__)	((__mode__) == 1)
+#define MODE_DISABLED(__mode__)	((__mode__) == 0)
+
+#if MODE_ENABLED(DEBUG_MODE)
+	#include <stdio.h>
+	#define DEBUG(__t__) do{ __t__ ;}while(0)
+#else
+	#define DEBUG(__t__)
+#endif
 
 /* ====== GPIO PORT REG DEFS ====== */
 
-typedef (volatile uint8_t*) GPIOPort;
+typedef volatile uint8_t* GPIOPort;
 
 #define PINA_REG		((GPIOPort)(0x00))
 #define DDRA_REG		((GPIOPort)(0x01))

@@ -12,28 +12,22 @@
 
 /* ====== GLOBAL DEFINES ====== */
 
-#if DEBUG_MODE == 1
-	#include <stdio.h>
-	#define DEBUG(__t__) do{ __t__ ;}while(0)
-#else
-	#define DEBUG(__t__)
-#endif
-
 /* ====== GLOBAL VARIABLES ====== */
 
 
 /* ====== FUNCTION PROTOTYPES ====== */
 
 /* ====== MAIN PROGRAM ====== */
-#if UNITTEST_MODE == 0
+#if MODE_ENABLED(PROGRAM_MODE)
 
 int main(void)
 {
+	DEBUG(printf("HELLO WORLD\n"));
 	return 0;
 }
 
 /* ====== UNITTESTS ======*/
-#else
+#elif MODE_ENABLED(UNITTEST_MODE)
 #include "unittest.h"
 /*UNITTEST*/ int main(void) /*UNITTEST*/
 {
