@@ -2,7 +2,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include "main.h"
+#include "config.h"
 
 /* ====== Structure Definitions ====== */
 

@@ -1,16 +1,14 @@
 
 
+/* ====== STANDARD INCLUDES ====== */
 
-/* ====== GLOBAL RUN-MODE DEFINITIONS ====== */
-
-#define UNITTEST_MODE (1)
-#define DEBUG_MODE (0)
-
-/* ====== INCLUDES ====== */
-
-#include "Queue.h"
 #include <stdlib.h>
 
+/* ====== AVR INCLUDES ====== */
+
+/* ====== USER INCLUDES ======*/
+#include "config.h"
+#include "Queue.h"
 
 /* ====== GLOBAL DEFINES ====== */
 
