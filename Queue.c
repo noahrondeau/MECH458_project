@@ -16,15 +16,14 @@ void QUEUE_deinit(Queue* q)
 {
 	while (q->front != NULL)
 	{
-		free(QUEUE_dequeue(q));
+		QUEUE_dequeue(q);
 	}
 }
 
-QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem)
+void QUEUE_enqueue(Queue* q, QueueElement elem)
 {
 	QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
-	newNode->data = (QueueElement*)malloc(sizeof(QueueElement));
-	*(newNode->data) = elem;
+	newNode->data = elem;
 
 	newNode->next = NULL;
 	newNode->prev = q->back;
@@ -37,19 +36,17 @@ QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem)
 		q->back->next = newNode;
 
 	q->back = newNode;
-
 	q->size++;
-	return (newNode->data);
 }
 
-QueueElement* QUEUE_dequeue(Queue* q)
+QueueElement QUEUE_dequeue(Queue* q)
 {
-	QueueElement* elem = NULL;
+	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
 	//if not empty
 	if (q->front != NULL)
 	{
-		elem = q->front->data;
+		retval = q->front->data;
 		QueueNode* node = q->front;
 
 		q->front = q->front->next;
@@ -61,12 +58,12 @@ QueueElement* QUEUE_dequeue(Queue* q)
 		free(node);
 		q->size--;
 	}
-	return elem;
+	return retval;
 }
 
-QueueElement* QUEUE_peak(Queue* q)
+QueueElement QUEUE_peak(Queue* q)
 {
-	QueueElement* elem = NULL;
+	QueueElement elem = DEFAULT_QUEUE_ELEM;
 	if (q->front)
 		elem = q->front->data;
 	return elem;
@@ -125,11 +122,12 @@ void QUEUE_destroy(Queue** q)
 			aux++;
 	}
 
+	q->array_length *= 2;
 	QueueElement* old_array = q->array_start;
 	q->array_start = new_array;
+	q->array_end = q->array_start + q->array_length - 1;
 	q->front = q->array_start;
 	q->back = (q->array_start + q->size - 1); 
-	q->array_length *= 2;
 	free(old_array);
 }
 
@@ -139,7 +137,7 @@ void QUEUE_init(Queue* q)
 	q->array_start =
 		(QueueElement*)malloc(CIRCULAR_QUEUE_INIT_SIZE*sizeof(QueueElement));
 
-	q->array_end = q->array_start + CIRCULAR_QUEUE_INIT_SIZE;
+	q->array_end = q->array_start + CIRCULAR_QUEUE_INIT_SIZE - 1;
 	q->front = NULL;
 	q->back = NULL;
 	q->size = 0;
@@ -149,11 +147,11 @@ void QUEUE_deinit(Queue* q)
 {
 	while (q->front != NULL)
 	{
-		free(QUEUE_dequeue(q));
+		QUEUE_dequeue(q);
 	}
 }
 
-QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem)
+void QUEUE_enqueue(Queue* q, QueueElement elem)
 {
 	//empty case
 	if (q->back == NULL)
@@ -179,15 +177,14 @@ QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem)
 	q->size++;
 }
 
-QueueElement* QUEUE_dequeue(Queue* q)
+QueueElement QUEUE_dequeue(Queue* q)
 {
-	QueueElement* retval = NULL;
+	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
 	if (q->front == NULL) // empty
 		return retval;
 
-	retval = (QueueElement*)malloc(sizeof(QueueElement));
-	*retval = *(q->front);
+	retval = *(q->front);
 
 	if (q->front == q->back)
 		//this was the last element
@@ -208,14 +205,13 @@ QueueElement* QUEUE_dequeue(Queue* q)
 	return retval;
 }
 
-QueueElement* QUEUE_peak(Queue* q)
+QueueElement QUEUE_peak(Queue* q)
 {
-	QueueElement* retval = NULL;
+	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
 	if(q->front)
 	{
-		retval = (QueueElement*)malloc(sizeof(QueueElement));
-		*retval = *(q->front);
+		retval = *(q->front);
 	}
 
 	return retval;
@@ -267,12 +263,11 @@ void QUEUE_unitTest(void)
 	TEST(count, "Verify empty queue size",QUEUE_size(q) == 0);
 	TEST(count, "Verify isEmpty returns true", QUEUE_isEmpty(q) >= 1);
 
-	QueueElement* test_elem = QUEUE_dequeue(q);
-	TEST(count, "Verify dequeueing empty queue returns NULL", test_elem == NULL);
-	free(test_elem);
+	QueueElement test_elem = QUEUE_dequeue(q);
+	TEST(count, "Verify dequeueing empty queue returns default", test_elem.item == 0);
 
 	test_elem = QUEUE_peak(q);
-	TEST(count, "Verify peak on empty queue returns NULL", test_elem == NULL);
+	TEST(count, "Verify peak on empty queue returns default", test_elem.item == 0);
 
 	QueueElement test_elem_1 = {
 		.item = 1,
@@ -293,19 +288,55 @@ void QUEUE_unitTest(void)
 	QUEUE_enqueue(q, test_elem_2);
 
 	test_elem = QUEUE_dequeue(q);
-	TEST(count, "Verify dequeue order correct", test_elem->item == 1);
-	free(test_elem);
+	TEST(count, "Verify dequeue order correct", test_elem.item == 1);
 
 	test_elem = QUEUE_peak(q);
-	TEST(count, "Verify peak order correct", test_elem->item == 2);
-	free(test_elem);
+	TEST(count, "Verify peak order correct", test_elem.item == 2);
 
 	QUEUE_deinit(q);
 	TEST(count, "Verify deinit", q->front == NULL);
 	TEST(count, "Verify deinit", q->back == NULL);
 
+	#if MODE_ENABLED(CIRCULAR_QUEUE_MODE)
+
+	QUEUE_init(q);
+	for(int i = 0; i < CIRCULAR_QUEUE_INIT_SIZE; i++)
+		QUEUE_enqueue(q, (QueueElement){ .item = i });
+	for(int i = 0; i < CIRCULAR_QUEUE_INIT_SIZE/2; i++)
+		QUEUE_dequeue(q);
+
+	TEST(count, "Check that circular wrapping works", q->size == 25);
+	TEST(count, "Check that circular wrapping works", QUEUE_peak(q).item == 25);
+	TEST(count, "Check that circular wrapping works", (q->front == q->array_start + CIRCULAR_QUEUE_INIT_SIZE/2));
+	TEST(count, "Check that circular wrapping works", q->back == q->array_end);
+
+	for(int i = CIRCULAR_QUEUE_INIT_SIZE; i < CIRCULAR_QUEUE_INIT_SIZE*3/2; i++)
+		QUEUE_enqueue(q, (QueueElement){ .item = i });
+
+	TEST(count, "Check that circular wrapping works", q->size == CIRCULAR_QUEUE_INIT_SIZE);
+	TEST(count, "Check that circular wrapping works", q->back == q->array_start + CIRCULAR_QUEUE_INIT_SIZE/2 - 1);
+	TEST(count, "Check that circular wrapping works", q->back->item == CIRCULAR_QUEUE_INIT_SIZE*3/2 -1);
+
+	for (int i = CIRCULAR_QUEUE_INIT_SIZE*3/2; i < 2*CIRCULAR_QUEUE_INIT_SIZE; i++)
+		QUEUE_enqueue(q, (QueueElement){ .item = i });
+	
+
+	TEST(count, "Check that queue enlargement works", q->size == 3*CIRCULAR_QUEUE_INIT_SIZE/2);
+	TEST(count, "Check that queue enlargement works", q->array_length == 2*CIRCULAR_QUEUE_INIT_SIZE);
+	TEST(count, "Check that queue enlargement works", q->front == q->array_start);
+	TEST(count, "Check that queue enlargement works", q->back == q->array_start + 3*CIRCULAR_QUEUE_INIT_SIZE/2 - 1);
+	TEST(count, "Check that queue enlargement works", q->array_end == q->array_start + 2*CIRCULAR_QUEUE_INIT_SIZE - 1);
+
+	for (int i = 0; i < q->size; i++)
+	{
+		TEST(count, "Verify queue enlargement preserved order", QUEUE_dequeue(q).item == i + 25);
+	}
+
+	#endif // circular queue mode
+
 	QUEUE_destroy(&q);
 	TEST(count, "Check that destroy works", q == NULL);
+
 }
 
 #endif //UNITTEST_MODE

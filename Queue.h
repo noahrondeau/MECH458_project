@@ -6,7 +6,6 @@
 
 /* ====== Structure Definitions ====== */
 
-#if MODE_ENABLED(LINKED_QUEUE_MODE)
 // @name:	QueueElement
 // @brief:	the stored data of a linked data structure
 typedef struct QueueElement
@@ -14,11 +13,15 @@ typedef struct QueueElement
 	int item;
 } QueueElement;
 
+#define DEFAULT_QUEUE_ELEM { .item = 0 }
+
+#if MODE_ENABLED(LINKED_QUEUE_MODE)
+
 // @name:	QueueNode
 // @brief:	a node in the linked data structure
 struct QueueNode
 {
-	QueueElement* data;
+	QueueElement data;
 	struct QueueNode* next;
 	struct QueueNode* prev;
 };
@@ -38,13 +41,6 @@ typedef struct Queue
 #elif MODE_ENABLED(CIRCULAR_QUEUE_MODE)
 
 
-// @name:	QueueElement
-// @brief:	the stored data of a linked data structure
-typedef struct QueueElement
-{
-	int item;
-} QueueElement;
-
 // @name:	Queue
 // @brief:	a linked queue data structure object
 typedef struct Queue
@@ -61,11 +57,14 @@ typedef struct Queue
 
 /* ====== Method Definitions ====== */
 
+// QUEUE_dequeue and QUEUE_peak only return valid elements
+// if they are not empty. USE QUEUE_isEmpty or QUEUE_size first!!!
+
 void QUEUE_init(Queue* q);
 void QUEUE_deinit(Queue* q);
-QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem);
-QueueElement* QUEUE_dequeue(Queue* q);
-QueueElement* QUEUE_peak(Queue* q);
+void QUEUE_enqueue(Queue* q, QueueElement elem);
+QueueElement QUEUE_dequeue(Queue* q);
+QueueElement QUEUE_peak(Queue* q);
 int QUEUE_size(Queue* q);
 int QUEUE_isEmpty(Queue* q);
 Queue* QUEUE_create(void);
