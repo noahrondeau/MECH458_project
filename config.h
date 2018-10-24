@@ -9,6 +9,9 @@
 #define UNITTEST_MODE	(!PROGRAM_MODE)
 #define DEBUG_MODE 		(0)
 
+#define LINKED_QUEUE_MODE	(0)
+#define CIRCULAR_QUEUE_MODE	(!LINKED_QUEUE_MODE)	
+
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
 

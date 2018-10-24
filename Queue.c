@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "Queue.h"
 
+#if MODE_ENABLED(LINKED_QUEUE_MODE)
+
 void QUEUE_init(Queue* q)
 {
 	q->front = NULL;
@@ -18,7 +20,7 @@ void QUEUE_deinit(Queue* q)
 	}
 }
 
-QueueNode* QUEUE_enqueue(Queue* q, QueueElement elem)
+QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem)
 {
 	QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
 	newNode->data = (QueueElement*)malloc(sizeof(QueueElement));
@@ -37,7 +39,7 @@ QueueNode* QUEUE_enqueue(Queue* q, QueueElement elem)
 	q->back = newNode;
 
 	q->size++;
-	return newNode;
+	return (newNode->data);
 }
 
 QueueElement* QUEUE_dequeue(Queue* q)
@@ -94,13 +96,169 @@ void QUEUE_destroy(Queue** q)
 	*q = NULL;
 }
 
+#elif MODE_ENABLED(CIRCULAR_QUEUE_MODE)
+
+#define CIRCULAR_QUEUE_INIT_SIZE (50)
+
+// @name: QUEUE_enlarge
+// @brief: enlarges the dynamically allocated queue
+//	to be used if the queue is full
+//	this is the only O(N) operation in this Queue library
+//	it also "reorders" the queue as a byproduct
+//	also, the function assumes the queue is not empty,
+//	since it will never be called in that case
+ void QUEUE_enlarge(Queue* q)
+{
+	// allocate new array that is twice the size of the previous
+	QueueElement* new_array =
+		(QueueElement*)malloc(2*(q->array_length)*sizeof(QueueElement));
+
+	// copy data from old array to new array
+	QueueElement* aux = q->front;
+	for (int i = 0; i < q->size; i++)
+	{
+		new_array[i] = *aux;
+
+		if (aux == q->array_end)
+			aux = q->array_start;
+		else
+			aux++;
+	}
+
+	QueueElement* old_array = q->array_start;
+	q->array_start = new_array;
+	q->front = q->array_start;
+	q->back = (q->array_start + q->size - 1); 
+	q->array_length *= 2;
+	free(old_array);
+}
+
+void QUEUE_init(Queue* q)
+{
+	q->array_length = CIRCULAR_QUEUE_INIT_SIZE;
+	q->array_start =
+		(QueueElement*)malloc(CIRCULAR_QUEUE_INIT_SIZE*sizeof(QueueElement));
+
+	q->array_end = q->array_start + CIRCULAR_QUEUE_INIT_SIZE;
+	q->front = NULL;
+	q->back = NULL;
+	q->size = 0;
+}
+
+void QUEUE_deinit(Queue* q)
+{
+	while (q->front != NULL)
+	{
+		free(QUEUE_dequeue(q));
+	}
+}
+
+QueueElement* QUEUE_enqueue(Queue* q, QueueElement elem)
+{
+	//empty case
+	if (q->back == NULL)
+	{
+		q->front = q->array_start;
+		q->back = q->array_start;
+		*(q->front) = elem;
+	}
+	// not empty case
+	else
+	{
+		// array full
+		if (q->size == q->array_length)
+			QUEUE_enlarge(q);
+
+		if (q->back == q->array_end)
+			q->back = q->array_start;
+		else
+			q->back++;
+
+		*(q->back) = elem;
+	}
+	q->size++;
+}
+
+QueueElement* QUEUE_dequeue(Queue* q)
+{
+	QueueElement* retval = NULL;
+
+	if (q->front == NULL) // empty
+		return retval;
+
+	retval = (QueueElement*)malloc(sizeof(QueueElement));
+	*retval = *(q->front);
+
+	if (q->front == q->back)
+		//this was the last element
+	{
+		q->front = NULL;
+		q->back = NULL;
+	}
+	else // this was not the last element
+	{
+		if (q->front == q->array_end)
+			q->front = q->array_start;
+		else
+			q->front++;
+	}
+
+	q->size--;
+
+	return retval;
+}
+
+QueueElement* QUEUE_peak(Queue* q)
+{
+	QueueElement* retval = NULL;
+
+	if(q->front)
+	{
+		retval = (QueueElement*)malloc(sizeof(QueueElement));
+		*retval = *(q->front);
+	}
+
+	return retval;
+}
+
+int QUEUE_size(Queue* q)
+{
+	return q->size;
+}
+
+int QUEUE_isEmpty(Queue* q)
+{
+	return (q->size == 0);
+}
+
+Queue* QUEUE_create(void)
+{
+	Queue* newQ = (Queue*)malloc(sizeof(Queue));
+	QUEUE_init(newQ);
+	return newQ;
+}
+
+void QUEUE_destroy(Queue** q)
+{
+	QUEUE_deinit(*q);
+	free(*q);
+	*q = NULL;
+}
+
+
+
+#endif //QUEUE_MODE
+
+
+
 #if UNITTEST_MODE == 1
 #include "unittest.h"
 void QUEUE_unitTest(void)
 {
 	int count = 1;
 
-	printf("Starting unit-tests on QUEUE\n\n");
+	printf("Starting unit-tests on QUEUE\n");
+	printf("Using %s\n", LINKED_QUEUE_MODE ? "Linked Queue": "Circular Queue");
 
 	Queue* q = QUEUE_create();
 	TEST(count, "Verify initial queue front", q->front == NULL);
@@ -149,4 +307,5 @@ void QUEUE_unitTest(void)
 	QUEUE_destroy(&q);
 	TEST(count, "Check that destroy works", q == NULL);
 }
-#endif
+
+#endif //UNITTEST_MODE
