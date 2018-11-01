@@ -3,6 +3,7 @@
 #define CONFIG_H
 
 #include <stdint.h>
+#include <avr/io.h>
 
 /* ====== BUILD MODE CONFIG ====== */
 #define PROGRAM_MODE	(1)
@@ -26,29 +27,29 @@
 
 typedef volatile uint8_t* GPIOPort;
 
-#define PINA_REG		((GPIOPort)(0x00))
-#define DDRA_REG		((GPIOPort)(0x01))
-#define PORTA_REG		((GPIOPort)(0x02))
+#define PINA_REG		((GPIOPort)((0x00) + (__SFR_OFFSET)))
+#define DDRA_REG		((GPIOPort)((0x01) + (__SFR_OFFSET)))
+#define PORTA_REG		((GPIOPort)((0x02) + (__SFR_OFFSET)))
 
-#define PINB_REG		((GPIOPort)(0x03))
-#define DDRB_REG		((GPIOPort)(0x04))
-#define PORTB_REG		((GPIOPort)(0x05))
+#define PINB_REG		((GPIOPort)((0x03) + (__SFR_OFFSET)))
+#define DDRB_REG		((GPIOPort)((0x04) + (__SFR_OFFSET)))
+#define PORTB_REG		((GPIOPort)((0x05) + (__SFR_OFFSET)))
 
-#define PINC_REG		((GPIOPort)(0x06))
-#define DDRC_REG		((GPIOPort)(0x07))
-#define PORTC_REG		((GPIOPort)(0x08))
+#define PINC_REG		((GPIOPort)((0x06) + (__SFR_OFFSET)))
+#define DDRC_REG		((GPIOPort)((0x07) + (__SFR_OFFSET)))
+#define PORTC_REG		((GPIOPort)((0x08) + (__SFR_OFFSET)))
 
-#define PIND_REG		((GPIOPort)(0x09))
-#define DDRD_REG		((GPIOPort)(0x0A))
-#define PORTD_REG		((GPIOPort)(0x0B))
+#define PIND_REG		((GPIOPort)((0x09) + (__SFR_OFFSET)))
+#define DDRD_REG		((GPIOPort)((0x0A) + (__SFR_OFFSET)))
+#define PORTD_REG		((GPIOPort)((0x0B) + (__SFR_OFFSET)))
 
-#define PINE_REG		((GPIOPort)(0x0C))
-#define DDRE_REG		((GPIOPort)(0x0D))
-#define PORTE_REG		((GPIOPort)(0x0E))
+#define PINE_REG		((GPIOPort)((0x0C) + (__SFR_OFFSET)))
+#define DDRE_REG		((GPIOPort)((0x0D) + (__SFR_OFFSET)))
+#define PORTE_REG		((GPIOPort)((0x0E) + (__SFR_OFFSET)))
 
-#define PINF_REG		((GPIOPort)(0x0F))
-#define DDRF_REG		((GPIOPort)(0x10))
-#define PORTF_REG		((GPIOPort)(0x11))
+#define PINF_REG		((GPIOPort)((0x0F) + (__SFR_OFFSET)))
+#define DDRF_REG		((GPIOPort)((0x10) + (__SFR_OFFSET)))
+#define PORTF_REG		((GPIOPort)((0x11) + (__SFR_OFFSET)))
 
 /* ====== STEPPER MOTOR CONFIG ====== */
 
@@ -56,5 +57,11 @@ typedef volatile uint8_t* GPIOPort;
 #define STEPPER_PORT (PORTA_REG)
 
 /* ====== OTHER CONFIGS ====== */
+
+typedef enum bool
+{
+	false = 0,
+	true = 1,
+} bool;
 
 #endif
