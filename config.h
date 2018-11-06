@@ -25,36 +25,45 @@
 
 /* ====== GPIO PORT REG DEFS ====== */
 
-typedef volatile uint8_t* GPIOPort;
+typedef volatile uint8_t* GPIOReg;
+typedef volatile uint8_t  GPIOMask;
 
-#define PINA_REG		((GPIOPort)((0x00) + (__SFR_OFFSET)))
-#define DDRA_REG		((GPIOPort)((0x01) + (__SFR_OFFSET)))
-#define PORTA_REG		((GPIOPort)((0x02) + (__SFR_OFFSET)))
+#define PINA_REG		((GPIOReg)((0x00) + (__SFR_OFFSET)))
+#define DDRA_REG		((GPIOReg)((0x01) + (__SFR_OFFSET)))
+#define PORTA_REG		((GPIOReg)((0x02) + (__SFR_OFFSET)))
 
-#define PINB_REG		((GPIOPort)((0x03) + (__SFR_OFFSET)))
-#define DDRB_REG		((GPIOPort)((0x04) + (__SFR_OFFSET)))
-#define PORTB_REG		((GPIOPort)((0x05) + (__SFR_OFFSET)))
+#define PINB_REG		((GPIOReg)((0x03) + (__SFR_OFFSET)))
+#define DDRB_REG		((GPIOReg)((0x04) + (__SFR_OFFSET)))
+#define PORTB_REG		((GPIOReg)((0x05) + (__SFR_OFFSET)))
 
-#define PINC_REG		((GPIOPort)((0x06) + (__SFR_OFFSET)))
-#define DDRC_REG		((GPIOPort)((0x07) + (__SFR_OFFSET)))
-#define PORTC_REG		((GPIOPort)((0x08) + (__SFR_OFFSET)))
+#define PINC_REG		((GPIOReg)((0x06) + (__SFR_OFFSET)))
+#define DDRC_REG		((GPIOReg)((0x07) + (__SFR_OFFSET)))
+#define PORTC_REG		((GPIOReg)((0x08) + (__SFR_OFFSET)))
 
-#define PIND_REG		((GPIOPort)((0x09) + (__SFR_OFFSET)))
-#define DDRD_REG		((GPIOPort)((0x0A) + (__SFR_OFFSET)))
-#define PORTD_REG		((GPIOPort)((0x0B) + (__SFR_OFFSET)))
+#define PIND_REG		((GPIOReg)((0x09) + (__SFR_OFFSET)))
+#define DDRD_REG		((GPIOReg)((0x0A) + (__SFR_OFFSET)))
+#define PORTD_REG		((GPIOReg)((0x0B) + (__SFR_OFFSET)))
 
-#define PINE_REG		((GPIOPort)((0x0C) + (__SFR_OFFSET)))
-#define DDRE_REG		((GPIOPort)((0x0D) + (__SFR_OFFSET)))
-#define PORTE_REG		((GPIOPort)((0x0E) + (__SFR_OFFSET)))
+#define PINE_REG		((GPIOReg)((0x0C) + (__SFR_OFFSET)))
+#define DDRE_REG		((GPIOReg)((0x0D) + (__SFR_OFFSET)))
+#define PORTE_REG		((GPIOReg)((0x0E) + (__SFR_OFFSET)))
 
-#define PINF_REG		((GPIOPort)((0x0F) + (__SFR_OFFSET)))
-#define DDRF_REG		((GPIOPort)((0x10) + (__SFR_OFFSET)))
-#define PORTF_REG		((GPIOPort)((0x11) + (__SFR_OFFSET)))
+#define PINF_REG		((GPIOReg)((0x0F) + (__SFR_OFFSET)))
+#define DDRF_REG		((GPIOReg)((0x10) + (__SFR_OFFSET)))
+#define PORTF_REG		((GPIOReg)((0x11) + (__SFR_OFFSET)))
 
 /* ====== STEPPER MOTOR CONFIG ====== */
 
 #define STEPPER_DDR (DDRA_REG)
 #define STEPPER_PORT (PORTA_REG)
+
+/* ====== HALL SENSOR CONFIG ====== */
+
+#define HALL_ACTIVE ((uint8_t)(0x00));
+#define HALL_PINX (PIND_REG)
+#define HALL_DDRX (DDRD_REG)
+#define HALL_PORTPIN (1)
+
 
 /* ====== OTHER CONFIGS ====== */
 

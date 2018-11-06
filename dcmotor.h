@@ -8,8 +8,8 @@
 
 typedef struct DcMotor
 {
-	GPIOPort port;
-	GPIOPort ddr;
+	GPIOReg port;
+	GPIOReg ddr;
 	PWM pwm;
 } DcMotor;
 

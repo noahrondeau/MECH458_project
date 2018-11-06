@@ -20,8 +20,8 @@ typedef struct StepperMotor
 	int step_index;
 	int current_pos;
 	int total_steps;
-	GPIOPort port;
-	GPIOPort ddr;
+	GPIOReg port;
+	GPIOReg ddr;
 } StepperMotor;
 
 void STEPPER_init(StepperMotor* motor);
