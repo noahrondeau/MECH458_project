@@ -64,13 +64,31 @@ typedef volatile uint8_t  GPIOMask;
 #define HALL_DDRX (DDRD_REG)
 #define HALL_PORTPIN (1)
 
+/* ====== OPTICAL SENSOR CONFIG ====== */
 
-/* ====== OTHER CONFIGS ====== */
+#define OPTICAL1_PINX (PIND_REG)
+#define OPTICAL1_DDRX (DDRD_REG)
+#define OPTICAL1_PORTPIN (1)
+#define OPTICAL1_ACTIVE (0x00)
+
+#define OPTICAL2_PINX (PIND_REG)
+#define OPTICAL2_DDRX (DDRD_REG)
+#define OPTICAL2_PORTPIN (2)
+#define OPTICAL2_ACTIVE (0b00000100)
+
+/* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 
 typedef enum bool
 {
 	false = 0,
 	true = 1,
 } bool;
+
+
+typedef enum ActiveLevel
+{
+	ACTIVE_LOW = 0,
+	ACTIVE_HIGH = 1,
+} ActiveLevel;
 
 #endif
