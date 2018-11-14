@@ -4,9 +4,8 @@
 #include <stdlib.h>
 
 #include "config.h"
-#include "motor.h"
 #include "PWM.h"
-#include "timer.h"
+#include "Timer.h"
 
 // we don't really need all these, just one
 // since we aren't actually changing direction

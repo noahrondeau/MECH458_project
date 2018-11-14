@@ -1,5 +1,5 @@
 
-#include "adc.h"
+#include "ADC.h"
 #include "timer.h"
 
 void ADC_Init(ADC* adc)
