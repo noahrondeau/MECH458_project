@@ -62,19 +62,33 @@ typedef volatile uint8_t  GPIOMask;
 #define HALL_ACTIVE ((uint8_t)(0x00));
 #define HALL_PINX (PIND_REG)
 #define HALL_DDRX (DDRD_REG)
-#define HALL_PORTPIN (1)
+#define HALL_PORTPIN (3)
 
 /* ====== OPTICAL SENSOR CONFIG ====== */
 
 #define OPTICAL1_PINX (PIND_REG)
 #define OPTICAL1_DDRX (DDRD_REG)
-#define OPTICAL1_PORTPIN (1)
+#define OPTICAL1_PORTPIN (0)
 #define OPTICAL1_ACTIVE (0x00)
 
 #define OPTICAL2_PINX (PIND_REG)
 #define OPTICAL2_DDRX (DDRD_REG)
-#define OPTICAL2_PORTPIN (2)
-#define OPTICAL2_ACTIVE (0b00000100)
+#define OPTICAL2_PORTPIN (1)
+#define OPTICAL2_ACTIVE (0b00000010)
+
+/* ====== FERRO SENSOR CONFIG ====== */
+
+#define FERRO_PINX (PINA_REG)
+#define FERRO_DDRX (DDRA_REG)
+#define FERRO_PORTPIN (3)
+#define FERRO_ACTIVE (0x00)
+
+/* ====== EXIT GATE CONFIG ====== */
+
+#define EXIT_PINX (PIND_REG)
+#define EXIT_DDRX (DDRD_REG)
+#define EXIT_PORTPIN (2)
+#define EXIT_ACTIVE (0x00)
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 
@@ -87,8 +101,8 @@ typedef enum bool
 
 typedef enum ActiveLevel
 {
-	ACTIVE_LOW = 0,
-	ACTIVE_HIGH = 1,
+	ACTIVE_LOW = 0x00,
+	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
 #endif

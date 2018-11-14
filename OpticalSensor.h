@@ -13,12 +13,6 @@ typedef enum OpticalSensorIdentity
 	OPTICAL2,
 } OpticalSensorIdentity;
 
-typedef enum bool
-{
-	false = 0,
-	true = 1,
-} bool;
-
 typedef struct OpticalSensor
 {
 	ActiveLevel active_level;
