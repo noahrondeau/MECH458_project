@@ -33,6 +33,13 @@
 
 /* ====== GPIO PORT REG DEFS ====== */
 
+/*	For ease of maintenance we want to be able to change the pinout of the project
+ *	but we don't want to have to change which ports are used everywhere: only in one place.
+ *  We initialize which registers are used for which peripheral at run-time init.
+ *	To do this, we redefine all the GPIO registers without the deferencing operator, so that
+ *	they can be passed around in variables.
+ */
+
 typedef volatile uint8_t* GPIOReg;
 typedef volatile uint8_t  GPIOMask;
 
@@ -68,35 +75,47 @@ typedef volatile uint8_t  GPIOMask;
 /* ====== HALL SENSOR CONFIG ====== */
 
 #define HALL_ACTIVE ((uint8_t)(0x00))
-#define HALL_PINX (PIND_REG)
-#define HALL_DDRX (DDRD_REG)
-#define HALL_PORTPIN (3)
+#define HALL_PINX (PINE_REG)
+#define HALL_DDRX (DDRE_REG)
+#define HALL_PORTPIN (5)
 
 /* ====== OPTICAL SENSOR CONFIG ====== */
 
-#define OPTICAL1_PINX (PIND_REG)
-#define OPTICAL1_DDRX (DDRD_REG)
-#define OPTICAL1_PORTPIN (0)
-#define OPTICAL1_ACTIVE (0x00)
+#define S1_OPTICAL_PINX (PIND_REG)
+#define S1_OPTICAL_DDRX (DDRD_REG)
+#define S1_OPTICAL_PORTPIN (0)
+#define S1_OPTICAL_ACTIVE (0x00)
 
-#define OPTICAL2_PINX (PIND_REG)
-#define OPTICAL2_DDRX (DDRD_REG)
-#define OPTICAL2_PORTPIN (1)
-#define OPTICAL2_ACTIVE (0b00000010)
+#define S2_OPTICAL_PINX (PIND_REG)
+#define S2_OPTICAL_DDRX (DDRD_REG)
+#define S2_OPTICAL_PORTPIN (1)
+#define S2_OPTICAL_ACTIVE (0b00000010) //ACTIVE HIGH
+
+#define EXIT_OPTICAL_PINX (PIND_REG)
+#define EXIT_OPTICAL_DDRX (DDRD_REG)
+#define EXIT_OPTICAL_PORTPIN (2)
+#define EXIT_OPTICAL_ACTIVE (0x00)
 
 /* ====== FERRO SENSOR CONFIG ====== */
 
-#define FERRO_PINX (PINA_REG)
-#define FERRO_DDRX (DDRA_REG)
-#define FERRO_PORTPIN (3)
+#define FERRO_PINX (PINE_REG)
+#define FERRO_DDRX (DDRE_REG)
+#define FERRO_PORTPIN (6)
 #define FERRO_ACTIVE (0x00)
 
-/* ====== EXIT GATE CONFIG ====== */
+/* ====== SW1 PAUSE SWITCH CONFIG ====== */
 
-#define EXIT_PINX (PIND_REG)
-#define EXIT_DDRX (DDRD_REG)
-#define EXIT_PORTPIN (2)
-#define EXIT_ACTIVE (0x00)
+#define PAUSE_PINX (PIND_REG)
+#define PAUSE_DDRX (DDRD_REG)
+#define PAUSE_PORTPIN (3)
+#define PAUSE_ACTIVE (0b00001000) // ACTIVE HIGH
+
+/* ====== SW2 RAMP-DOWN SWITCH CONFIG ====== */
+
+#define RAMPDOWN_PINX (PINE_REG)
+#define RAMPDOWN_DDRX (DDRE_REG)
+#define RAMPDOWN_PORTPIN (4)
+#define RAMPDOWN_ACTIVE (0x00)
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 

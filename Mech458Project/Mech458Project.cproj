@@ -137,12 +137,6 @@
     <Compile Include="DcMotor.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="ExitSensor.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="ExitSensor.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="FerroSensor.c">
       <SubType>compile</SubType>
     </Compile>

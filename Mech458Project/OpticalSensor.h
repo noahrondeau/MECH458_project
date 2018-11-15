@@ -17,8 +17,9 @@
 
 typedef enum OpticalSensorIdentity
 {
-	OPTICAL1,
-	OPTICAL2,
+	S1_OPTICAL,
+	S2_OPTICAL,
+	EXIT_OPTICAL,
 } OpticalSensorIdentity;
 
 typedef struct OpticalSensor

@@ -1,9 +1,9 @@
 /*
- * OpticalSensor.c
- *
- * Created: 2018-11-13 11:45:57 PM
- *  Author: ntron
- */ 
+* OpticalSensor.c
+*
+* Created: 2018-11-13 11:45:57 PM
+*  Author: ntron
+*/
 
 
 
@@ -18,37 +18,57 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 {
 	switch(ident)
 	{
-		case OPTICAL1:
-		opt->pinx = OPTICAL1_PINX;
-		opt->ddrx = OPTICAL1_DDRX;
-		opt->mask = (uint8_t)((1) << OPTICAL1_PORTPIN);
+	case S1_OPTICAL:
+		opt->pinx = S1_OPTICAL_PINX;
+		opt->ddrx = S1_OPTICAL_DDRX;
+		opt->mask = (uint8_t)((1) << S1_OPTICAL_PORTPIN);
 		opt->active_level = ACTIVE_LOW;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
 
 		EIMSK |= (_BV(INT0)); // enable INT1
-		EICRA |= (_BV(ISC01));  // falling edge interrupt
+		EICRA |= (_BV(ISC01)) | _BV(ISC00);  // rising edge interrupt
 		break;
 
-		case OPTICAL2:
-		opt->pinx = OPTICAL2_PINX;
-		opt->ddrx = OPTICAL2_DDRX;
-		opt->mask = (uint8_t)((1) << OPTICAL2_PORTPIN);
+	case S2_OPTICAL:
+		opt->pinx = S2_OPTICAL_PINX;
+		opt->ddrx = S2_OPTICAL_DDRX;
+		opt->mask = (uint8_t)((1) << S2_OPTICAL_PORTPIN);
 		opt->active_level = ACTIVE_HIGH;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
 
-		EIMSK |= (_BV(INT1)); // enable INT2
-		EICRA |= (_BV(ISC11)) | (_BV(ISC10)); // rising edge interrupt
+		EIMSK |= (_BV(INT1)); // enable INT1
+		EICRA |= (_BV(ISC10)); // any edge
 		break;
+		
+	case EXIT_OPTICAL:
+		opt->pinx = EXIT_OPTICAL_PINX;
+		opt->ddrx = EXIT_OPTICAL_DDRX;
+		opt->mask = (uint8_t)((1) << EXIT_OPTICAL_PORTPIN);
+		opt->active_level = ACTIVE_LOW;
+		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
+
+		//	For the exit gate sensor
+		EIMSK |= (_BV(INT2)); // enable INT2
+		EICRA |= (_BV(ISC21)); // trigger falling edge
 	}
 
 }
 
-ISR(INT1_vect)
-{
 
+// ISR for S1_OPTICAL
+ISR(INT0_vect)
+{
+	PORTC = 0x01;
 }
 
+// ISR for S2_OPTICAL
+ISR(INT1_vect)
+{
+	PORTC ^= 0b00000010;
+}
+
+// ISR for EXIT_OPTICAL
 ISR(INT2_vect)
 {
-
+	PORTC = 0b00000100;
 }
