@@ -15,7 +15,7 @@
 #include "config.h"
 
 
-typedef struct HallSensor
+typedef volatile struct HallSensor
 {
 	// There is only one stepper motor step
 	// that will cause the HALL sensor to be active (ACTIVE LOW)

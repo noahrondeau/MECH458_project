@@ -17,12 +17,12 @@
 #define LED_RIGHT_END (0b00000011)
 #define LED_LEFT_END (0b11000000)
 
-void TIMER_Init(void)
+void TIMER_DelayInit(void)
 {
 	TCCR1B |= _BV(CS10);
 }
 
-void TIMER_CountMs(int ms)
+void TIMER_DelayMs(int ms)
 {
 	// Index for loop
 	int i = 0;
@@ -49,4 +49,14 @@ void TIMER_CountMs(int ms)
 		// clear interrupt flag and begin counting
 		TIFR1 |= _BV(OCF1A);
 	}
+}
+
+void TIMER_ScheduleInit(void)
+{
+	TCCR2B |= _BV(CS10);
+}
+
+void TIMER_ScheduleMs(int ms)
+{
+	
 }

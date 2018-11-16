@@ -13,7 +13,7 @@
 #include <avr/interrupt.h>
 #include "config.h"
 
-typedef struct ADCHandle
+typedef volatile struct ADCHandle
 {
 	uint16_t result;
 	bool result_finished;

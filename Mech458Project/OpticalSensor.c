@@ -21,6 +21,7 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 	case S1_OPTICAL:
 		opt->pinx = S1_OPTICAL_PINX;
 		opt->ddrx = S1_OPTICAL_DDRX;
+		opt->portpin = S1_OPTICAL_PORTPIN;
 		opt->mask = (uint8_t)((1) << S1_OPTICAL_PORTPIN);
 		opt->active_level = ACTIVE_LOW;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
@@ -32,6 +33,7 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 	case S2_OPTICAL:
 		opt->pinx = S2_OPTICAL_PINX;
 		opt->ddrx = S2_OPTICAL_DDRX;
+		opt->portpin = S2_OPTICAL_PORTPIN;
 		opt->mask = (uint8_t)((1) << S2_OPTICAL_PORTPIN);
 		opt->active_level = ACTIVE_HIGH;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
@@ -43,6 +45,7 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 	case EXIT_OPTICAL:
 		opt->pinx = EXIT_OPTICAL_PINX;
 		opt->ddrx = EXIT_OPTICAL_DDRX;
+		opt->portpin = EXIT_OPTICAL_PORTPIN;
 		opt->mask = (uint8_t)((1) << EXIT_OPTICAL_PORTPIN);
 		opt->active_level = ACTIVE_LOW;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
@@ -51,24 +54,9 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 		EIMSK |= (_BV(INT2)); // enable INT2
 		EICRA |= (_BV(ISC21)); // trigger falling edge
 	}
-
 }
 
-
-// ISR for S1_OPTICAL
-ISR(INT0_vect)
+bool OPTICAL_IsBlocked(OpticalSensor* opt)
 {
-	PORTC = 0x01;
-}
-
-// ISR for S2_OPTICAL
-ISR(INT1_vect)
-{
-	PORTC ^= 0b00000010;
-}
-
-// ISR for EXIT_OPTICAL
-ISR(INT2_vect)
-{
-	PORTC = 0b00000100;
+	return ( (*(opt->pinx) & (opt->mask)) == ((opt->active_level) << (opt->portpin)) );
 }

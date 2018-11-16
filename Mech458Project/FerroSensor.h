@@ -13,7 +13,7 @@
 #include <avr/interrupt.h>
 #include "config.h"
 
-typedef struct FerroSensor
+typedef volatile struct FerroSensor
 {
 	ActiveLevel active_level;
 	GPIOReg pinx;

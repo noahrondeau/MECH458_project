@@ -39,7 +39,3 @@ void ADC_ReadConversion(ADCHandle* adc)
 	uint8_t ADC_result_high = ADCH;
 	adc->result = (uint16_t)( ((uint16_t)ADC_result_low) | (((uint16_t)ADC_result_high) << 8)  );
 }
-
-ISR(ADC_vect)
-{
-}

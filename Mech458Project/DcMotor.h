@@ -12,10 +12,10 @@
 #include "config.h"
 #include "PWM.h"
 
-typedef struct DcMotor
+typedef volatile struct DcMotor
 {
-	GPIOReg port;
-	GPIOReg ddr;
+	GPIOReg portx;
+	GPIOReg ddrx;
 } DcMotor;
 
 void DCMOTOR_Init(DcMotor* motor);

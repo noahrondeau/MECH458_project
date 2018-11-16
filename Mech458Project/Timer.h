@@ -10,8 +10,11 @@
 #define TIMER_H_
 
 
-void TIMER_Init(void);
-void TIMER_CountMs(int ms);
+void TIMER_DelayInit(void);
+void TIMER_DelayMs(int ms);
+
+void TIMER_ScheduleInit(void);
+void TIMER_ScheduleMs(int ms);
 
 
 #endif /* TIMER_H_ */

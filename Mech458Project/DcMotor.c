@@ -19,20 +19,20 @@
 // since we aren't actually changing direction
 
 #define IS_DCMOTOR_CW(__m__) \
-((*((__m__)->port) & 0b00000011) == 0b00000010)
+((*((__m__)->portx) & 0b00000011) == 0b00000010)
 #define IS_DCMOTOR_CCW(__m__) \
-(( *((__m__)->port) & 0b00000011) == 0b00000001)
+(( *((__m__)->portx) & 0b00000011) == 0b00000001)
 
 #define DO_DCMOTOR_SET_CW(__m__) \
-*((__m__)->port) = \
-(*((__m__)->port) & 0b10000000) | 0b00000010
+*((__m__)->portx) = \
+(*((__m__)->portx) & 0b10000000) | 0b00000010
 
 #define DO_DCMOTOR_SET_CCW(__m__) \
-*((__m__)->port) = \
-(*((__m__)->port) & 0b10000000) | 0b00000010
+*((__m__)->portx) = \
+(*((__m__)->portx) & 0b10000000) | 0b00000010
 
 #define DO_DCMOTOR_BRAKE(__m__) \
-*((__m__)->port) = ( *((__m__)->port) & 0b10000000 )
+*((__m__)->portx) = ( *((__m__)->portx) & 0b10000000 )
 
 
 // this is the only one we need
@@ -41,9 +41,9 @@
 
 void DCMOTOR_Init(DcMotor* motor)
 {
-	motor->port = PORTB_REG;
-	motor->ddr = DDRB_REG;
-	*(motor->ddr) = 0xFF;
+	motor->portx = DCMOTOR_PORTX;
+	motor->ddrx = DCMOTOR_DDRX;
+	*(motor->ddrx) = 0xFF;
 	PWM_Init(Scale_8);
 
 }

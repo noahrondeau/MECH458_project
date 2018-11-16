@@ -22,15 +22,17 @@ typedef enum OpticalSensorIdentity
 	EXIT_OPTICAL,
 } OpticalSensorIdentity;
 
-typedef struct OpticalSensor
+typedef volatile struct OpticalSensor
 {
 	ActiveLevel active_level;
 	GPIOReg pinx;
 	GPIOReg ddrx;
 	GPIOMask mask;
+	uint8_t portpin;
 } OpticalSensor;
 
 void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident);
+bool OPTICAL_IsBlocked(OpticalSensor* opt);
 
 
 

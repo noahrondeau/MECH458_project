@@ -27,6 +27,8 @@ void PWM_Init(unsigned char clockScale){
 	//TIMSK0 |= 0b00000011;
 	
 	DDRB |= (1<<7); 		//sets PB7 to output
+	
+	PWM_SetDutyCycle(0);// start off
 }
 
 void PWM_SetDutyCycle(unsigned char dutyCycle){
