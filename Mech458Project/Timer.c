@@ -20,6 +20,7 @@
 void TIMER_DelayInit(void)
 {
 	TCCR1B |= _BV(CS10);
+	TCCR1B |= _BV(CS11);
 }
 
 void TIMER_DelayMs(int ms)
