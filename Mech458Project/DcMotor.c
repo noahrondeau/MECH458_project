@@ -44,7 +44,7 @@ void DCMOTOR_Init(DcMotor* motor)
 	motor->portx = DCMOTOR_PORTX;
 	motor->ddrx = DCMOTOR_DDRX;
 	*(motor->ddrx) = 0xFF;
-	PWM_Init(Scale_8);
+	PWM_Init(Scale_64);
 
 }
 
