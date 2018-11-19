@@ -54,8 +54,6 @@ void DCMOTOR_Run(DcMotor* motor, unsigned char speed)
 	DO_DCMOTOR_RUN(motor);
 }
 
-//void DCMOTOR_SetDirection(DcMotor* motor, MotorDirection dir){}
-
 void DCMOTOR_Brake(DcMotor* motor)
 {
 	DO_DCMOTOR_BRAKE(motor);

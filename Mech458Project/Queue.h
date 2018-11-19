@@ -18,10 +18,12 @@
 // @brief:	the stored data of a linked data structure
 typedef struct QueueElement
 {
-	int item;
+	unsigned int counter;
+	bool isFerroMag;
+	ItemClass class;
 } QueueElement;
 
-#define DEFAULT_QUEUE_ELEM { .item = 0 }
+#define DEFAULT_QUEUE_ELEM { .counter = 0, .isFerroMag = false, .class = UNCLASSIFIED }
 
 #if MODE_ENABLED(LINKED_QUEUE_MODE)
 
@@ -51,7 +53,7 @@ typedef struct Queue
 
 // @name:	Queue
 // @brief:	a linked queue data structure object
-typedef struct Queue
+typedef volatile struct Queue
 {
 	QueueElement* front;
 	QueueElement* back;
@@ -77,6 +79,10 @@ int QUEUE_size(Queue* q);
 int QUEUE_isEmpty(Queue* q);
 Queue* QUEUE_create(void);
 void QUEUE_destroy(Queue** q);
+//void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr);
+//void QUEUE_PointerDecrement(Queue* q, QueueElement** q_ptr);
+QueueElement* QUEUE_BackPtr(Queue* q);
+
 
 #if MODE_ENABLED(UNITTEST_MODE)
 #include "unittest.h"

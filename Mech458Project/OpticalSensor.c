@@ -27,7 +27,7 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
 
 		EIMSK |= (_BV(INT0)); // enable INT1
-		EICRA |= (_BV(ISC01)) | _BV(ISC00);  // rising edge interrupt
+		EICRA |= (_BV(ISC01)) | _BV(ISC00);// falling edge interrupt
 		break;
 
 	case S2_OPTICAL:

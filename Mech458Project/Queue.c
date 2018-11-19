@@ -99,6 +99,11 @@ void QUEUE_destroy(Queue** q)
 	*q = NULL;
 }
 
+QueueElement* QUEUE_BackPtr(Queue* q)
+{
+	return &(q->back->data);
+}
+
 #elif MODE_ENABLED(CIRCULAR_QUEUE_MODE)
 
 #define CIRCULAR_QUEUE_INIT_SIZE (50)
@@ -188,7 +193,7 @@ QueueElement QUEUE_dequeue(Queue* q)
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
 	if (q->front == NULL) // empty
-	return retval;
+		return retval;
 
 	retval = *(q->front);
 
@@ -247,8 +252,85 @@ void QUEUE_destroy(Queue** q)
 	*q = NULL;
 }
 
+/* @brief: increment an auxiliary pointer to the next item in the queue
+ * Makes pointer NULL if we increment when at the end of the queue.
+ */
+/*
+void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr)
+{
+	if (q_ptr == NULL) return; // invalid argument
 
+	if ((*q_ptr) == NULL)
+		return; // invalid pointer
+		
+	if ( QUEUE_isEmpty(q) )
+	{
+		*q_ptr = NULL;
+		return; // empty case where q front and back are NULL
+	}
+		
+	if ( (*q_ptr) == q->back )
+	{
+		*q_ptr = NULL;
+		return; // case where we are at the end and make NULL
+	}
+	
+	if (q->front < q->back) // queue is continuous block
+	{
+		if ( (*q_ptr) < q->front || (*q_ptr) > q->back )
+		{
+			*q_ptr = NULL;
+			return; // pointer not  referencing valid element
+		}
+		
+		q_ptr++;
+	}
+	else // queue is wrapped around
+	{
+		if ((*q_ptr) < q->front && (*q_ptr) > q->back )
+		{
+			*q_ptr = NULL;
+			return; // pointer not  referencing valid element
+		}
+		
+		if ( (*q_ptr) == q->array_end )
+			(*q_ptr) = q->array_start;
+		else
+			(*q_ptr)++;
+	}
+}*/
+/* @brief: decrement an auxiliary pointer to the previous item in the queue
+ * this call is unsafe. only call if you are certain that there is another item in the queue before it,
+ * since otherwise it does nothing.
+ *//*
+void QUEUE_PointerDecrement(Queue* q, QueueElement** q_ptr)
+{
+	if ( QUEUE_isEmpty(q) )
+		return; // empty case where q front and back are NULL
 
+	if ( QUEUE_size(q) == 1 )
+		return; // case where can't decrement, and both q->front == q->back
+
+	if ( (*q_ptr) == q->front )
+		return; // case where we can't decrement, we are at the start
+
+	if (q->front < q->back) // queue is continuous block
+	{
+		q_ptr--;
+	}
+	else // queue is wrapped around
+	{
+		if ( (*q_ptr) == q->array_start )
+			(*q_ptr) = q->array_end;
+		else
+			(*q_ptr)--;
+	}	
+}*/
+
+QueueElement* QUEUE_BackPtr(Queue* q)
+{
+	return q->back;
+}
 #endif //QUEUE_MODE
 
 

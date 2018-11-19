@@ -15,9 +15,9 @@
 #include "HallSensor.h"
 #include "OpticalSensor.h"
 #include "Timer.h"
+#include "Queue.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
-
 
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
@@ -32,7 +32,27 @@ volatile OpticalSensor	s1_optic;
 volatile OpticalSensor	s2_optic;
 volatile OpticalSensor	exit_optic;
 
-volatile unsigned char s2_edge_flag = 0;
+volatile FsmState fsmState = MOTOR_CONTROL;
+Queue* readyQueue;
+Queue* processQueue;
+
+volatile struct {
+	uint16_t minReflectivity;
+} Stage2;
+
+volatile struct {
+	unsigned int totalCount;
+	unsigned int blackPlasticCount;
+	unsigned int whitePlasticCount;
+	unsigned int aluminiumCount;
+	unsigned int steelCount;
+} ItemStats = {
+	.totalCount = 0,
+	.blackPlasticCount = 0,
+	.whitePlasticCount = 0,
+	.aluminiumCount = 0,
+	.steelCount = 0,
+};
 
 
 /* ====== MAIN FUNCTION ====== */
@@ -63,6 +83,9 @@ void Initialize()
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
 	OPTICAL_Init(&exit_optic,EXIT_OPTICAL);
 	
+	readyQueue = QUEUE_create();
+	processQueue = QUEUE_create();
+	
 	DDRC = 0xFF;
 	PORTC = 0x00;
 	
@@ -76,24 +99,49 @@ void Initialize()
 // ISR for S1_OPTICAL
 ISR(INT0_vect)
 {
-	
+	QueueElement new_elem = DEFAULT_QUEUE_ELEM;
+	// increment total stat count and tag item with its count ID
+	new_elem.counter = ++(ItemStats.totalCount);
+	// initialize like this so that if no ferro interrupt flips then we are good
+	new_elem.isFerroMag = false;
+	QUEUE_enqueue(processQueue, new_elem);
+}
+
+// ISR for Ferro Sensor
+ISR(INT6_vect)
+{
+	QUEUE_BackPtr(processQueue)->isFerroMag = true;
 }
 
 // ISR for S2_OPTICAL
 ISR(INT1_vect)
-{
-	PORTC = 0x00;
-	
+{	
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
-		ADC_StartConversion(&adc);
+		//ADC_StartConversion(&adc);
+		
+	}
+	else // just saw rising edge
+	{
+		/* ADC reflectivity stuff go here!!!!! */
+		
+		//move item from the "process Queue" to the "ready Queue"
+		if (!QUEUE_isEmpty(processQueue))
+		{
+			QueueElement processedItem = QUEUE_dequeue(processQueue);
+			QUEUE_enqueue(readyQueue, processedItem);
+		}
 	}
 }
 
 // ISR for EXIT_OPTICAL
 ISR(INT2_vect)
 {
-	DCMOTOR_Brake(&belt);
+	if(!QUEUE_isEmpty(readyQueue))
+	{
+		QueueElement dropItem = QUEUE_dequeue(readyQueue);
+		PORTC = (uint8_t)(dropItem.counter) | (((uint8_t)(dropItem.isFerroMag)) << 7);
+	}
 }
 
 /*
@@ -115,14 +163,6 @@ ISR(INT5_vect)
 	
 }
 */
-// ISR for Ferro Sensor // UNUSED
-ISR(INT6_vect)
-{
-	if(FERRO_Read(&ferro))
-	{
-		//PORTC = 0xff; // turn on LSB light
-	}
-}
 
 ISR(ADC_vect)
 {
@@ -131,8 +171,8 @@ ISR(ADC_vect)
 	
 	if (OPTICAL_IsBlocked(&s2_optic))
 		ADC_StartConversion(&adc);
-	else
-		PORTC = 0x00;
+	//else
+		//PORTC = 0x00;
 }
 
 

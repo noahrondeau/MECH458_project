@@ -137,7 +137,19 @@ typedef enum ActiveLevel
 	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
+typedef enum FsmState
+{
+	MOTOR_CONTROL,
+	PAUSE,
+	CLASSIFY,
+} FsmState;
 
-
-
+typedef enum ItemClass
+{
+	UNCLASSIFIED,
+	WHITE_PLASTIC,
+	BLACK_PLASTIC,
+	STEEL,
+	ALUMINIUM,
+}ItemClass;
 #endif /* CONFIG_H_ */
