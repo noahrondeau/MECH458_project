@@ -118,7 +118,7 @@ ISR(INT1_vect)
 }
 
 // ISR for Ferro Sensor
-ISR(INT6_vect)
+ISR(INT3_vect)
 {
 	LED_toggle(&led, 1);
 	//if (FERRO_Read(&ferro))
@@ -169,19 +169,19 @@ ISR(INT0_vect)
 
 /*
 // ISR for PAUSE BUTTON (SW1) //UNUSED
-ISR(INT3_vect)
-{
-	
-}
-
-// ISR for RAMP_DOWN BUTTON (SW2) //UNUSED
 ISR(INT4_vect)
 {
 	
 }
 
-// ISR for Hall Sensor	//UNUSED
+// ISR for RAMP_DOWN BUTTON (SW2) //UNUSED
 ISR(INT5_vect)
+{
+	
+}
+
+// ISR for Hall Sensor	//UNUSED
+ISR(INT6_vect)
 {
 	
 }

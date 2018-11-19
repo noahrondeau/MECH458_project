@@ -17,8 +17,8 @@ void FERRO_Init(FerroSensor* ferro)
 	ferro->active_level = ACTIVE_LOW;
 	*(ferro->ddrx) &= (~(ferro->mask)); // set ddr as input for that pin
 	
-	EIMSK |= (_BV(INT6)); // enable INT6
-	EICRA |= (_BV(ISC61));  // falling edge
+	EIMSK |= (_BV(INT3)); // enable INT6
+	EICRA |= (_BV(ISC31));  // falling edge
 }
 
 bool FERRO_Read(FerroSensor* ferro)
