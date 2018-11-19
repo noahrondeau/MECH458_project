@@ -176,6 +176,12 @@
     <Compile Include="StepperMotor.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="SysClk.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SysClk.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Timer.c">
       <SubType>compile</SubType>
     </Compile>

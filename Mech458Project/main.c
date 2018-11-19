@@ -9,6 +9,7 @@
 /* ====== USER INCLUDES ======*/
 
 #include "config.h"
+#include "SysClk.h"
 #include "DcMotor.h"
 #include "ADC.h"
 #include "FerroSensor.h"
@@ -74,6 +75,7 @@ void Initialize()
 {
 	cli(); // turn off interrupts
 	// ====== INIT CODE START ======
+	Sys_Clk_Init();
 	TIMER_DelayInit();
 	DCMOTOR_Init(&belt);
 	ADC_Init();

@@ -19,7 +19,7 @@
 
 void TIMER_DelayInit(void)
 {
-	TCCR1B |= _BV(CS10);
+	//prescale to 1/8 to tick at a 1MHz rate
 	TCCR1B |= _BV(CS11);
 }
 
