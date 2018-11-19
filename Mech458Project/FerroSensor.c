@@ -24,7 +24,7 @@ void FERRO_Init(FerroSensor* ferro)
 bool FERRO_Read(FerroSensor* ferro)
 {
 	if ( (*(ferro->pinx) & (ferro->mask)) == ferro->active_level )
-	return true;
+		return true;
 	else
-	return false;
+		return false;
 }

@@ -20,10 +20,11 @@ typedef struct QueueElement
 {
 	unsigned int counter;
 	bool isFerroMag;
+	uint16_t reflectivity;
 	ItemClass class;
 } QueueElement;
 
-#define DEFAULT_QUEUE_ELEM { .counter = 0, .isFerroMag = false, .class = UNCLASSIFIED }
+#define DEFAULT_QUEUE_ELEM { .counter = 0, .isFerroMag = false, .reflectivity = 1024, .class = UNCLASSIFIED }
 
 #if MODE_ENABLED(LINKED_QUEUE_MODE)
 

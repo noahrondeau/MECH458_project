@@ -26,8 +26,8 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 		opt->active_level = ACTIVE_LOW;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
 
-		EIMSK |= (_BV(INT0)); // enable INT1
-		EICRA |= (_BV(ISC01)) | _BV(ISC00);// falling edge interrupt
+		EIMSK |= (_BV(INT1)); // enable INT1
+		EICRA |= (_BV(ISC11));// falling edge interrupt
 		break;
 
 	case S2_OPTICAL:
@@ -38,8 +38,8 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 		opt->active_level = ACTIVE_HIGH;
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
 
-		EIMSK |= (_BV(INT1)); // enable INT1
-		EICRA |= (_BV(ISC10)); // any edge
+		EIMSK |= (_BV(INT2)); // enable INT1
+		EICRA |= (_BV(ISC20)); // any edge
 		break;
 		
 	case EXIT_OPTICAL:
@@ -51,8 +51,8 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 		*(opt->ddrx) &= (~(opt->mask)); // set ddr as input for that pin
 
 		//	For the exit gate sensor
-		EIMSK |= (_BV(INT2)); // enable INT2
-		EICRA |= (_BV(ISC21)); // trigger falling edge
+		EIMSK |= (_BV(INT0)); // enable INT2
+		EICRA |= (_BV(ISC01)); // trigger falling edge
 	}
 }
 

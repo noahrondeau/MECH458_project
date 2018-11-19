@@ -39,7 +39,7 @@ Queue* processQueue;
 
 volatile struct {
 	uint16_t minReflectivity;
-} Stage2;
+} Stage2 = {.minReflectivity = 1024,};
 
 volatile struct {
 	unsigned int totalCount;
@@ -62,7 +62,7 @@ int main()
 {
 	Initialize();
 	TIMER_DelayMs(2000);
-	DCMOTOR_Run(&belt,50);
+	DCMOTOR_Run(&belt,100);
 	
 	while(1)
 	{
@@ -91,6 +91,9 @@ void Initialize()
 	DDRC = 0xFF;
 	PORTC = 0x00;
 	
+	DDRD |= 0xF0;
+	PORTD = (PORTD & 0x0F);
+	
 	// ====== INIT CODE END   ======
 	sei(); // turn on interrupts
 }
@@ -99,51 +102,67 @@ void Initialize()
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
 
 // ISR for S1_OPTICAL
-ISR(INT0_vect)
+ISR(INT1_vect)
 {
-	QueueElement new_elem = DEFAULT_QUEUE_ELEM;
-	// increment total stat count and tag item with its count ID
-	new_elem.counter = ++(ItemStats.totalCount);
-	// initialize like this so that if no ferro interrupt flips then we are good
-	new_elem.isFerroMag = false;
-	QUEUE_enqueue(processQueue, new_elem);
+	//if (OPTICAL_IsBlocked(&s1_optic))
+	//{	
+		if ((PORTC & 0b00000001) == 0b00000000) PORTC |= 0b00000001;
+		else PORTC = PORTC & 0b11111110;
+		/*
+		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
+		// increment total stat count and tag item with its count ID
+		new_elem.counter = ++(ItemStats.totalCount);
+		// initialize like this so that if no ferro interrupt flips then we are good
+		new_elem.isFerroMag = false;
+		QUEUE_enqueue(processQueue, new_elem);*/
+	//}
 }
 
 // ISR for Ferro Sensor
 ISR(INT6_vect)
 {
-	QUEUE_BackPtr(processQueue)->isFerroMag = true;
+	//if (FERRO_Read(&ferro))
+	//{
+		if ((PORTC & 0b00000010) == 0b00000000) PORTC |= 0b00000010;
+		else PORTC = PORTC & 0b11111101;
+		//QUEUE_BackPtr(processQueue)->isFerroMag = true;
+	//}
 }
 
 // ISR for S2_OPTICAL
-ISR(INT1_vect)
-{	
+ISR(INT2_vect)
+{/*
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
 		//ADC_StartConversion(&adc);
-		
 	}
 	else // just saw rising edge
-	{
-		/* ADC reflectivity stuff go here!!!!! */
-		
+	{ 
 		//move item from the "process Queue" to the "ready Queue"
 		if (!QUEUE_isEmpty(processQueue))
 		{
 			QueueElement processedItem = QUEUE_dequeue(processQueue);
+			//add reflectivity for now -- calculate class here!
+			//processedItem.reflectivity = Stage2.minReflectivity;
 			QUEUE_enqueue(readyQueue, processedItem);
 		}
-	}
+	}*/
 }
 
 // ISR for EXIT_OPTICAL
-ISR(INT2_vect)
-{
-	if(!QUEUE_isEmpty(readyQueue))
-	{
-		QueueElement dropItem = QUEUE_dequeue(readyQueue);
-		PORTC = (uint8_t)(dropItem.counter) | (((uint8_t)(dropItem.isFerroMag)) << 7);
-	}
+ISR(INT0_vect)
+{/*
+	//if(OPTICAL_IsBlocked(&exit_optic))
+	//{	
+		if(!QUEUE_isEmpty(readyQueue))
+		{
+			QueueElement dropItem = QUEUE_dequeue(readyQueue);
+			//PORTC = (uint8_t)((dropItem.reflectivity) >> 2);
+			//uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
+			//uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
+			//PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
+		}
+	//}*/
 }
 
 /*
@@ -167,21 +186,28 @@ ISR(INT5_vect)
 */
 
 ISR(ADC_vect)
-{
+{/*
 	ADC_ReadConversion(&adc);
-	PORTC = (uint8_t)((adc.result) >> 2);
+	
+	if (adc.result < Stage2.minReflectivity)
+		Stage2.minReflectivity = adc.result;
 	
 	if (OPTICAL_IsBlocked(&s2_optic))
 		ADC_StartConversion(&adc);
-	//else
-		//PORTC = 0x00;
+	*/
 }
 
 
 
 ISR(BADISR_vect)
 {
-	
+	while(1)
+	{
+		PORTC = 0b01010101;
+		TIMER_DelayMs(500);
+		PORTC = 0b10101010;
+		TIMER_DelayMs(500);
+	}
 }
 
 
