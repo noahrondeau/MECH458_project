@@ -37,6 +37,10 @@ volatile FsmState fsmState = MOTOR_CONTROL;
 Queue* readyQueue;
 Queue* processQueue;
 
+bool light0_ON = false;
+bool light1_ON = false;
+bool light2_ON = false;
+
 volatile struct {
 	uint16_t minReflectivity;
 } Stage2 = {.minReflectivity = 1024,};
@@ -78,9 +82,9 @@ void Initialize()
 	Sys_Clk_Init();
 	TIMER_DelayInit();
 	DCMOTOR_Init(&belt);
-	ADC_Init();
+	//ADC_Init();
 	FERRO_Init(&ferro);
-	HALL_Init(&hall);
+	//HALL_Init(&hall);
 	OPTICAL_Init(&s1_optic,S1_OPTICAL);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
 	OPTICAL_Init(&exit_optic,EXIT_OPTICAL);
@@ -106,8 +110,16 @@ ISR(INT1_vect)
 {
 	//if (OPTICAL_IsBlocked(&s1_optic))
 	//{	
-		if ((PORTC & 0b00000001) == 0b00000000) PORTC |= 0b00000001;
-		else PORTC = PORTC & 0b11111110;
+		if (light0_ON)
+		{
+			PORTC &= 0b11111110;
+			light0_ON = false;
+		}
+		else
+		{
+			PORTC |= 0b00000001;
+			light0_ON = true;
+		}
 		/*
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
@@ -123,8 +135,16 @@ ISR(INT6_vect)
 {
 	//if (FERRO_Read(&ferro))
 	//{
-		if ((PORTC & 0b00000010) == 0b00000000) PORTC |= 0b00000010;
-		else PORTC = PORTC & 0b11111101;
+	if (light1_ON)
+	{
+		PORTC &= 0b11111101;
+		light1_ON = false;
+	}
+	else
+	{
+		PORTC |= 0b00000010;
+		light1_ON = true;
+	}
 		//QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	//}
 }
@@ -151,7 +171,18 @@ ISR(INT2_vect)
 
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
-{/*
+{
+	if (light2_ON)
+	{
+		PORTC &= 0b11111011;
+		light2_ON = false;
+	}
+	else
+	{
+		PORTC |= 0b00000100;
+		light2_ON = true;
+	}	
+	/*
 	//if(OPTICAL_IsBlocked(&exit_optic))
 	//{	
 		if(!QUEUE_isEmpty(readyQueue))
