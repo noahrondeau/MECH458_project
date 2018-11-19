@@ -9,6 +9,7 @@
 /* ====== USER INCLUDES ======*/
 
 #include "config.h"
+#include "LedBank.h"
 #include "SysClk.h"
 #include "DcMotor.h"
 #include "ADC.h"
@@ -25,21 +26,18 @@ void Initialize();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
-volatile DcMotor		belt;
-volatile ADCHandle		adc;
-volatile FerroSensor	ferro;
-volatile HallSensor		hall;
-volatile OpticalSensor	s1_optic;
-volatile OpticalSensor	s2_optic;
-volatile OpticalSensor	exit_optic;
+LedBank			led;
+DcMotor			belt;
+ADCHandle		adc;
+FerroSensor		ferro;
+HallSensor		hall;
+OpticalSensor	s1_optic;
+OpticalSensor	s2_optic;
+OpticalSensor	exit_optic;
 
 volatile FsmState fsmState = MOTOR_CONTROL;
 Queue* readyQueue;
 Queue* processQueue;
-
-bool light0_ON = false;
-bool light1_ON = false;
-bool light2_ON = false;
 
 volatile struct {
 	uint16_t minReflectivity;
@@ -80,6 +78,7 @@ void Initialize()
 	cli(); // turn off interrupts
 	// ====== INIT CODE START ======
 	Sys_Clk_Init();
+	LED_Init(&led);
 	TIMER_DelayInit();
 	DCMOTOR_Init(&belt);
 	//ADC_Init();
@@ -91,9 +90,6 @@ void Initialize()
 	
 	readyQueue = QUEUE_create();
 	processQueue = QUEUE_create();
-	
-	DDRC = 0xFF;
-	PORTC = 0x00;
 	
 	DDRD |= 0xF0;
 	PORTD = (PORTD & 0x0F);
@@ -110,16 +106,7 @@ ISR(INT1_vect)
 {
 	//if (OPTICAL_IsBlocked(&s1_optic))
 	//{	
-		if (light0_ON)
-		{
-			PORTC &= 0b11111110;
-			light0_ON = false;
-		}
-		else
-		{
-			PORTC |= 0b00000001;
-			light0_ON = true;
-		}
+		LED_toggle(&led, 0);
 		/*
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
@@ -133,25 +120,18 @@ ISR(INT1_vect)
 // ISR for Ferro Sensor
 ISR(INT6_vect)
 {
+	LED_toggle(&led, 1);
 	//if (FERRO_Read(&ferro))
 	//{
-	if (light1_ON)
-	{
-		PORTC &= 0b11111101;
-		light1_ON = false;
-	}
-	else
-	{
-		PORTC |= 0b00000010;
-		light1_ON = true;
-	}
 		//QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	//}
 }
 
 // ISR for S2_OPTICAL
 ISR(INT2_vect)
-{/*
+{
+	LED_toggle(&led, 2);
+	/*
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
 		//ADC_StartConversion(&adc);
@@ -172,16 +152,7 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-	if (light2_ON)
-	{
-		PORTC &= 0b11111011;
-		light2_ON = false;
-	}
-	else
-	{
-		PORTC |= 0b00000100;
-		light2_ON = true;
-	}	
+	LED_toggle(&led, 3);
 	/*
 	//if(OPTICAL_IsBlocked(&exit_optic))
 	//{	
@@ -234,9 +205,9 @@ ISR(BADISR_vect)
 {
 	while(1)
 	{
-		PORTC = 0b01010101;
+		LED_set(&led, 0b01010101);
 		TIMER_DelayMs(500);
-		PORTC = 0b10101010;
+		LED_set(&led, 0b10101010);
 		TIMER_DelayMs(500);
 	}
 }

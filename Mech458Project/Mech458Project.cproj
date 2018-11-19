@@ -149,6 +149,12 @@
     <Compile Include="HallSensor.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="LedBank.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="LedBank.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
