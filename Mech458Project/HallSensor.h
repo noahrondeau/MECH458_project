@@ -22,6 +22,7 @@ typedef volatile struct HallSensor
 	GPIOReg pinx;
 	GPIOReg ddrx;
 	GPIOMask mask;
+	ActiveLevel active_level;
 } HallSensor;
 
 void HALL_Init(HallSensor* hall);

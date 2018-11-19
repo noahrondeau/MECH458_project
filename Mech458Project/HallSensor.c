@@ -16,6 +16,7 @@ void HALL_Init(HallSensor* hall)
 	hall->pinx = HALL_PINX;
 	hall->ddrx = HALL_DDRX;
 	hall->mask = (((uint8_t)(1)) << (HALL_PORTPIN) );
+	hall->active_level = ACTIVE_LOW;
 
 	*(hall->ddrx) &= (~(hall->mask)); // set ddr as input for that pin
 }
@@ -23,8 +24,8 @@ void HALL_Init(HallSensor* hall)
 bool HALL_isActive(HallSensor* hall)
 {
 	//active low
-	if (  ((*(hall->pinx)) & (hall->mask)) == HALL_ACTIVE )
-	return true;
+	if (  ((*(hall->pinx)) & (hall->mask)) == ((hall->active_level) << HALL_PORTPIN) )
+		return true;
 	else
-	return false;
+		return false;
 }
