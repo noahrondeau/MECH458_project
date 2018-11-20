@@ -79,6 +79,10 @@ int main()
 void Initialize()
 {
 	cli(); // turn off interrupts
+	// clear interrupt enables just in case of weird startup state
+	EIMSK = 0x00;
+	EICRA = 0x00;
+	EICRB = 0x00;
 	// ====== INIT CODE START ======
 	Sys_Clk_Init();
 	LED_Init(&led);
@@ -179,16 +183,26 @@ ISR(INT4_vect)
 	
 }*/
 
-// ISR for RAMP_DOWN BUTTON (SW2)
+// ISR for RAMP_DOWN button
 ISR(INT6_vect)
 {
+	// Debounce
+	// We should probably set up a new different timer for this
+	// Since this one will be used for the stepper motor
+	TIMER_DelayMs(20);
 	LED_toggle(&led, 6);
+	TIMER_DelayMs(20);
 }
 
 // ISR for PAUSE button
 ISR(INT7_vect)
 {
+	// Debounce
+	// We should probably set up a new different timer for this
+	// Since this one will be used for the stepper motor
+	TIMER_DelayMs(20);
 	LED_toggle(&led, 7);
+	TIMER_DelayMs(20);
 }
 
 ISR(ADC_vect)

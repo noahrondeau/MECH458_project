@@ -24,7 +24,7 @@ void BUTTON_Init(PushButton* button, PushButtonIdentity ident)
 		
 		// set interrupts for falling edge
 		EIMSK |= (_BV(INT7)); // enable INT7
-		EICRA |= (_BV(ISC71));  // falling edge
+		EICRB |= (_BV(ISC71));  // falling edge
 		break;
 		
 	case RAMPDOWN_BUTTON:
@@ -37,7 +37,7 @@ void BUTTON_Init(PushButton* button, PushButtonIdentity ident)
 		
 		// set interrupts for falling edge
 		EIMSK |= (_BV(INT6)); // enable INT6
-		EICRA |= (_BV(ISC61));  // falling edge
+		EICRB |= (_BV(ISC61));  // falling edge
 		break;	
 	}
 }
