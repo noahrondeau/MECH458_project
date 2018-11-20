@@ -164,6 +164,12 @@
     <Compile Include="OpticalSensor.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="PushButton.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="PushButton.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="PWM.c">
       <SubType>compile</SubType>
     </Compile>

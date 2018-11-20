@@ -17,6 +17,7 @@
 #include "HallSensor.h"
 #include "OpticalSensor.h"
 #include "Timer.h"
+#include "PushButton.h"
 #include "Queue.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
@@ -34,6 +35,8 @@ HallSensor		hall;
 OpticalSensor	s1_optic;
 OpticalSensor	s2_optic;
 OpticalSensor	exit_optic;
+PushButton		pauseButton;
+PushButton		rampDownButton;
 
 volatile FsmState fsmState = MOTOR_CONTROL;
 Queue* readyQueue;
@@ -83,10 +86,12 @@ void Initialize()
 	DCMOTOR_Init(&belt);
 	//ADC_Init();
 	FERRO_Init(&ferro);
-	//HALL_Init(&hall);
+	HALL_Init(&hall);
 	OPTICAL_Init(&s1_optic,S1_OPTICAL);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
 	OPTICAL_Init(&exit_optic,EXIT_OPTICAL);
+	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
+	BUTTON_Init(&rampDownButton, RAMPDOWN_BUTTON);
 	
 	readyQueue = QUEUE_create();
 	processQueue = QUEUE_create();
@@ -106,7 +111,7 @@ ISR(INT1_vect)
 {
 	//if (OPTICAL_IsBlocked(&s1_optic))
 	//{	
-		LED_toggle(&led, 0);
+		//LED_toggle(&led, 0);
 		/*
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
@@ -120,7 +125,7 @@ ISR(INT1_vect)
 // ISR for Ferro Sensor
 ISR(INT3_vect)
 {
-	LED_toggle(&led, 1);
+	//LED_toggle(&led, 1);
 	//if (FERRO_Read(&ferro))
 	//{
 		//QUEUE_BackPtr(processQueue)->isFerroMag = true;
@@ -130,12 +135,12 @@ ISR(INT3_vect)
 // ISR for S2_OPTICAL
 ISR(INT2_vect)
 {
-	LED_toggle(&led, 2);
-	/*
+	
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
+		LED_toggle(&led, 2);
 		//ADC_StartConversion(&adc);
-	}
+	}/*
 	else // just saw rising edge
 	{ 
 		//move item from the "process Queue" to the "ready Queue"
@@ -152,7 +157,7 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-	LED_toggle(&led, 3);
+	//LED_toggle(&led, 3);
 	/*
 	//if(OPTICAL_IsBlocked(&exit_optic))
 	//{	
@@ -168,24 +173,23 @@ ISR(INT0_vect)
 }
 
 /*
-// ISR for PAUSE BUTTON (SW1) //UNUSED
+// ISR for HALL Sensor UNUSED
 ISR(INT4_vect)
 {
 	
-}
+}*/
 
-// ISR for RAMP_DOWN BUTTON (SW2) //UNUSED
-ISR(INT5_vect)
-{
-	
-}
-
-// ISR for Hall Sensor	//UNUSED
+// ISR for RAMP_DOWN BUTTON (SW2)
 ISR(INT6_vect)
 {
-	
+	LED_toggle(&led, 6);
 }
-*/
+
+// ISR for PAUSE button
+ISR(INT7_vect)
+{
+	LED_toggle(&led, 7);
+}
 
 ISR(ADC_vect)
 {/*
