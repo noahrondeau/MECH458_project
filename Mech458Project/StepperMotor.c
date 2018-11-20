@@ -53,7 +53,7 @@ void STEPPER_stepCW(StepperMotor* motor, int num_steps, int delay)
 		motor->current_pos = 0;
 
 		*(motor->port) = motor->commutation_steps[motor->step_index];
-		TIMER_DelayMs(delay);
+		TIMER1_DelayMs(delay);
 	}
 }
 
