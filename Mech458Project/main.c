@@ -66,12 +66,13 @@ volatile struct {
 int main()
 {
 	Initialize();
-	TIMER_DelayMs(2000);
+	TIMER1_DelayMs(2000);
 	DCMOTOR_Run(&belt,100);
+
 	
 	while(1)
 	{
-		
+
 	}
 	return 0;
 }
@@ -86,7 +87,8 @@ void Initialize()
 	// ====== INIT CODE START ======
 	Sys_Clk_Init();
 	LED_Init(&led);
-	TIMER_DelayInit();
+	TIMER1_DelayInit();
+	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
 	//ADC_Init();
 	FERRO_Init(&ferro);
@@ -189,9 +191,9 @@ ISR(INT6_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER_DelayMs(20);
+	TIMER1_DelayMs(20);
 	LED_toggle(&led, 6);
-	TIMER_DelayMs(20);
+	TIMER1_DelayMs(20);
 }
 
 // ISR for PAUSE button
@@ -200,9 +202,9 @@ ISR(INT7_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER_DelayMs(20);
+	TIMER1_DelayMs(20);
 	LED_toggle(&led, 7);
-	TIMER_DelayMs(20);
+	TIMER1_DelayMs(20);
 }
 
 ISR(ADC_vect)
@@ -217,16 +219,26 @@ ISR(ADC_vect)
 	*/
 }
 
-
+/*
+ISR(TIMER3_COMPB_vect)
+{
+	
+	LED_toggle(&led,1);
+	TCNT3 = 0x0000;			//reset counter
+	TIFR3 |= _BV(OCF3B);	//Clear interrupt flag begin counting
+	
+	PORTC = 0xFF;
+}
+*/
 
 ISR(BADISR_vect)
 {
 	while(1)
 	{
 		LED_set(&led, 0b01010101);
-		TIMER_DelayMs(500);
+		TIMER1_DelayMs(500);
 		LED_set(&led, 0b10101010);
-		TIMER_DelayMs(500);
+		TIMER1_DelayMs(500);
 	}
 }
 
