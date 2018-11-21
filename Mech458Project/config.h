@@ -136,11 +136,11 @@ typedef enum ActiveLevel
 	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
-typedef volatile enum FsmState
+typedef volatile struct FsmState
 {
-	MOTOR_CONTROL,
-	PAUSE,
-	CLASSIFY,
+	enum { RUN_STATE, PAUSE_STATE, RAMPDOWN_STATE, } state;
+	bool rampDownInitFlag;
+	bool rampDownEndFlag;
 } FsmState;
 
 typedef enum ItemClass

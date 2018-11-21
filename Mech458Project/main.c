@@ -39,7 +39,12 @@ OpticalSensor	exit_optic;
 PushButton		pauseButton;
 PushButton		rampDownButton;
 
-FsmState fsmState = MOTOR_CONTROL;
+FsmState fsmState = {
+	.state = RUN_STATE,
+	.rampDownInitFlag = false,
+	.rampDownEndFlag = false,
+};
+
 Queue* readyQueue;
 Queue* processQueue;
 
@@ -72,11 +77,33 @@ int main()
 	TIMER1_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 
-	
-	while(1)
-	{
-
+	// main loop
+	while(true)
+	{	
+		switch(fsmState.state)
+		{
+		case RUN_STATE:
+			{
+				
+			}
+			break;
+			
+		case PAUSE_STATE:
+			{
+				// nothing lets us get here right now
+			}
+			break;
+		
+		case RAMPDOWN_STATE:
+			{
+				// nothing lets us get here right now
+				return 0;
+			}
+			break;
+		}
 	}
+	
+	// should never get here
 	return 0;
 }
 
@@ -140,7 +167,7 @@ ISR(INT3_vect)
 	if (FERRO_Read(&ferro))
 	{
 		//LED_toggle(&led, 1);
-		//QUEUE_BackPtr(processQueue)->isFerroMag = true;
+		QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	}
 }
 
@@ -151,12 +178,12 @@ ISR(INT2_vect)
 	
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
-		LED_toggle(&led, 2);
+		//LED_toggle(&led, 2);
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
 	{
-		LED_toggle(&led,3);
+		//LED_toggle(&led,3);
 		
 		//move item from the "process Queue" to the "ready Queue"
 		if (!QUEUE_isEmpty(processQueue))
