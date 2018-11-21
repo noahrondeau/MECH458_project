@@ -26,8 +26,6 @@ typedef struct StepperMotor
 {
 	unsigned char commutation_steps[NUM_COMMUTATION_STEPS];
 	int step_index;
-	int current_pos;
-	int total_steps;
 	GPIOReg portx;
 	GPIOReg ddrx;
 } StepperMotor;
@@ -40,13 +38,13 @@ typedef enum MotorDirection
 	CCW
 } MotorDirection;
 
-void STEPPER_init(StepperMotor* motor);
+void STEPPER_Init(StepperMotor* motor);
 
-void STEPPER_step(	StepperMotor* motor,
+void STEPPER_Step(	StepperMotor* motor,
 					MotorDirection dir);
 
-void STEPPER_stepCW(StepperMotor* motor);
-void STEPPER_stepCCW(StepperMotor* motor);
+void STEPPER_StepCW(StepperMotor* motor);
+void STEPPER_StepCCW(StepperMotor* motor);
 
 
 #endif /* STEPPERMOTOR_H_ */

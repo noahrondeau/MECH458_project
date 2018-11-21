@@ -27,16 +27,16 @@ void STEPPER_init(StepperMotor* motor)
 	motor->portx = STEPPER_PORT;
 }
 
-void STEPPER_step(	StepperMotor* motor,
+void STEPPER_Step(	StepperMotor* motor,
 MotorDirection dir)
 {
 	if (dir == CW)
-	STEPPER_stepCW(motor);
+	STEPPER_StepCW(motor);
 	else if (dir == CCW)
-	STEPPER_stepCCW(motor);
+	STEPPER_StepCCW(motor);
 }
 
-void STEPPER_stepCW(StepperMotor* motor)
+void STEPPER_StepCW(StepperMotor* motor)
 {
 	motor->step_index++;
 	if (motor->step_index == NUM_COMMUTATION_STEPS)
@@ -45,7 +45,7 @@ void STEPPER_stepCW(StepperMotor* motor)
 	*(motor->portx) = motor->commutation_steps[motor->step_index];
 }
 
-void STEPPER_stepCCW(StepperMotor* motor)
+void STEPPER_StepCCW(StepperMotor* motor)
 {
 	motor->step_index--;
 	if (motor->step_index < 0)
