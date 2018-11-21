@@ -26,7 +26,7 @@ typedef volatile struct HallSensor
 } HallSensor;
 
 void HALL_Init(HallSensor* hall);
-bool HALL_isActive(HallSensor* hall);
+bool HALL_IsActive(HallSensor* hall);
 
 
 #endif /* HALLSENSOR_H_ */

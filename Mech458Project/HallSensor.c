@@ -21,7 +21,7 @@ void HALL_Init(HallSensor* hall)
 	*(hall->ddrx) &= (~(hall->mask)); // set ddr as input for that pin
 }
 
-bool HALL_isActive(HallSensor* hall)
+bool HALL_IsActive(HallSensor* hall)
 {
 	//active low
 	if (  ((*(hall->pinx)) & (hall->mask)) == ((hall->active_level) << HALL_PORTPIN) )
