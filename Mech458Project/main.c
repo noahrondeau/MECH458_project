@@ -191,9 +191,9 @@ ISR(INT6_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER1_DelayMs(20);
+	TIMER3_DelayMs(20);
 	LED_toggle(&led, 6);
-	TIMER1_DelayMs(20);
+	TIMER3_DelayMs(20);
 }
 
 // ISR for PAUSE button
@@ -202,9 +202,9 @@ ISR(INT7_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER1_DelayMs(20);
+	TIMER3_DelayMs(20);
 	LED_toggle(&led, 7);
-	TIMER1_DelayMs(20);
+	TIMER3_DelayMs(20);
 }
 
 ISR(ADC_vect)
