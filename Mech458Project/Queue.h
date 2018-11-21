@@ -24,7 +24,7 @@ typedef struct QueueElement
 	ItemClass class;
 } QueueElement;
 
-#define DEFAULT_QUEUE_ELEM { .counter = 0, .isFerroMag = false, .reflectivity = 1024, .class = UNCLASSIFIED }
+#define DEFAULT_QUEUE_ELEM { .counter = 0, .isFerroMag = false, .reflectivity = MAX_ADC_VAL, .class = UNCLASSIFIED }
 
 #if MODE_ENABLED(LINKED_QUEUE_MODE)
 

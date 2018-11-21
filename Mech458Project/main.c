@@ -27,6 +27,7 @@ void Initialize();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
+// all these types are typedef'd as volatile, don't need to repeat here
 LedBank			led;
 DcMotor			belt;
 ADCHandle		adc;
@@ -38,13 +39,15 @@ OpticalSensor	exit_optic;
 PushButton		pauseButton;
 PushButton		rampDownButton;
 
-volatile FsmState fsmState = MOTOR_CONTROL;
+FsmState fsmState = MOTOR_CONTROL;
 Queue* readyQueue;
 Queue* processQueue;
 
 volatile struct {
 	uint16_t minReflectivity;
-} Stage2 = {.minReflectivity = 1024,};
+} Stage2 = {
+	.minReflectivity = MAX_ADC_VAL,
+};
 
 volatile struct {
 	unsigned int totalCount;
@@ -67,7 +70,7 @@ int main()
 {
 	Initialize();
 	TIMER1_DelayMs(2000);
-	DCMOTOR_Run(&belt,100);
+	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 
 	
 	while(1)
@@ -80,7 +83,7 @@ int main()
 void Initialize()
 {
 	cli(); // turn off interrupts
-	// clear interrupt enables just in case of weird startup state
+	// clear EXTI interrupt enables just in case of weird startup state
 	EIMSK = 0x00;
 	EICRA = 0x00;
 	EICRB = 0x00;
@@ -90,7 +93,7 @@ void Initialize()
 	TIMER1_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
-	//ADC_Init();
+	ADC_Init();
 	FERRO_Init(&ferro);
 	HALL_Init(&hall);
 	OPTICAL_Init(&s1_optic,S1_OPTICAL);
@@ -115,67 +118,81 @@ void Initialize()
 // ISR for S1_OPTICAL
 ISR(INT1_vect)
 {
-	//if (OPTICAL_IsBlocked(&s1_optic))
-	//{	
+	// verify interrupt wasn't spurious by polling sensor
+	// this is critical as it helps to avoid enqueuing fictitious items
+	if (OPTICAL_IsBlocked(&s1_optic))
+	{	
 		//LED_toggle(&led, 0);
-		/*
+		
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
 		new_elem.counter = ++(ItemStats.totalCount);
 		// initialize like this so that if no ferro interrupt flips then we are good
 		new_elem.isFerroMag = false;
-		QUEUE_enqueue(processQueue, new_elem);*/
-	//}
+		QUEUE_enqueue(processQueue, new_elem);
+	}
 }
 
 // ISR for Ferro Sensor
 ISR(INT3_vect)
 {
-	//LED_toggle(&led, 1);
-	//if (FERRO_Read(&ferro))
-	//{
+	// verify interrupt wasn't spurious by polling sensor
+	if (FERRO_Read(&ferro))
+	{
+		//LED_toggle(&led, 1);
 		//QUEUE_BackPtr(processQueue)->isFerroMag = true;
-	//}
+	}
 }
 
 // ISR for S2_OPTICAL
 ISR(INT2_vect)
 {
+	// poll sensor state to determine whether falling or rising edge was seen
 	
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
 		LED_toggle(&led, 2);
-		//ADC_StartConversion(&adc);
-	}/*
+		ADC_StartConversion(&adc);
+	}
 	else // just saw rising edge
-	{ 
+	{
+		LED_toggle(&led,3);
+		
 		//move item from the "process Queue" to the "ready Queue"
 		if (!QUEUE_isEmpty(processQueue))
 		{
 			QueueElement processedItem = QUEUE_dequeue(processQueue);
 			//add reflectivity for now -- calculate class here!
-			//processedItem.reflectivity = Stage2.minReflectivity;
+			processedItem.reflectivity = Stage2.minReflectivity;
+			Stage2.minReflectivity = MAX_ADC_VAL;
 			QUEUE_enqueue(readyQueue, processedItem);
 		}
-	}*/
+	}
 }
 
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-	//LED_toggle(&led, 3);
-	/*
-	//if(OPTICAL_IsBlocked(&exit_optic))
-	//{	
+	//LED_toggle(&led, 4);
+	// poll sensor to verify interrupt was not spurious
+	if(OPTICAL_IsBlocked(&exit_optic))
+	{
+		DCMOTOR_Brake(&belt);
+		// even if the interrupt is not spurious and we know there is an item
+		// verify there is a queued item
 		if(!QUEUE_isEmpty(readyQueue))
 		{
 			QueueElement dropItem = QUEUE_dequeue(readyQueue);
-			//PORTC = (uint8_t)((dropItem.reflectivity) >> 2);
+			LED_set(&led, (uint8_t)((dropItem.reflectivity) >> 2));
 			//uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
 			//uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
 			//PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
+			
+			TIMER1_DelayMs(1000);
+			LED_set(&led, 0x00);
+			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 		}
-	//}*/
+	}
 }
 
 /*
@@ -208,15 +225,14 @@ ISR(INT7_vect)
 }
 
 ISR(ADC_vect)
-{/*
+{
 	ADC_ReadConversion(&adc);
-	
+	//LED_set(&led, (uint8_t)((adc.result) >> 2));
 	if (adc.result < Stage2.minReflectivity)
 		Stage2.minReflectivity = adc.result;
 	
 	if (OPTICAL_IsBlocked(&s2_optic))
 		ADC_StartConversion(&adc);
-	*/
 }
 
 /*

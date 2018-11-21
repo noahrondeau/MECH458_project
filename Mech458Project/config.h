@@ -77,6 +77,8 @@ typedef volatile uint8_t  GPIOMask;
 #define DCMOTOR_PORTX			(PORTB_REG)
 #define DCMOTOR_DDRX			(DDRB_REG)
 
+#define DCMOTOR_SPEED			(60)
+
 /* ====== HALL SENSOR CONFIG ====== */
 
 #define HALL_PINX				(PINE_REG)
@@ -115,6 +117,10 @@ typedef volatile uint8_t  GPIOMask;
 #define RAMPDOWN_DDRX			(DDRE_REG)
 #define RAMPDOWN_PORTPIN		(7)	
 
+/* ====== RL SENSOR CONFIGS ====== */
+
+#define MAX_ADC_VAL (1024)
+
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 
 typedef enum bool
@@ -130,7 +136,7 @@ typedef enum ActiveLevel
 	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
-typedef enum FsmState
+typedef volatile enum FsmState
 {
 	MOTOR_CONTROL,
 	PAUSE,
