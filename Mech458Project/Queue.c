@@ -248,7 +248,7 @@ Queue* QUEUE_create(void)
 void QUEUE_destroy(Queue** q)
 {
 	QUEUE_deinit(*q);
-	free(*q);
+	free(*(void**)q);
 	*q = NULL;
 }
 
