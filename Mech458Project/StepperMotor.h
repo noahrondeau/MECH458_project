@@ -28,8 +28,8 @@ typedef struct StepperMotor
 	int step_index;
 	int current_pos;
 	int total_steps;
-	GPIOReg port;
-	GPIOReg ddr;
+	GPIOReg portx;
+	GPIOReg ddrx;
 } StepperMotor;
 
 // @name:	MotorDirection
@@ -43,12 +43,10 @@ typedef enum MotorDirection
 void STEPPER_init(StepperMotor* motor);
 
 void STEPPER_step(	StepperMotor* motor,
-					MotorDirection dir,
-					int num_steps,
-					int delay	);
+					MotorDirection dir);
 
-void STEPPER_stepCW(StepperMotor* motor, int num_steps, int delay);
-void STEPPER_stepCCW(StepperMotor* motor, int num_steps, int delay);
+void STEPPER_stepCW(StepperMotor* motor);
+void STEPPER_stepCCW(StepperMotor* motor);
 
 
 #endif /* STEPPERMOTOR_H_ */

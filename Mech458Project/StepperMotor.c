@@ -20,58 +20,38 @@ void STEPPER_init(StepperMotor* motor)
 	motor->commutation_steps[3] = STEP3;
 
 	motor->step_index = 0;
-	motor->current_pos = 0;
-	motor->total_steps = 200;
 
-	motor->ddr = STEPPER_DDR;
-	*(motor->ddr) = 0xFF;
+	motor->ddrx = STEPPER_DDR;
+	*(motor->ddrx) = 0xFF;
 
-	motor->port = STEPPER_PORT;
+	motor->portx = STEPPER_PORT;
 }
 
 void STEPPER_step(	StepperMotor* motor,
-MotorDirection dir,
-int num_steps,
-int delay)
+MotorDirection dir)
 {
 	if (dir == CW)
-	STEPPER_stepCW(motor, num_steps, delay);
+	STEPPER_stepCW(motor);
 	else if (dir == CCW)
-	STEPPER_stepCCW(motor,num_steps, delay);
+	STEPPER_stepCCW(motor);
 }
 
-void STEPPER_stepCW(StepperMotor* motor, int num_steps, int delay)
+void STEPPER_stepCW(StepperMotor* motor)
 {
-	for( int counter = 0; counter < num_steps; counter++ )
-	{
-		motor->step_index++;
-		if (motor->step_index == NUM_COMMUTATION_STEPS)
-		motor->step_index = 0;
+	motor->step_index++;
+	if (motor->step_index == NUM_COMMUTATION_STEPS)
+	motor->step_index = 0;
 
-		motor->current_pos++;
-		if (motor->current_pos == motor->total_steps)
-		motor->current_pos = 0;
-
-		*(motor->port) = motor->commutation_steps[motor->step_index];
-		TIMER1_DelayMs(delay);
-	}
+	*(motor->portx) = motor->commutation_steps[motor->step_index];
 }
 
-void STEPPER_stepCCW(StepperMotor* motor, int num_steps, int delay)
+void STEPPER_stepCCW(StepperMotor* motor)
 {
-	for( int counter = 0; counter < num_steps; counter++ )
-	{
-		motor->step_index--;
-		if (motor->step_index < 0)
-		motor->step_index = NUM_COMMUTATION_STEPS - 1;
+	motor->step_index--;
+	if (motor->step_index < 0)
+	motor->step_index = NUM_COMMUTATION_STEPS - 1;
 
-		motor->current_pos--;
-		if (motor->current_pos < 0)
-		motor->current_pos = motor->total_steps - 1;
-
-		*(motor->port) = motor->commutation_steps[motor->step_index];
-		TIMER1_DelayMs(delay);
-	}
+	*(motor->portx) = motor->commutation_steps[motor->step_index];
 }
 
 
