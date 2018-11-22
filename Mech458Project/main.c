@@ -79,6 +79,7 @@ int main()
 	TIMER1_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 
+	Tray_Rotate180(&tray);
 	// main loop
 	while(true)
 	{	

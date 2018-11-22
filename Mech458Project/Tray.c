@@ -54,5 +54,9 @@ void Tray_Rotate90(Tray* tray, MotorDirection dir){
 }
 
 void Tray_Rotate180(Tray* tray){
-	
+	for(int i = 0; i<100; i++)
+	{
+		STEPPER_StepCW(&(tray->stepper));
+		TIMER1_DelayMs(20);
+	}
 }
