@@ -75,3 +75,37 @@ void TRAY_Rotate180(Tray* tray){
 	}
 }
 
+void TRAY_Sort(Tray* tray, Queue* q){
+	tray->targetPos = QUEUE_Peak(&q).class;
+	
+	switch ((tray->targetPos) - (tray->beltPos)){
+		case 0:
+			tray->beltPos = tray->targetPos;
+			break;
+		case 50:
+			TRAY_Rotate90(&tray,CCW);
+			tray->beltPos = tray->targetPos;
+			break;
+		case 100:
+			TRAY_Rotate180(&tray);
+			tray->beltPos = tray->targetPos;
+			break;
+		case 150:
+			TRAY_Rotate90(&tray,CW);
+			tray->beltPos = tray->targetPos;		
+			break;
+		case -50:
+			TRAY_Rotate90(&tray,CW);
+			tray->beltPos = tray->targetPos;
+			break;
+		case -100:
+			TRAY_Rotate180(&tray);
+			tray->beltPos = tray->targetPos;		
+			break;
+		case -150:
+			TRAY_Rotate90(&tray,CCW);
+			tray->beltPos = tray->targetPos;
+			break;					
+	}
+	
+}
