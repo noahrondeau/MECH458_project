@@ -11,22 +11,22 @@
 
 #if MODE_ENABLED(LINKED_QUEUE_MODE)
 
-void QUEUE_init(Queue* q)
+void QUEUE_Init(Queue* q)
 {
 	q->front = NULL;
 	q->back = NULL;
 	q->size = 0;
 }
 
-void QUEUE_deinit(Queue* q)
+void QUEUE_Deinit(Queue* q)
 {
 	while (q->front != NULL)
 	{
-		QUEUE_dequeue(q);
+		QUEUE_Dequeue(q);
 	}
 }
 
-void QUEUE_enqueue(Queue* q, QueueElement elem)
+void QUEUE_Enqueue(Queue* q, QueueElement elem)
 {
 	QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
 	newNode->data = elem;
@@ -45,7 +45,7 @@ void QUEUE_enqueue(Queue* q, QueueElement elem)
 	q->size++;
 }
 
-QueueElement QUEUE_dequeue(Queue* q)
+QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
@@ -67,7 +67,7 @@ QueueElement QUEUE_dequeue(Queue* q)
 	return retval;
 }
 
-QueueElement QUEUE_peak(Queue* q)
+QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement elem = DEFAULT_QUEUE_ELEM;
 	if (q->front)
@@ -75,26 +75,26 @@ QueueElement QUEUE_peak(Queue* q)
 	return elem;
 }
 
-int QUEUE_size(Queue* q)
+int QUEUE_Size(Queue* q)
 {
 	return q->size;
 }
 
-int QUEUE_isEmpty(Queue* q)
+int QUEUE_IsEmpty(Queue* q)
 {
 	return (q->size == 0);
 }
 
-Queue* QUEUE_create(void)
+Queue* QUEUE_Create(void)
 {
 	Queue* newQ = (Queue*)malloc(sizeof(Queue));
-	QUEUE_init(newQ);
+	QUEUE_Init(newQ);
 	return newQ;
 }
 
-void QUEUE_destroy(Queue** q)
+void QUEUE_Destroy(Queue** q)
 {
-	QUEUE_deinit(*q);
+	QUEUE_Deinit(*q);
 	free(*q);
 	*q = NULL;
 }
@@ -142,7 +142,7 @@ void QUEUE_enlarge(Queue* q)
 	free(old_array);
 }
 
-void QUEUE_init(Queue* q)
+void QUEUE_Init(Queue* q)
 {
 	q->array_length = CIRCULAR_QUEUE_INIT_SIZE;
 	q->array_start =
@@ -154,15 +154,15 @@ void QUEUE_init(Queue* q)
 	q->size = 0;
 }
 
-void QUEUE_deinit(Queue* q)
+void QUEUE_Deinit(Queue* q)
 {
 	while (q->front != NULL)
 	{
-		QUEUE_dequeue(q);
+		QUEUE_Dequeue(q);
 	}
 }
 
-void QUEUE_enqueue(Queue* q, QueueElement elem)
+void QUEUE_Enqueue(Queue* q, QueueElement elem)
 {
 	//empty case
 	if (q->back == NULL)
@@ -188,7 +188,7 @@ void QUEUE_enqueue(Queue* q, QueueElement elem)
 	q->size++;
 }
 
-QueueElement QUEUE_dequeue(Queue* q)
+QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
@@ -216,7 +216,7 @@ QueueElement QUEUE_dequeue(Queue* q)
 	return retval;
 }
 
-QueueElement QUEUE_peak(Queue* q)
+QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 
@@ -228,26 +228,26 @@ QueueElement QUEUE_peak(Queue* q)
 	return retval;
 }
 
-int QUEUE_size(Queue* q)
+int QUEUE_Size(Queue* q)
 {
 	return q->size;
 }
 
-int QUEUE_isEmpty(Queue* q)
+int QUEUE_IsEmpty(Queue* q)
 {
 	return (q->size == 0);
 }
 
-Queue* QUEUE_create(void)
+Queue* QUEUE_Create(void)
 {
 	Queue* newQ = (Queue*)malloc(sizeof(Queue));
-	QUEUE_init(newQ);
+	QUEUE_Init(newQ);
 	return newQ;
 }
 
-void QUEUE_destroy(Queue** q)
+void QUEUE_Destroy(Queue** q)
 {
-	QUEUE_deinit(*q);
+	QUEUE_Deinit(*q);
 	free(*(void**)q);
 	*q = NULL;
 }
@@ -263,7 +263,7 @@ void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr)
 	if ((*q_ptr) == NULL)
 		return; // invalid pointer
 		
-	if ( QUEUE_isEmpty(q) )
+	if ( QUEUE_IsEmpty(q) )
 	{
 		*q_ptr = NULL;
 		return; // empty case where q front and back are NULL
@@ -305,10 +305,10 @@ void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr)
  *//*
 void QUEUE_PointerDecrement(Queue* q, QueueElement** q_ptr)
 {
-	if ( QUEUE_isEmpty(q) )
+	if ( QUEUE_IsEmpty(q) )
 		return; // empty case where q front and back are NULL
 
-	if ( QUEUE_size(q) == 1 )
+	if ( QUEUE_Size(q) == 1 )
 		return; // case where can't decrement, and both q->front == q->back
 
 	if ( (*q_ptr) == q->front )
@@ -337,32 +337,32 @@ QueueElement* QUEUE_BackPtr(Queue* q)
 
 #if UNITTEST_MODE == 1
 #include "unittest.h"
-void QUEUE_unitTest(void)
+void QUEUE_UnitTest(void)
 {
 	int count = 1;
 
 	printf("Starting unit-tests on QUEUE\n");
 	printf("Using %s\n", LINKED_QUEUE_MODE ? "Linked Queue": "Circular Queue");
 
-	Queue* q = QUEUE_create();
+	Queue* q = QUEUE_Create();
 	TEST(count, "Verify initial queue front", q->front == NULL);
 	TEST(count, "Verify initial queue back", q->back == NULL);
 
-	TEST(count, "Verify empty queue size",QUEUE_size(q) == 0);
-	TEST(count, "Verify isEmpty returns true", QUEUE_isEmpty(q) >= 1);
+	TEST(count, "Verify empty queue size",QUEUE_Size(q) == 0);
+	TEST(count, "Verify isEmpty returns true", QUEUE_IsEmpty(q) >= 1);
 
-	QueueElement test_elem = QUEUE_dequeue(q);
+	QueueElement test_elem = QUEUE_Dequeue(q);
 	TEST(count, "Verify dequeueing empty queue returns default", test_elem.item == 0);
 
-	test_elem = QUEUE_peak(q);
+	test_elem = QUEUE_Peak(q);
 	TEST(count, "Verify peak on empty queue returns default", test_elem.item == 0);
 
 	QueueElement test_elem_1 = {
 		.item = 1,
 	};
 
-	QUEUE_enqueue(q, test_elem_1);
-	TEST(count, "Verify size after enqueue",QUEUE_size(q) == 1);
+	QUEUE_Enqueue(q, test_elem_1);
+	TEST(count, "Verify size after enqueue",QUEUE_Size(q) == 1);
 
 	QueueElement test_elem_2 = {
 		.item = 2,
@@ -372,41 +372,41 @@ void QUEUE_unitTest(void)
 		.item = 3,
 	};
 
-	QUEUE_enqueue(q, test_elem_2);
-	QUEUE_enqueue(q, test_elem_2);
+	QUEUE_Enqueue(q, test_elem_2);
+	QUEUE_Enqueue(q, test_elem_2);
 
-	test_elem = QUEUE_dequeue(q);
+	test_elem = QUEUE_Dequeue(q);
 	TEST(count, "Verify dequeue order correct", test_elem.item == 1);
 
-	test_elem = QUEUE_peak(q);
+	test_elem = QUEUE_Peak(q);
 	TEST(count, "Verify peak order correct", test_elem.item == 2);
 
-	QUEUE_deinit(q);
+	QUEUE_Deinit(q);
 	TEST(count, "Verify deinit", q->front == NULL);
 	TEST(count, "Verify deinit", q->back == NULL);
 
 	#if MODE_ENABLED(CIRCULAR_QUEUE_MODE)
 
-	QUEUE_init(q);
+	QUEUE_Init(q);
 	for(int i = 0; i < CIRCULAR_QUEUE_INIT_SIZE; i++)
-	QUEUE_enqueue(q, (QueueElement){ .item = i });
+	QUEUE_Enqueue(q, (QueueElement){ .item = i });
 	for(int i = 0; i < CIRCULAR_QUEUE_INIT_SIZE/2; i++)
-	QUEUE_dequeue(q);
+	QUEUE_Dequeue(q);
 
 	TEST(count, "Check that circular wrapping works", q->size == 25);
-	TEST(count, "Check that circular wrapping works", QUEUE_peak(q).item == 25);
+	TEST(count, "Check that circular wrapping works", QUEUE_Peak(q).item == 25);
 	TEST(count, "Check that circular wrapping works", (q->front == q->array_start + CIRCULAR_QUEUE_INIT_SIZE/2));
 	TEST(count, "Check that circular wrapping works", q->back == q->array_end);
 
 	for(int i = CIRCULAR_QUEUE_INIT_SIZE; i < CIRCULAR_QUEUE_INIT_SIZE*3/2; i++)
-	QUEUE_enqueue(q, (QueueElement){ .item = i });
+	QUEUE_Enqueue(q, (QueueElement){ .item = i });
 
 	TEST(count, "Check that circular wrapping works", q->size == CIRCULAR_QUEUE_INIT_SIZE);
 	TEST(count, "Check that circular wrapping works", q->back == q->array_start + CIRCULAR_QUEUE_INIT_SIZE/2 - 1);
 	TEST(count, "Check that circular wrapping works", q->back->item == CIRCULAR_QUEUE_INIT_SIZE*3/2 -1);
 
 	for (int i = CIRCULAR_QUEUE_INIT_SIZE*3/2; i < 2*CIRCULAR_QUEUE_INIT_SIZE; i++)
-	QUEUE_enqueue(q, (QueueElement){ .item = i });
+	QUEUE_Enqueue(q, (QueueElement){ .item = i });
 	
 
 	TEST(count, "Check that queue enlargement works", q->size == 3*CIRCULAR_QUEUE_INIT_SIZE/2);
@@ -417,12 +417,12 @@ void QUEUE_unitTest(void)
 
 	for (int i = 0; i < q->size; i++)
 	{
-		TEST(count, "Verify queue enlargement preserved order", QUEUE_dequeue(q).item == i + 25);
+		TEST(count, "Verify queue enlargement preserved order", QUEUE_Dequeue(q).item == i + 25);
 	}
 
 	#endif // circular queue mode
 
-	QUEUE_destroy(&q);
+	QUEUE_Destroy(&q);
 	TEST(count, "Check that destroy works", q == NULL);
 
 }

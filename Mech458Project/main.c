@@ -129,8 +129,8 @@ void Initialize()
 	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
 	BUTTON_Init(&rampDownButton, RAMPDOWN_BUTTON);
 	
-	readyQueue = QUEUE_create();
-	processQueue = QUEUE_create();
+	readyQueue = QUEUE_Create();
+	processQueue = QUEUE_Create();
 	
 	DDRD |= 0xF0;
 	PORTD = (PORTD & 0x0F);
@@ -156,7 +156,7 @@ ISR(INT1_vect)
 		new_elem.counter = ++(ItemStats.totalCount);
 		// initialize like this so that if no ferro interrupt flips then we are good
 		new_elem.isFerroMag = false;
-		QUEUE_enqueue(processQueue, new_elem);
+		QUEUE_Enqueue(processQueue, new_elem);
 	}
 }
 
@@ -186,13 +186,13 @@ ISR(INT2_vect)
 		//LED_toggle(&led,3);
 		
 		//move item from the "process Queue" to the "ready Queue"
-		if (!QUEUE_isEmpty(processQueue))
+		if (!QUEUE_IsEmpty(processQueue))
 		{
-			QueueElement processedItem = QUEUE_dequeue(processQueue);
+			QueueElement processedItem = QUEUE_Dequeue(processQueue);
 			//add reflectivity for now -- calculate class here!
 			processedItem.reflectivity = Stage2.minReflectivity;
 			Stage2.minReflectivity = MAX_ADC_VAL;
-			QUEUE_enqueue(readyQueue, processedItem);
+			QUEUE_Enqueue(readyQueue, processedItem);
 		}
 	}
 }
@@ -207,9 +207,9 @@ ISR(INT0_vect)
 		DCMOTOR_Brake(&belt);
 		// even if the interrupt is not spurious and we know there is an item
 		// verify there is a queued item
-		if(!QUEUE_isEmpty(readyQueue))
+		if(!QUEUE_IsEmpty(readyQueue))
 		{
-			QueueElement dropItem = QUEUE_dequeue(readyQueue);
+			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 			LED_set(&led, (uint8_t)((dropItem.reflectivity) >> 2));
 			//uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
 			//uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);

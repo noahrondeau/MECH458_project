@@ -68,18 +68,18 @@ typedef volatile struct Queue
 
 /* ====== Method Definitions ====== */
 
-// QUEUE_dequeue and QUEUE_peak only return valid elements
-// if they are not empty. USE QUEUE_isEmpty or QUEUE_size first!!!
+// QUEUE_Dequeue and QUEUE_Peak only return valid elements
+// if they are not empty. USE QUEUE_IsEmpty or QUEUE_Size first!!!
 
-void QUEUE_init(Queue* q);
-void QUEUE_deinit(Queue* q);
-void QUEUE_enqueue(Queue* q, QueueElement elem);
-QueueElement QUEUE_dequeue(Queue* q);
-QueueElement QUEUE_peak(Queue* q);
-int QUEUE_size(Queue* q);
-int QUEUE_isEmpty(Queue* q);
-Queue* QUEUE_create(void);
-void QUEUE_destroy(Queue** q);
+void QUEUE_Init(Queue* q);
+void QUEUE_Deinit(Queue* q);
+void QUEUE_Enqueue(Queue* q, QueueElement elem);
+QueueElement QUEUE_Dequeue(Queue* q);
+QueueElement QUEUE_Peak(Queue* q);
+int QUEUE_Size(Queue* q);
+int QUEUE_IsEmpty(Queue* q);
+Queue* QUEUE_Create(void);
+void QUEUE_Destroy(Queue** q);
 //void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr);
 //void QUEUE_PointerDecrement(Queue* q, QueueElement** q_ptr);
 QueueElement* QUEUE_BackPtr(Queue* q);
@@ -87,7 +87,7 @@ QueueElement* QUEUE_BackPtr(Queue* q);
 
 #if MODE_ENABLED(UNITTEST_MODE)
 #include "unittest.h"
-void QUEUE_unitTest(void);
+void QUEUE_UnitTest(void);
 #endif
 
 
