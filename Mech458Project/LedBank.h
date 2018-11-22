@@ -17,7 +17,8 @@ void LED_Init();
 void LED_On(uint8_t led);
 void LED_Off(uint8_t led);
 void LED_Toggle(uint8_t led);
-void LED_Set(uint8_t seq);
+void LED_Set(uint16_t seq);
+void LED_SetBottom8(uint8_t seq);
 
 
 

@@ -135,9 +135,6 @@ void Initialize()
 	readyQueue = QUEUE_Create();
 	processQueue = QUEUE_Create();
 	
-	DDRD |= 0xF0;
-	PORTD = (PORTD & 0x0F);
-	
 	// ====== INIT CODE END   ======
 	sei(); // turn on interrupts
 }
@@ -238,10 +235,7 @@ ISR(INT0_vect)
 		if(!QUEUE_IsEmpty(readyQueue))
 		{
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_Set( (uint8_t)((dropItem.reflectivity) & 0x00FF));
-			uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
-			uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
-			PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
+			LED_Set(dropItem.reflectivity);
 			
 			TIMER1_DelayMs(1000);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);

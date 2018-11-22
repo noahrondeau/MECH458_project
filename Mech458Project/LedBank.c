@@ -9,26 +9,53 @@
 
 void LED_Init()
 {	
-	DDRC = 0xFF;
+	DDRC |= 0xFF;
 	PORTC = 0x00;
+	
+	DDRD |= 0xF0; // LOWER FOUR BITS OF DDRD MUST BE INPUTS (0)!!!
+	PORTD &= 0x0F; // NEVER WRITE 1s to lower 4 bits of PORTD
 }
 
 void LED_On(uint8_t led)
 {
-	PORTC |= (uint8_t)((uint8_t)(1) << led); 
+	if( led < 8 )// led is in lower 8 on port C
+		PORTC |= (uint8_t)((uint8_t)(1) << led);
+	else if ( led == 8 )
+		PORTD |= (((uint8_t)(1)) << 5);
+	else if ( led == 9 )
+		PORTD |= (((uint8_t)(1)) << 7);
 }
 
 void LED_Off(uint8_t led)
 {
-	PORTC &= ~((uint8_t)((uint8_t)(1) << led));
+	if (led < 8 )
+		PORTC &= ~((uint8_t)((uint8_t)(1) << led));
+	else if ( led == 8 )
+		PORTD &= ~(((uint8_t)(1)) << 5);
+	else if (led == 9)
+		PORTD &= ~(((uint8_t)(1)) << 7);
 }
 
 void LED_Toggle(uint8_t led)
 {
-	PORTC ^= (uint8_t)(((uint8_t)1) << led);
+	if (led < 8)
+		PORTC ^= (uint8_t)(((uint8_t)1) << led);
+	else if (led == 8)
+		PORTD ^= (((uint8_t)(1)) << 5);
+	else if (led == 9)
+		PORTD ^= (((uint8_t)(1)) << 7);
+		
 }
 
-void LED_Set(uint8_t seq)
+void LED_Set(uint16_t seq)
 {
-	PORTC = seq;	
+	PORTC = (uint8_t)(seq & 0x00FF);	
+	uint8_t MSB0 = ((uint8_t)((seq & 0xFF00) >> 8) & 0x01);
+	uint8_t MSB1 = ((uint8_t)((seq & 0xFF00) >> 9) & 0x01);
+	PORTD = (PORTD & 0x0F) | (MSB0 << 5) | (MSB1 << 7);
+}
+
+void LED_SetBottom8(uint8_t seq)
+{
+	PORTC = seq;
 }
