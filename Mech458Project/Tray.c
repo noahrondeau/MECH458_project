@@ -49,7 +49,7 @@ void TRAY_Home(Tray* tray)
 	
 }
 
-void Tray_Rotate90(Tray* tray, MotorDirection dir){
+void TRAY_Rotate90(Tray* tray, MotorDirection dir){
 	if(dir == CW){
 		for(int i = 0; i<50; i++)
 		{
@@ -67,10 +67,11 @@ void Tray_Rotate90(Tray* tray, MotorDirection dir){
 	}
 }
 
-void Tray_Rotate180(Tray* tray){
+void TRAY_Rotate180(Tray* tray){
 	for(int i = 0; i<100; i++)
 	{
 		STEPPER_StepCW(&(tray->stepper));
 		TIMER1_DelayMs(20);
 	}
 }
+
