@@ -22,7 +22,7 @@
 
 // @name:	StepperMotor
 // @brief:	Represents a stepper motor
-typedef struct StepperMotor
+typedef volatile struct StepperMotor
 {
 	unsigned char commutation_steps[NUM_COMMUTATION_STEPS];
 	int step_index;
