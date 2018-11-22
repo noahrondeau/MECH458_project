@@ -7,43 +7,28 @@
 
 #include "LedBank.h"
 
-void LED_Init(LedBank* ledBank)
-{
-	for ( uint8_t i = 0; i < LED_BANK_LEN; i++)
-	{
-		ledBank->ledStatus[i] = false;
-		ledBank->ledMask[i] = (uint8_t)((uint8_t)(1) << i); 
-	}
-	
+void LED_Init()
+{	
 	DDRC = 0xFF;
 	PORTC = 0x00;
 }
 
-void LED_on(LedBank* ledBank, uint8_t led)
+void LED_On(uint8_t led)
 {
-	ledBank->ledStatus[led] = true;
-	PORTC |= ledBank->ledMask[led];
+	PORTC |= (uint8_t)((uint8_t)(1) << led); 
 }
 
-void LED_off(LedBank* ledBank, uint8_t led)
+void LED_Off(uint8_t led)
 {
-	ledBank->ledStatus[led] = false;
-	PORTC &= ~(ledBank->ledMask[led]);
+	PORTC &= ~((uint8_t)((uint8_t)(1) << led));
 }
 
-void LED_toggle(LedBank* ledBank, uint8_t led)
+void LED_Toggle(uint8_t led)
 {
-	if (ledBank->ledStatus[led] == false)
-		LED_on(ledBank, led);
-	else
-		LED_off(ledBank, led);
+	PORTC ^= (uint8_t)(((uint8_t)1) << led);
 }
 
-void LED_set(LedBank* ledBank, uint8_t seq)
+void LED_Set(uint8_t seq)
 {
-	for(uint8_t i = 0; i < LED_BANK_LEN; i++)
-	{
-		ledBank->ledStatus[i] = (0b00000001 & (seq >> i));
-	}
 	PORTC = seq;	
 }

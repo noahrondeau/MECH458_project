@@ -30,7 +30,6 @@ ItemClass Classify(QueueElement elem);
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
 // all these types are typedef'd as volatile, don't need to repeat here
-LedBank			led;
 DcMotor			belt;
 ADCHandle		adc;
 FerroSensor		ferro;
@@ -79,7 +78,7 @@ int main()
 	TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
-
+	
 	// main loop
 	while(true)
 	{	
@@ -87,7 +86,7 @@ int main()
 		{
 		case RUN_STATE:
 			{
-				// HELLLO GIT!!!!!
+				
 			}
 			break;
 			
@@ -119,7 +118,7 @@ void Initialize()
 	EICRB = 0x00;
 	// ====== INIT CODE START ======
 	SYSCLK_Init();
-	LED_Init(&led);
+	LED_Init();
 	TIMER1_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
@@ -177,7 +176,7 @@ ISR(INT1_vect)
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
 	{	
-		//LED_toggle(&led, 0);
+		//LED_Toggle( 0);
 		
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
@@ -194,7 +193,7 @@ ISR(INT3_vect)
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
 	{
-		//LED_toggle(&led, 1);
+		//LED_Toggle( 1);
 		QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	}
 }
@@ -206,12 +205,12 @@ ISR(INT2_vect)
 	
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
-		//LED_toggle(&led, 2);
+		//LED_Toggle( 2);
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
 	{
-		//LED_toggle(&led,3);
+		//LED_Toggle(3);
 		
 		//move item from the "process Queue", classify, and move to the "ready" Queue
 		if (!QUEUE_IsEmpty(processQueue))
@@ -229,7 +228,7 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-	//LED_toggle(&led, 4);
+	//LED_Toggle( 4);
 	// poll sensor to verify interrupt was not spurious
 	if(OPTICAL_IsBlocked(&exit_optic))
 	{
@@ -239,7 +238,7 @@ ISR(INT0_vect)
 		if(!QUEUE_IsEmpty(readyQueue))
 		{
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_set(&led, (uint8_t)((dropItem.reflectivity) & 0x00FF));
+			LED_Set( (uint8_t)((dropItem.reflectivity) & 0x00FF));
 			uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
 			uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
 			PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
@@ -264,7 +263,7 @@ ISR(INT6_vect)
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
 	TIMER3_DelayMs(20);
-	LED_toggle(&led, 6);
+	LED_Toggle( 6);
 	TIMER3_DelayMs(20);
 }
 
@@ -275,14 +274,14 @@ ISR(INT7_vect)
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
 	TIMER3_DelayMs(20);
-	LED_toggle(&led, 7);
+	LED_Toggle( 7);
 	TIMER3_DelayMs(20);
 }
 
 ISR(ADC_vect)
 {
 	ADC_ReadConversion(&adc);
-	//LED_set(&led, (uint8_t)((adc.result) >> 2));
+	//LED_Set( (uint8_t)((adc.result) >> 2));
 	if (adc.result < Stage2.minReflectivity)
 		Stage2.minReflectivity = adc.result;
 	
@@ -294,7 +293,7 @@ ISR(ADC_vect)
 ISR(TIMER3_COMPB_vect)
 {
 	
-	LED_toggle(&led,1);
+	LED_Toggle(1);
 	TCNT3 = 0x0000;			//reset counter
 	TIFR3 |= _BV(OCF3B);	//Clear interrupt flag begin counting
 	
@@ -306,9 +305,9 @@ ISR(BADISR_vect)
 {
 	while(1)
 	{
-		LED_set(&led, 0b01010101);
+		LED_Set( 0b01010101);
 		TIMER1_DelayMs(500);
-		LED_set(&led, 0b10101010);
+		LED_Set( 0b10101010);
 		TIMER1_DelayMs(500);
 	}
 }
