@@ -19,6 +19,7 @@
 #include "Timer.h"
 #include "PushButton.h"
 #include "Queue.h"
+#include "Tray.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
 
@@ -32,12 +33,12 @@ LedBank			led;
 DcMotor			belt;
 ADCHandle		adc;
 FerroSensor		ferro;
-HallSensor		hall;
 OpticalSensor	s1_optic;
 OpticalSensor	s2_optic;
 OpticalSensor	exit_optic;
 PushButton		pauseButton;
 PushButton		rampDownButton;
+Tray			tray;
 
 FsmState fsmState = {
 	.state = RUN_STATE,
@@ -74,6 +75,7 @@ volatile struct {
 int main()
 {
 	Initialize();
+	TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 
@@ -122,12 +124,13 @@ void Initialize()
 	DCMOTOR_Init(&belt);
 	ADC_Init();
 	FERRO_Init(&ferro);
-	HALL_Init(&hall);
 	OPTICAL_Init(&s1_optic,S1_OPTICAL);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
 	OPTICAL_Init(&exit_optic,EXIT_OPTICAL);
 	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
 	BUTTON_Init(&rampDownButton, RAMPDOWN_BUTTON);
+	TRAY_Init(&tray);
+	
 	
 	readyQueue = QUEUE_Create();
 	processQueue = QUEUE_Create();

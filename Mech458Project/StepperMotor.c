@@ -11,7 +11,7 @@
 #include "StepperMotor.h"
 
 
-void STEPPER_init(StepperMotor* motor)
+void STEPPER_Init(StepperMotor* motor)
 {
 	//rotating tray motor defs
 	motor->commutation_steps[0] = STEP0;

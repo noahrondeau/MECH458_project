@@ -146,9 +146,9 @@ typedef volatile struct FsmState
 typedef enum ItemClass
 {
 	UNCLASSIFIED,
-	WHITE_PLASTIC,
-	BLACK_PLASTIC,
-	STEEL,
-	ALUMINIUM,
+	WHITE_PLASTIC = 50,
+	BLACK_PLASTIC = 150,
+	STEEL = 0,
+	ALUMINIUM = 100,
 }ItemClass;
 #endif /* CONFIG_H_ */

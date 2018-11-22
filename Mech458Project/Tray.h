@@ -13,15 +13,22 @@
 #include "HallSensor.h"
 #include "StepperMotor.h"
 
+
 typedef volatile struct Tray
 {
 	uint8_t currentPos;
 	uint8_t targetPos;
+	ItemClass beltPos;
 	HallSensor hall;
 	StepperMotor stepper;
 } Tray;
 
 void TRAY_Init(Tray* tray);
 void TRAY_Home(Tray* tray);
+
+void Tray_Rotate90(Tray* tray, MotorDirection dir);
+void Tray_Rotate180(Tray* tray);
+
+
 
 #endif /* TRAY_H_ */
