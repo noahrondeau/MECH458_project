@@ -22,8 +22,14 @@ void ADC_Init(ADCHandle* adc)
 	ADMUX |= _BV(REFS0); //sets to use refrence voltage with capacitor
 	//sets adc to channel 1: reflective sensor, Input PORTF1 
 	ADMUX |= _BV(MUX0); 
-	// initialize the ADC, start one conversion at the beginning ==========
-
+	// initialize the ADC, start one conversion at the beginning
+	ADC_StartConversion(adc);
+	// wait because no interupts are enabled yet -- first conversion takes 25 clock cycles
+	TIMER1_DelayMs(1);
+	// poll for conversion value
+	ADC_ReadConversion(adc);
+	// clear useless conversion result
+	adc->result = 0;
 	adc->result_finished = false;
 }
 
