@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "SysClk.h"
 
-void Sys_Clk_Init(/*unsigned char prescaler*/){
+void SYSCLK_Init(/*unsigned char prescaler*/){
 
 	// set CLKPR bit to change clock prescaler
 	CLKPR = (1<<CLKPCE);

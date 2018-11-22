@@ -11,6 +11,6 @@
 
 #include "config.h"
 
-void Sys_Clk_Init();
+void SYSCLK_Init();
 
 #endif /* SYSCLK_H_ */

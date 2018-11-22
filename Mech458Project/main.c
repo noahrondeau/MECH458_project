@@ -115,7 +115,7 @@ void Initialize()
 	EICRA = 0x00;
 	EICRB = 0x00;
 	// ====== INIT CODE START ======
-	Sys_Clk_Init();
+	SYSCLK_Init();
 	LED_Init(&led);
 	TIMER1_DelayInit();
 	TIMER3_DelayInit();
