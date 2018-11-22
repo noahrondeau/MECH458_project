@@ -25,6 +25,7 @@
 
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
+ItemClass Classify(QueueElement elem);
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -52,7 +53,7 @@ Queue* processQueue;
 volatile struct {
 	uint16_t minReflectivity;
 } Stage2 = {
-	.minReflectivity = MAX_ADC_VAL,
+	.minReflectivity = LARGEST_UINT16_T,
 };
 
 volatile struct {
@@ -142,6 +143,30 @@ void Initialize()
 	sei(); // turn on interrupts
 }
 
+ItemClass Classify(QueueElement elem)
+{
+	// for now, if the item falls within one of the ranges, we classify it
+	// as the material corresponding to that range.
+	// this will have to be improved upon, since overlap can occur
+	
+	if		(	elem.reflectivity >= MIN_ALUMINIUM_VAL
+				&& elem.reflectivity <= MAX_ALUMINIUM_VAL )
+		return ALUMINIUM;
+		 
+	else if (	elem.reflectivity >= MIN_STEEL_VAL
+				&& elem.reflectivity <= MAX_STEEL_VAL )
+		return  STEEL;
+	
+	else if (	elem.reflectivity >= MIN_WHITE_PLASTIC_VAL
+				&& elem.reflectivity <= MAX_WHITE_PLASTIC_VAL )
+		return  WHITE_PLASTIC;
+	
+	else if (	elem.reflectivity >= MIN_BLACK_PLASTIC_VAL
+				&& elem.reflectivity <= MAX_BLACK_PLASTIC_VAL )
+		return  BLACK_PLASTIC;
+	else
+		return UNCLASSIFIED; // this should never be reached
+}
 
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
 
@@ -188,13 +213,14 @@ ISR(INT2_vect)
 	{
 		//LED_toggle(&led,3);
 		
-		//move item from the "process Queue" to the "ready Queue"
+		//move item from the "process Queue", classify, and move to the "ready" Queue
 		if (!QUEUE_IsEmpty(processQueue))
 		{
 			QueueElement processedItem = QUEUE_Dequeue(processQueue);
-			//add reflectivity for now -- calculate class here!
 			processedItem.reflectivity = Stage2.minReflectivity;
-			Stage2.minReflectivity = MAX_ADC_VAL;
+			Stage2.minReflectivity = LARGEST_UINT16_T; // reset sensor stage default reflectivity
+			
+			processedItem.class = Classify(processedItem);
 			QUEUE_Enqueue(readyQueue, processedItem);
 		}
 	}
@@ -213,13 +239,12 @@ ISR(INT0_vect)
 		if(!QUEUE_IsEmpty(readyQueue))
 		{
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_set(&led, (uint8_t)((dropItem.reflectivity) >> 2));
-			//uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
-			//uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
-			//PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
+			LED_set(&led, (uint8_t)((dropItem.reflectivity) & 0x00FF));
+			uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
+			uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
+			PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
 			
 			TIMER1_DelayMs(1000);
-			LED_set(&led, 0x00);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 		}
 	}

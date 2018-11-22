@@ -119,7 +119,19 @@ typedef volatile uint8_t  GPIOMask;
 
 /* ====== RL SENSOR CONFIGS ====== */
 
-#define MAX_ADC_VAL (1024)
+#define LARGEST_UINT16_T ((uint16_t)(0xFFFF))
+
+#define MIN_ALUMINIUM_VAL		(0)
+#define MAX_ALUMINIUM_VAL		(255)
+
+#define MIN_STEEL_VAL			(256)
+#define MAX_STEEL_VAL			(511)
+
+#define MIN_WHITE_PLASTIC_VAL	(512)
+#define MAX_WHITE_PLASTIC_VAL	(767)
+
+#define MIN_BLACK_PLASTIC_VAL	(768)
+#define MAX_BLACK_PLASTIC_VAL	(1023)
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 
@@ -146,9 +158,10 @@ typedef volatile struct FsmState
 typedef enum ItemClass
 {
 	UNCLASSIFIED,
-	WHITE_PLASTIC = 50,
-	BLACK_PLASTIC = 150,
 	STEEL = 0,
+	WHITE_PLASTIC = 50,
 	ALUMINIUM = 100,
+	BLACK_PLASTIC = 150,
 }ItemClass;
+
 #endif /* CONFIG_H_ */
