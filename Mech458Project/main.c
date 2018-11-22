@@ -241,14 +241,15 @@ ISR(INT0_vect)
 		}
 		else if(tray.beltPos != QUEUE_Peak(readyQueue).class)
 		{
+			
+			DCMOTOR_Brake(&belt);
+			
 			if(!QUEUE_IsEmpty(readyQueue))
 			{
-				DCMOTOR_Brake(&belt);
 				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 				TRAY_Sort(&tray, &dropItem);
 				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-			}
-
+			}			
 		}
 	}
 
