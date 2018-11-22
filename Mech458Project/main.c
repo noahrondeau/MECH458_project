@@ -77,7 +77,7 @@ int main()
 	Initialize();
 	TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
-	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 
 	
 	// main loop
@@ -206,7 +206,7 @@ ISR(INT0_vect)
 {
 	//LED_toggle(&led, 4);
 	// poll sensor to verify interrupt was not spurious
-	if(OPTICAL_IsBlocked(&exit_optic))
+/*	if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		DCMOTOR_Brake(&belt);
 		// even if the interrupt is not spurious and we know there is an item
@@ -215,6 +215,11 @@ ISR(INT0_vect)
 		{
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 			LED_set(&led, (uint8_t)((dropItem.reflectivity) >> 2));
+			
+			//Testing sort using hard set values
+			dropItem.class = STEEL;	
+			TRAY_Sort(&tray,dropItem);
+						
 			//uint8_t MSB1 = (uint8_t)((dropItem.reflectivity >> 9) << 7);
 			//uint8_t MSB0 = (uint8_t)(((dropItem.reflectivity >> 8) & 0b00000001) << 5);
 			//PORTD = (PORTD & 0x0F) | MSB1 | MSB0;
@@ -223,7 +228,30 @@ ISR(INT0_vect)
 			LED_set(&led, 0x00);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 		}
+	}*/
+	if(OPTICAL_IsBlocked(&exit_optic))
+	{
+		if(tray.beltPos == QUEUE_Peak(readyQueue).class)
+		{
+			if(!QUEUE_IsEmpty(readyQueue))
+			{
+				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+				TRAY_Sort(&tray, &dropItem);
+			}
+		}
+		else if(tray.beltPos != QUEUE_Peak(readyQueue).class)
+		{
+			if(!QUEUE_IsEmpty(readyQueue))
+			{
+				DCMOTOR_Brake(&belt);
+				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+				TRAY_Sort(&tray, &dropItem);
+				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+			}
+
+		}
 	}
+
 }
 
 /*

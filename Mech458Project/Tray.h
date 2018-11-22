@@ -30,7 +30,7 @@ void TRAY_Home(Tray* tray);
 void TRAY_Rotate90(Tray* tray, MotorDirection dir);
 void TRAY_Rotate180(Tray* tray);
 
-void TRAY_Sort(Tray* tray, Queue* q);
+void TRAY_Sort(Tray* tray, QueueElement* q);
 
 
 #endif /* TRAY_H_ */
