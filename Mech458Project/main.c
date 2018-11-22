@@ -77,9 +77,14 @@ int main()
 	Initialize();
 	TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
-	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 
 	Tray_Rotate180(&tray);
+	TIMER1_DelayMs(2000);
+	Tray_Rotate90(&tray,CW);
+	TIMER1_DelayMs(2000);
+	Tray_Rotate90(&tray,CCW);
+	
 	// main loop
 	while(true)
 	{	
