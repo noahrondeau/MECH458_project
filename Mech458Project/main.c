@@ -75,11 +75,18 @@ volatile struct {
 int main()
 {
 	Initialize();
-	TRAY_Home(&tray);
+	//TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
-	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
-
+	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 	
+	for(int i = 0; i<10; i++)
+	{
+		STEPPER_StepCW(&(tray.stepper));
+		TIMER1_DelayMs(21-2*i);
+	}
+		
+		
+
 	// main loop
 	while(true)
 	{	
@@ -87,7 +94,8 @@ int main()
 		{
 		case RUN_STATE:
 			{
-				
+				STEPPER_StepCW(&(tray.stepper));
+				TIMER1_DelayMs(5);
 			}
 			break;
 			
