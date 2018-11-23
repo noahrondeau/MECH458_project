@@ -10,6 +10,7 @@
 #include "StepperMotor.h"
 #include "HallSensor.h"
 #include "Timer.h"
+#include "LedBank.h"
 
 void TRAY_Init(Tray* tray)
 {
@@ -33,6 +34,7 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCCW(&(tray->stepper));
 			TIMER1_DelayMs(20);	
 		}
+		STEPPER_StepCCW(&(tray->stepper));
 	}
 	else
 	{
@@ -43,6 +45,7 @@ void TRAY_Home(Tray* tray)
 		}
 	}
 	
+	tray->currentPos = 0;
 	tray->beltPos = BLACK_PLASTIC;
 		
 		
@@ -79,33 +82,58 @@ void TRAY_Sort(Tray* tray, QueueElement* q){
 	tray->targetPos = q->class;
 	
 	switch ((tray->targetPos) - (tray->beltPos)){
-		case 0:
+		case (0):
+		{
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		case (50):
+		{
+			TRAY_Rotate90(tray,CCW);
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		case (100):
+		{
+			TRAY_Rotate180(tray);
 			tray->beltPos = tray->targetPos;
 			break;
-		case 50:
-			TRAY_Rotate90(&tray,CCW);
-			tray->beltPos = tray->targetPos;
-			break;
-		case 100:
-			TRAY_Rotate180(&tray);
-			tray->beltPos = tray->targetPos;
-			break;
-		case 150:
-			TRAY_Rotate90(&tray,CW);
+		}
+		case (150):
+		{
+			TRAY_Rotate90(tray,CW);
 			tray->beltPos = tray->targetPos;		
 			break;
-		case -50:
-			TRAY_Rotate90(&tray,CW);
+		}
+		case (-50):
+		{
+			TRAY_Rotate90(tray,CW);
 			tray->beltPos = tray->targetPos;
 			break;
-		case -100:
-			TRAY_Rotate180(&tray);
-			tray->beltPos = tray->targetPos;		
-			break;
-		case -150:
-			TRAY_Rotate90(&tray,CCW);
+		}
+		case (-100):
+		{
+			TRAY_Rotate180(tray);
 			tray->beltPos = tray->targetPos;
-			break;					
+		}
+			break;
+		case (-150):
+		{
+			TRAY_Rotate90(tray,CCW);
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		default:
+		{
+			while(1)
+			{
+				PORTC = 0b01010101;
+				TIMER1_DelayMs(500);
+				PORTC = 0b10101010;
+				TIMER1_DelayMs(500);
+			}
+		}
+			break;			
 	}
 	
 }

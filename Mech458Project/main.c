@@ -229,6 +229,25 @@ ISR(INT0_vect)
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 		}
 	}*/
+
+
+	//test 1:
+	//readyQueue->front->class = tray.beltPos;
+	
+	//test 2:
+	//readyQueue->front->class = STEEL;
+	
+	//test 3:
+	//readyQueue->front->class = ALUMINIUM;
+	
+	//test 4:
+	//readyQueue->front->class = BLACK_PLASTIC;
+	
+	//test 5:
+	readyQueue->front->class = WHITE_PLASTIC;
+
+
+
 	if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		if(tray.beltPos == QUEUE_Peak(readyQueue).class)
