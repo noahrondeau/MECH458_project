@@ -244,9 +244,45 @@ ISR(INT0_vect)
 	//readyQueue->front->class = BLACK_PLASTIC;
 	
 	//test 5:
-	readyQueue->front->class = WHITE_PLASTIC;
-
-
+	//readyQueue->front->class = WHITE_PLASTIC;
+	
+	//Random test
+	switch (rand()%4)
+	{
+		case 0:
+			readyQueue->front->class = WHITE_PLASTIC;
+			LED_toggle(&led,0);
+			break;
+		case 1:
+			readyQueue->front->class = STEEL;
+			LED_toggle(&led,1);
+			break;
+		case 2:
+			readyQueue->front->class = ALUMINIUM;
+			LED_toggle(&led,2);
+			break;
+		case 3:
+			readyQueue->front->class = BLACK_PLASTIC;
+			LED_toggle(&led,3);
+			break;						
+	}
+	
+	//LED Toggle for current Belt Position
+	switch (tray.beltPos)
+	{
+		case WHITE_PLASTIC:
+			LED_toggle(&led,4);
+			break;
+		case STEEL:
+			LED_toggle(&led,5);
+			break;
+		case ALUMINIUM:
+			LED_toggle(&led,6);
+			break;
+		case BLACK_PLASTIC:
+			LED_toggle(&led,7);
+		break;
+	}
 
 	if(OPTICAL_IsBlocked(&exit_optic))
 	{
@@ -271,6 +307,8 @@ ISR(INT0_vect)
 			}			
 		}
 	}
+	
+	LED_set(&led,0x00);
 
 }
 

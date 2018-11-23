@@ -123,9 +123,9 @@ void TRAY_Sort(Tray* tray, QueueElement* q){
 			tray->beltPos = tray->targetPos;
 		}
 			break;
-		default:
+		default: //should never reach here
 		{
-			while(1)
+			while(1) //signifies sorting error
 			{
 				PORTC = 0b01010101;
 				TIMER1_DelayMs(500);
