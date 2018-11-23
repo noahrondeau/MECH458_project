@@ -21,6 +21,7 @@ typedef struct QueueElement
 	unsigned int counter;
 	bool isFerroMag;
 	uint16_t reflectivity;
+	uint16_t sampleCount;
 	ItemClass class;
 } QueueElement;
 

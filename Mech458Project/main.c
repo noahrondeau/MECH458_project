@@ -29,6 +29,7 @@ ItemClass Classify(QueueElement elem);
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
+// system resource handles, includes both internal and external periphs
 // all these types are typedef'd as volatile, don't need to repeat here
 DcMotor			belt;
 ADCHandle		adc;
@@ -40,21 +41,28 @@ PushButton		pauseButton;
 PushButton		rampDownButton;
 Tray			tray;
 
+// State variable
 FsmState fsmState = {
 	.state = RUN_STATE,
 	.rampDownInitFlag = false,
 	.rampDownEndFlag = false,
 };
 
+// queue for items *already* processed
 Queue* readyQueue;
+// queue for items *being* processed
 Queue* processQueue;
 
+// sensor stage 2 stats singleton struct
 volatile struct {
 	uint16_t minReflectivity;
+	uint16_t sampleCount;
 } Stage2 = {
 	.minReflectivity = LARGEST_UINT16_T,
+	.sampleCount = 0,
 };
 
+// sorting stats singleton struct
 volatile struct {
 	unsigned int totalCount;
 	unsigned int blackPlasticCount;
@@ -117,6 +125,7 @@ void Initialize()
 	EICRA = 0x00;
 	EICRB = 0x00;
 	// ====== INIT CODE START ======
+	// Initialize all required resources and peripherals
 	SYSCLK_Init();
 	LED_Init();
 	TIMER1_DelayInit();
@@ -131,7 +140,7 @@ void Initialize()
 	BUTTON_Init(&rampDownButton, RAMPDOWN_BUTTON);
 	TRAY_Init(&tray);
 	
-	
+	// initialize both queues
 	readyQueue = QUEUE_Create();
 	processQueue = QUEUE_Create();
 	
@@ -203,6 +212,7 @@ ISR(INT2_vect)
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
 		//LED_Toggle( 2);
+		Stage2.sampleCount = 0; // reset sample counter
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
@@ -213,9 +223,15 @@ ISR(INT2_vect)
 		if (!QUEUE_IsEmpty(processQueue))
 		{
 			QueueElement processedItem = QUEUE_Dequeue(processQueue);
+			// store minimum reflectivity and sample count in item
 			processedItem.reflectivity = Stage2.minReflectivity;
-			Stage2.minReflectivity = LARGEST_UINT16_T; // reset sensor stage default reflectivity
+			processedItem.sampleCount = Stage2.sampleCount;
 			
+			// reset stage two stat values
+			Stage2.sampleCount = 0; // reset sample counter
+			Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
+			
+			//classify item and move to ready queue
 			processedItem.class = Classify(processedItem);
 			QUEUE_Enqueue(readyQueue, processedItem);
 		}
@@ -235,7 +251,7 @@ ISR(INT0_vect)
 		if(!QUEUE_IsEmpty(readyQueue))
 		{
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_Set(dropItem.reflectivity);
+			LED_Set(dropItem.sampleCount);
 			
 			TIMER1_DelayMs(1000);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
@@ -276,6 +292,8 @@ ISR(ADC_vect)
 {
 	ADC_ReadConversion(&adc);
 	//LED_Set( (uint8_t)((adc.result) >> 2));
+	Stage2.sampleCount++;
+	
 	if (adc.result < Stage2.minReflectivity)
 		Stage2.minReflectivity = adc.result;
 	

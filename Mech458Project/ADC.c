@@ -13,6 +13,8 @@ void ADC_Init(ADCHandle* adc)
 {
 	// config ADC
 	ADCSRA |= _BV(ADEN); // enable ADC
+	
+	// this should probably go at the end so no interrupt gets queued for the startup conversion
 	ADCSRA |= _BV(ADIE); // enable interrupt of ADC
 
 	//sets ADLAR 0 which makes ADCL 8bits read 1st ADCH 2 bits read 2nd
