@@ -213,6 +213,7 @@ ISR(INT2_vect)
 	{
 		//LED_Toggle( 2);
 		Stage2.sampleCount = 0; // reset sample counter
+		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge

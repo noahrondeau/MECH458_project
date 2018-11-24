@@ -143,10 +143,16 @@
     <Compile Include="FerroSensor.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Filter.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="HallSensor.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="HallSensor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Filter.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="LedBank.c">
