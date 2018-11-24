@@ -78,7 +78,8 @@ int main()
 	TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
 	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
-		
+	
+	int spins_90 = 0;
 
 	// main loop
 	while(true)
@@ -87,26 +88,33 @@ int main()
 		{
 		case RUN_STATE:
 			{
-				//0-15
-				for(int i=0; i<14; i++)
+				//0-11
+				for(int i=0; i<12; i++)
 				{
 					STEPPER_StepCW(&(tray.stepper));
-					TIMER1_DelayMs(21-1*i);
+					TIMER1_DelayMs(20-1*i);
 					tray.currentPos++;
 				}
-				//16-35
-				for(int i=0;  i<25; i++)
+				//12-37
+				for(int i=0;  i<26; i++)
 				{
 					STEPPER_StepCW(&(tray.stepper));
 					TIMER1_DelayMs(8);
 					tray.currentPos++;
 				}
-				//35-50
-				for(int i=0;  i<14; i++)
+				//38-49
+				for(int i=0;  i<12; i++)
 				{
 					STEPPER_StepCW(&(tray.stepper));
 					TIMER1_DelayMs(8+1*i);
 					tray.currentPos++;
+				}
+				spins_90++;
+				
+				if((spins_90)%4 == 0 && HALL_IsActive(&(tray.hall))){
+					LED_set(&led,0b10101010);
+					TIMER1_DelayMs(1000);
+					LED_set(&led,0);
 				}
 				
 				LED_set(&led,tray.currentPos);
