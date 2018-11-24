@@ -92,20 +92,28 @@ int main()
 				{
 					STEPPER_StepCW(&(tray.stepper));
 					TIMER1_DelayMs(21-1*i);
+					tray.currentPos++;
 				}
 				//16-35
 				for(int i=0;  i<25; i++)
 				{
 					STEPPER_StepCW(&(tray.stepper));
 					TIMER1_DelayMs(8);
+					tray.currentPos++;
 				}
 				//35-50
 				for(int i=0;  i<14; i++)
 				{
 					STEPPER_StepCW(&(tray.stepper));
 					TIMER1_DelayMs(8+1*i);
+					tray.currentPos++;
 				}
+				
+				LED_set(&led,tray.currentPos);
 				TIMER1_DelayMs(1000);
+				tray.currentPos = 0;
+				TIMER1_DelayMs(1000);
+				LED_set(&led,0);
 			}
 			break;
 			
