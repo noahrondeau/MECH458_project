@@ -133,7 +133,7 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_BLACK_PLASTIC_VAL	(768)
 #define MAX_BLACK_PLASTIC_VAL	(1023)
 
-// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1 rad/sample
+// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
 #define FILTER_NUMER_LEN		(4)
 #define FILTER_DENOM_LEN		(3)
 #define FILTER_NUMER_COEFFS		{0.0029, 0.0087, 0.0087, 0.0029}		
