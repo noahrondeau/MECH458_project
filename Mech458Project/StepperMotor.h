@@ -14,10 +14,10 @@
 #include "config.h"
 
 #define NUM_COMMUTATION_STEPS (4)
-#define STEP0 (0b110000)
-#define STEP1 (0b000110)
-#define STEP2 (0b101000)
-#define STEP3 (0b000101)
+#define STEP0 (0b110110)
+#define STEP1 (0b101110)
+#define STEP2 (0b101101)
+#define STEP3 (0b110101)
 
 
 // @name:	StepperMotor
