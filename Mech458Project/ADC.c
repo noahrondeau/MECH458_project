@@ -9,13 +9,16 @@
 #include "ADC.h"
 #include "Timer.h"
 
-void ADC_Init(ADCHandle* adc)
+void ADC_Init(ADCHandle* adc, ADCPrescale prescale)
 {
-	// config ADC
-	ADCSRA |= _BV(ADEN); // enable ADC
+	// enable ADC
+	ADCSRA |= _BV(ADEN);
 	
-	// this should probably go at the end so no interrupt gets queued for the startup conversion
-	ADCSRA |= _BV(ADIE); // enable interrupt of ADC
+	// sets the lower three bits in ADCSRA according to prescaling needs
+	// anything larger than 50 KHZ is ok, but ideally it needs to be as low as acceptable
+	// so that we don't waste CPU time on ISR for way more conversions than necessary
+	// ideally around 200 conversions would be nice
+	//ADCSRA = (ADCSRA & 0b11111000) | ((uint8_t)prescale);
 
 	//sets ADLAR 0 which makes ADCL 8bits read 1st ADCH 2 bits read 2nd
 	/* ADLAR = 0 sets the adc registers to the following:
@@ -27,12 +30,16 @@ void ADC_Init(ADCHandle* adc)
 	// initialize the ADC, start one conversion at the beginning
 	ADC_StartConversion(adc);
 	// wait because no interupts are enabled yet -- first conversion takes 25 clock cycles
-	TIMER1_DelayMs(1);
+	TIMER1_DelayMs(20);
 	// poll for conversion value
 	ADC_ReadConversion(adc);
 	// clear useless conversion result
 	adc->result = 0;
 	adc->result_finished = false;
+	
+	TIMER1_DelayMs(20);
+	// this should probably go at the end so no interrupt gets queued for the startup conversion
+	ADCSRA |= _BV(ADIE); // enable interrupt of ADC
 }
 
 void ADC_StartConversion(ADCHandle* adc)

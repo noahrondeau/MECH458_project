@@ -77,7 +77,7 @@ typedef volatile uint8_t  GPIOMask;
 #define DCMOTOR_PORTX			(PORTB_REG)
 #define DCMOTOR_DDRX			(DDRB_REG)
 
-#define DCMOTOR_SPEED			(125)
+#define DCMOTOR_SPEED			(60)
 
 /* ====== HALL SENSOR CONFIG ====== */
 
@@ -133,7 +133,7 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_BLACK_PLASTIC_VAL	(934)
 #define MAX_BLACK_PLASTIC_VAL	(982)
 
-// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
+		// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
 #define FILTER_NUMER_LEN		(4)
 #define FILTER_DENOM_LEN		(3)
 #define FILTER_NUMER_COEFFS		{0.0029, 0.0087, 0.0087, 0.0029}		

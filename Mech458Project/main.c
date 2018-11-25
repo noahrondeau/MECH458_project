@@ -135,7 +135,7 @@ void Initialize()
 	TIMER1_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
-	ADC_Init();
+	ADC_Init(&adc, ADC_PRESCALE_32);
 	FERRO_Init(&ferro);
 	OPTICAL_Init(&s1_optic,S1_OPTICAL);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
@@ -258,7 +258,8 @@ ISR(INT0_vect)
 		DCMOTOR_Brake(&belt);
 		if(!QUEUE_IsEmpty(readyQueue)){
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_Set(0x000);
+			LED_Set(dropItem.sampleCount);
+			/*
 			switch(dropItem.class)
 			{
 			case STEEL:
@@ -276,7 +277,7 @@ ISR(INT0_vect)
 			default: // UNCLASSIFIED
 				LED_SetBottom8(0xF0);
 				break;
-			}
+			}*/
 		
 			TIMER1_DelayMs(1000);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
@@ -315,21 +316,25 @@ ISR(INT7_vect)
 
 ISR(ADC_vect)
 {
-	ADC_ReadConversion(&adc);
-	//LED_Set( (uint8_t)((adc.result) >> 2));
-	Stage2.sampleCount++;
-	float f_filteredOutput = Filter(&adcFilter, adc.result);
-	uint16_t u_filteredOutput;
-	
-	if ( f_filteredOutput < 0.0 ) u_filteredOutput = 0;
-	else if (f_filteredOutput > 1023.0) u_filteredOutput = 1023;
-	else u_filteredOutput = (uint16_t)f_filteredOutput;
-	
-	if (u_filteredOutput < Stage2.minReflectivity)
-		Stage2.minReflectivity = u_filteredOutput;
-	
 	if (Stage2.adcContinueConversions)
-		ADC_StartConversion(&adc);
+	{
+		ADC_ReadConversion(&adc);
+		//LED_Set( (uint8_t)((adc.result) >> 2));
+		Stage2.sampleCount++;
+	
+		float f_filteredOutput = Filter(&adcFilter, adc.result);
+		uint16_t u_filteredOutput;
+	
+		if ( f_filteredOutput < 0.0 ) u_filteredOutput = 0;
+		else if (f_filteredOutput > 1023.0) u_filteredOutput = 1023;
+		else u_filteredOutput = (uint16_t)f_filteredOutput;
+	
+		if (u_filteredOutput < Stage2.minReflectivity)
+			Stage2.minReflectivity = u_filteredOutput;
+		
+		if (OPTICAL_IsBlocked(&s2_optic))
+			ADC_StartConversion(&adc);
+	}
 }
 
 /*
