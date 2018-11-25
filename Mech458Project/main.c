@@ -59,9 +59,11 @@ Queue* processQueue;
 volatile struct {
 	uint16_t minReflectivity;
 	uint16_t sampleCount;
+	bool adcContinueConversions;
 } Stage2 = {
 	.minReflectivity = LARGEST_UINT16_T,
 	.sampleCount = 0,
+	.adcContinueConversions = false,
 };
 
 // sorting stats singleton struct
@@ -208,7 +210,7 @@ ISR(INT3_vect)
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
 	{
-		//LED_Toggle( 1);
+		// don't need to check if queue is populated because it must be if we are here
 		QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	}
 }
@@ -220,7 +222,7 @@ ISR(INT2_vect)
 	
 	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
 	{
-		//LED_Toggle( 2);
+		Stage2.adcContinueConversions = true;
 		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
 		FILTER_ResetWithPadding(&adcFilter, 1023);
@@ -228,20 +230,20 @@ ISR(INT2_vect)
 	}
 	else // just saw rising edge
 	{
-		//LED_Toggle(3);
+		// stop the ADC from converting
+		Stage2.adcContinueConversions = false;
 		
 		//move item from the "process Queue", classify, and move to the "ready" Queue
-		if (!QUEUE_IsEmpty(processQueue))
-		{
-			QueueElement processedItem = QUEUE_Dequeue(processQueue);
-			// store minimum reflectivity and sample count in item
-			processedItem.reflectivity = Stage2.minReflectivity;
-			processedItem.sampleCount = Stage2.sampleCount;
+		// dequeue -- no need to check if we can, because we must if we got the interrupt
+		QueueElement processedItem = QUEUE_Dequeue(processQueue);
+		// store minimum reflectivity and sample count in item
+		processedItem.reflectivity = Stage2.minReflectivity;
+		processedItem.sampleCount = Stage2.sampleCount;
+		
 			
-			//classify item and move to ready queue
-			processedItem.class = Classify(processedItem);
-			QUEUE_Enqueue(readyQueue, processedItem);
-		}
+		//classify item and move to ready queue
+		processedItem.class = Classify(processedItem);
+		QUEUE_Enqueue(readyQueue, processedItem);
 	}
 }
 
@@ -250,16 +252,13 @@ ISR(INT0_vect)
 {
 	//LED_Toggle( 4);
 	// poll sensor to verify interrupt was not spurious
+	// there must be an item
 	if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		DCMOTOR_Brake(&belt);
-		// even if the interrupt is not spurious and we know there is an item
-		// verify there is a queued item
-		if(!QUEUE_IsEmpty(readyQueue))
-		{
+		if(!QUEUE_IsEmpty(readyQueue)){
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 			LED_Set(0x000);
-			
 			switch(dropItem.class)
 			{
 			case STEEL:
@@ -278,6 +277,7 @@ ISR(INT0_vect)
 				LED_SetBottom8(0xF0);
 				break;
 			}
+		
 			TIMER1_DelayMs(1000);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 		}
@@ -328,7 +328,7 @@ ISR(ADC_vect)
 	if (u_filteredOutput < Stage2.minReflectivity)
 		Stage2.minReflectivity = u_filteredOutput;
 	
-	if (OPTICAL_IsBlocked(&s2_optic))
+	if (Stage2.adcContinueConversions)
 		ADC_StartConversion(&adc);
 }
 
