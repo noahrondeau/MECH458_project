@@ -13,8 +13,8 @@
 void TIMER1_DelayInit(void);
 void TIMER1_DelayMs(int ms);
 
-void TIMER_ScheduleInit(void);
-void TIMER_ScheduleMs(int ms);
+void TIMER2_DelayInit(void);
+void TIMER2_DelayMs(int us);
 
 void TIMER3_DelayInit(void);
 void TIMER3_DelayMs(int ms);
