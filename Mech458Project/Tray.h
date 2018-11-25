@@ -12,6 +12,7 @@
 #include "config.h"
 #include "HallSensor.h"
 #include "StepperMotor.h"
+#include "Queue.h"
 
 
 typedef volatile struct Tray
@@ -26,9 +27,13 @@ typedef volatile struct Tray
 void TRAY_Init(Tray* tray);
 void TRAY_Home(Tray* tray);
 
-void Tray_Rotate90(Tray* tray, MotorDirection dir);
-void Tray_Rotate180(Tray* tray);
+void TRAY_Rotate90(Tray* tray, MotorDirection dir);
+void TRAY_Rotate180(Tray* tray);
 
+void TRAY_AccelRotate90(Tray* tray, MotorDirection dir);
+void TRAY_AccelRotate180(Tray* tray);
+
+void TRAY_Sort(Tray* tray, QueueElement* q);
 
 
 #endif /* TRAY_H_ */

@@ -52,14 +52,34 @@ void TIMER1_DelayMs(int ms)
 	}
 }
 
-void TIMER_ScheduleInit(void)
+void TIMER2_DelayInit(void)
 {
-	TCCR2B |= _BV(CS10);
+	TCCR2B |= _BV(CS21);
 }
 
-void TIMER_ScheduleMs(int ms)
-{
-	
+void TIMER2_DelayMs(int us){
+	// Index for loop
+	int i = 0;
+	// Set Waveform Gen Mode to CTC mode
+	TCCR2A |= _BV(WGM21);
+	// Set output compare register to count 1cycles = 1us
+	OCR2A = 0x0001;
+	// Reset the timer
+	TCNT2 = 0x0000;
+
+	// clear interrupt flag and begin counting
+	TIFR2 |= _BV(OCF2A);
+
+	// loop "ms" times, each loop iteration is one millisecond
+	while (i < us)
+	{
+		// wait for the timer to be reached
+		while ((TIFR2 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
+		// increment loop counter
+		i++;
+		// clear interrupt flag and begin counting
+		TIFR2 |= _BV(OCF2A);
+	}
 }
 
 void TIMER3_DelayInit(void)

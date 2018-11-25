@@ -10,6 +10,7 @@
 #include "StepperMotor.h"
 #include "HallSensor.h"
 #include "Timer.h"
+#include "LedBank.h"
 
 void TRAY_Init(Tray* tray)
 {
@@ -33,6 +34,7 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCCW(&(tray->stepper));
 			TIMER1_DelayMs(20);	
 		}
+		STEPPER_StepCCW(&(tray->stepper));
 	}
 	else
 	{
@@ -43,16 +45,170 @@ void TRAY_Home(Tray* tray)
 		}
 	}
 	
+	tray->currentPos = 0;
 	tray->beltPos = BLACK_PLASTIC;
 		
 		
 	
 }
 
-void Tray_Rotate90(Tray* tray, MotorDirection dir){
+void TRAY_Rotate90(Tray* tray, MotorDirection dir){
+	if(dir == CW){
+		for(int i = 0; i<50; i++)
+		{
+			STEPPER_StepCW(&(tray->stepper));
+			TIMER1_DelayMs(20);
+		}
+	}
+	
+	if(dir == CCW){
+		for(int i = 0; i<50; i++)
+		{
+			STEPPER_StepCCW(&(tray->stepper));
+			TIMER1_DelayMs(20);
+		}
+	}
+}
+
+void TRAY_Rotate180(Tray* tray){
+	for(int i = 0; i<100; i++)
+	{
+		STEPPER_StepCW(&(tray->stepper));
+		TIMER1_DelayMs(20);
+	}
+}
+
+void TRAY_Sort(Tray* tray, QueueElement* q){
+	tray->targetPos = q->class;
+	
+	switch ((tray->targetPos) - (tray->beltPos)){
+		case (0):
+		{
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		case (50):
+		{
+			TRAY_Rotate90(tray,CCW);
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		case (100):
+		{
+			TRAY_Rotate180(tray);
+			tray->beltPos = tray->targetPos;
+			break;
+		}
+		case (150):
+		{
+			TRAY_Rotate90(tray,CW);
+			tray->beltPos = tray->targetPos;		
+			break;
+		}
+		case (-50):
+		{
+			TRAY_Rotate90(tray,CW);
+			tray->beltPos = tray->targetPos;
+			break;
+		}
+		case (-100):
+		{
+			TRAY_Rotate180(tray);
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		case (-150):
+		{
+			TRAY_Rotate90(tray,CCW);
+			tray->beltPos = tray->targetPos;
+		}
+			break;
+		default: //should never reach here
+		{
+			while(1) //signifies sorting error
+			{
+				PORTC = 0b01010101;
+				TIMER1_DelayMs(500);
+				PORTC = 0b10101010;
+				TIMER1_DelayMs(500);
+			}
+		}
+			break;			
+	}
 	
 }
 
-void Tray_Rotate180(Tray* tray){
+void TRAY_AccelRotate90(Tray* tray, MotorDirection dir){
+	if(dir == CW){
+		//0-11
+		for(int i=0; i<12; i++)
+		{
+			STEPPER_StepCW(&(tray->stepper));
+			TIMER1_DelayMs(20-1*i);
+			tray->currentPos= (tray->currentPos + 1) % 200;
+		}
+		//12-37
+		for(int i=0;  i<26; i++)
+		{
+			STEPPER_StepCW(&(tray->stepper));
+			TIMER1_DelayMs(8);
+			tray->currentPos= (tray->currentPos + 1) % 200;
+		}
+		//38-49
+		for(int i=0;  i<12; i++)
+		{
+			STEPPER_StepCW(&(tray->stepper));
+			TIMER1_DelayMs(8+1*i);
+			tray->currentPos= (tray->currentPos + 1) % 200;
+		}
+	}
 	
+	
+	if(dir == CCW){
+		//0-11
+		for(int i=0; i<12; i++)
+		{
+			STEPPER_StepCCW(&(tray->stepper));
+			TIMER1_DelayMs(20-1*i);
+			tray->currentPos= (tray->currentPos + 1) % 200;
+		}
+		//12-37
+		for(int i=0;  i<26; i++)
+		{
+			STEPPER_StepCCW(&(tray->stepper));
+			TIMER1_DelayMs(8);
+			tray->currentPos= (tray->currentPos + 1) % 200;
+		}
+		//38-49
+		for(int i=0;  i<12; i++)
+		{
+			STEPPER_StepCCW(&(tray->stepper));
+			TIMER1_DelayMs(8+1*i);
+			tray->currentPos= (tray->currentPos + 1) % 200;
+		}
+	}
+}
+
+void TRAY_AccelRotate180(Tray* tray){
+	//0-11
+	for(int i=0; i<12; i++)
+	{
+		STEPPER_StepCW(&(tray->stepper));
+		TIMER1_DelayMs(20-1*i);
+		tray->currentPos= (tray->currentPos + 1) % 200;
+	}
+	//12-87
+	for(int i=0;  i<76; i++)
+	{
+		STEPPER_StepCW(&(tray->stepper));
+		TIMER1_DelayMs(8);
+		tray->currentPos= (tray->currentPos + 1) % 200;
+	}
+	//88-99
+	for(int i=0;  i<12; i++)
+	{
+		STEPPER_StepCW(&(tray->stepper));
+		TIMER1_DelayMs(8+1*i);
+		tray->currentPos= (tray->currentPos + 1) % 200;
+	}
 }

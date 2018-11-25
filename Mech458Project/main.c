@@ -98,7 +98,7 @@ int main()
 		{
 		case RUN_STATE:
 			{
-				
+
 			}
 			break;
 			
@@ -250,37 +250,27 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-	//LED_Toggle( 4);
-	// poll sensor to verify interrupt was not spurious
-	// there must be an item
-	if(OPTICAL_IsBlocked(&exit_optic))
+    if(OPTICAL_IsBlocked(&exit_optic))
 	{
-		DCMOTOR_Brake(&belt);
-		if(!QUEUE_IsEmpty(readyQueue)){
-			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_Set(dropItem.sampleCount);
-			/*
-			switch(dropItem.class)
+		if(tray.beltPos == QUEUE_Peak(readyQueue).class)
+		{
+			if(!QUEUE_IsEmpty(readyQueue))
 			{
-			case STEEL:
-				LED_On(0);
-				break;
-			case ALUMINIUM:
-				LED_On(1);
-				break;
-			case WHITE_PLASTIC:
-				LED_On(2);
-				break;
-			case BLACK_PLASTIC:
-				LED_On(3);
-				break;
-			default: // UNCLASSIFIED
-				LED_SetBottom8(0xF0);
-				break;
-			}*/
-		
-			TIMER1_DelayMs(1000);
-			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+				TRAY_Sort(&tray, &dropItem);
+			}
+		}
+		else if(tray.beltPos != QUEUE_Peak(readyQueue).class)
+		{
+			
+			DCMOTOR_Brake(&belt);
+			
+			if(!QUEUE_IsEmpty(readyQueue))
+			{
+				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+				TRAY_Sort(&tray, &dropItem);
+				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+			}			
 		}
 	}
 }
