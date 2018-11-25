@@ -122,16 +122,16 @@ typedef volatile uint8_t  GPIOMask;
 #define LARGEST_UINT16_T ((uint16_t)(0xFFFF))
 
 #define MIN_ALUMINIUM_VAL		(0)
-#define MAX_ALUMINIUM_VAL		(255)
+#define MAX_ALUMINIUM_VAL		(28)
 
-#define MIN_STEEL_VAL			(256)
-#define MAX_STEEL_VAL			(511)
+#define MIN_STEEL_VAL			(351)
+#define MAX_STEEL_VAL			(496)
 
-#define MIN_WHITE_PLASTIC_VAL	(512)
-#define MAX_WHITE_PLASTIC_VAL	(767)
+#define MIN_WHITE_PLASTIC_VAL	(932)
+#define MAX_WHITE_PLASTIC_VAL	(969)
 
-#define MIN_BLACK_PLASTIC_VAL	(768)
-#define MAX_BLACK_PLASTIC_VAL	(1023)
+#define MIN_BLACK_PLASTIC_VAL	(934)
+#define MAX_BLACK_PLASTIC_VAL	(982)
 
 // CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
 #define FILTER_NUMER_LEN		(4)

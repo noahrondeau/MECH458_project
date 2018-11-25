@@ -258,8 +258,26 @@ ISR(INT0_vect)
 		if(!QUEUE_IsEmpty(readyQueue))
 		{
 			QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-			LED_Set(dropItem.reflectivity);
+			LED_Set(0x000);
 			
+			switch(dropItem.class)
+			{
+			case STEEL:
+				LED_On(0);
+				break;
+			case ALUMINIUM:
+				LED_On(1);
+				break;
+			case WHITE_PLASTIC:
+				LED_On(2);
+				break;
+			case BLACK_PLASTIC:
+				LED_On(3);
+				break;
+			default: // UNCLASSIFIED
+				LED_SetBottom8(0xF0);
+				break;
+			}
 			TIMER1_DelayMs(1000);
 			DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 		}
