@@ -5,9 +5,10 @@
  *  Author: ntron
  */ 
 
-
+#include <util/atomic.h>
 #include <stdlib.h>
 #include "Queue.h"
+#include "config.h"
 
 #if MODE_ENABLED(LINKED_QUEUE_MODE)
 
@@ -30,39 +31,45 @@ void QUEUE_Enqueue(Queue* q, QueueElement elem)
 {
 	QueueNode* newNode = (QueueNode*)malloc(sizeof(QueueNode));
 	newNode->data = elem;
-
 	newNode->next = NULL;
-	newNode->prev = q->back;
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		newNode->prev = q->back;
 
-	// if was empty
-	if (q->front == NULL)
-		q->front = newNode;
-	//if was not empty
-	else
-		q->back->next = newNode;
+		// if was empty
+		if (q->front == NULL)
+			q->front = newNode;
+		//if was not empty
+		else
+			q->back->next = newNode;
 
-	q->back = newNode;
-	q->size++;
+		q->back = newNode;
+		q->size++;
+	}
 }
 
 QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
-
-	//if not empty
-	if (q->front != NULL)
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		retval = q->front->data;
-		QueueNode* node = q->front;
+		//if not empty
+		if (q->front != NULL)
+		{
+			retval = q->front->data;
+			QueueNode* node = q->front;
 
-		q->front = q->front->next;
+			q->front = q->front->next;
 
-		//if that was the last node reset back ptr
-		if (q->front == NULL)
-		q->back = NULL;
+			//if that was the last node reset back ptr
+			if (q->front == NULL)
+				q->back = NULL;
 
-		free(node);
-		q->size--;
+			free(node);
+			q->size--;
+		}
 	}
 	return retval;
 }
@@ -70,22 +77,36 @@ QueueElement QUEUE_Dequeue(Queue* q)
 QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement elem = DEFAULT_QUEUE_ELEM;
-	if (q->front)
-		elem = q->front->data;
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		if (q->front)
+			elem = q->front->data;
+	}
 	return elem;
 }
 
 uint16_t QUEUE_Size(Queue* q)
 {
-	return (q->size);
+	uint16_t ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		 ret = (q->size);
+	}
+	return ret;
 }
 
 bool QUEUE_IsEmpty(Queue* q)
 {
-	if (q->size == 0)
-		return true;
-	else
-		return false;
+	bool ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		if (q->size == 0)
+			ret = true;
+		else
+			ret =  false;
+	}
+	return ret;
 }
 
 Queue* QUEUE_Create(void)
@@ -104,7 +125,12 @@ void QUEUE_Destroy(Queue** q)
 
 QueueElement* QUEUE_BackPtr(Queue* q)
 {
-	return &(q->back->data);
+	QueueElement* ptr;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		ptr = &(q->back->data);
+	}
+	return ptr;
 }
 
 #elif MODE_ENABLED(CIRCULAR_QUEUE_MODE)
@@ -167,54 +193,60 @@ void QUEUE_Deinit(Queue* q)
 
 void QUEUE_Enqueue(Queue* q, QueueElement elem)
 {
-	//empty case
-	if (q->back == NULL)
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		q->front = q->array_start;
-		q->back = q->array_start;
-		*(q->front) = elem;
-	}
-	// not empty case
-	else
-	{
-		// array full
-		if (q->size == q->array_length)
-		QUEUE_enlarge(q);
-
-		if (q->back == q->array_end)
-		q->back = q->array_start;
+			//empty case
+		if (q->back == NULL)
+		{
+			q->front = q->array_start;
+			q->back = q->array_start;
+			*(q->front) = elem;
+		}
+		// not empty case
 		else
-		q->back++;
+		{
+			// array full
+			if (q->size == q->array_length)
+			QUEUE_enlarge(q);
 
-		*(q->back) = elem;
+			if (q->back == q->array_end)
+			q->back = q->array_start;
+			else
+			q->back++;
+
+			*(q->back) = elem;
+		}
+		q->size++;
 	}
-	q->size++;
 }
 
 QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
-
-	if (q->front == NULL) // empty
-		return retval;
-
-	retval = *(q->front);
-
-	if (q->front == q->back)
-	//this was the last element
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		q->front = NULL;
-		q->back = NULL;
-	}
-	else // this was not the last element
-	{
-		if (q->front == q->array_end)
-		q->front = q->array_start;
-		else
-		q->front++;
-	}
+		if (q->front != NULL) // not empty
+		{
+			retval = *(q->front);
 
-	q->size--;
+			if (q->front == q->back)
+			//this was the last element
+			{
+				q->front = NULL;
+				q->back = NULL;
+			}
+			else // this was not the last element
+			{
+				if (q->front == q->array_end)
+				q->front = q->array_start;
+				else
+				q->front++;
+			}
+
+			q->size--;
+		}
+	}
 
 	return retval;
 }
@@ -222,26 +254,36 @@ QueueElement QUEUE_Dequeue(Queue* q)
 QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
-
-	if(q->front)
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		retval = *(q->front);
+		if(q->front)
+			retval = *(q->front);
 	}
-
 	return retval;
 }
 
 uint16_t QUEUE_Size(Queue* q)
 {
-	return q->size;
+	uint16_t ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		ret = q->size;
+	}
+	return ret;
 }
 
 bool QUEUE_IsEmpty(Queue* q)
 {
-	if (q->size == 0)
-		return true;
-	else 
-		return false;
+	bool ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		if (q->size == 0)
+			ret = true;
+		else
+			ret = false;
+	}
+	return ret;
 }
 
 Queue* QUEUE_Create(void)
@@ -258,84 +300,14 @@ void QUEUE_Destroy(Queue** q)
 	*q = NULL;
 }
 
-/* @brief: increment an auxiliary pointer to the next item in the queue
- * Makes pointer NULL if we increment when at the end of the queue.
- */
-/*
-void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr)
-{
-	if (q_ptr == NULL) return; // invalid argument
-
-	if ((*q_ptr) == NULL)
-		return; // invalid pointer
-		
-	if ( QUEUE_IsEmpty(q) )
-	{
-		*q_ptr = NULL;
-		return; // empty case where q front and back are NULL
-	}
-		
-	if ( (*q_ptr) == q->back )
-	{
-		*q_ptr = NULL;
-		return; // case where we are at the end and make NULL
-	}
-	
-	if (q->front < q->back) // queue is continuous block
-	{
-		if ( (*q_ptr) < q->front || (*q_ptr) > q->back )
-		{
-			*q_ptr = NULL;
-			return; // pointer not  referencing valid element
-		}
-		
-		q_ptr++;
-	}
-	else // queue is wrapped around
-	{
-		if ((*q_ptr) < q->front && (*q_ptr) > q->back )
-		{
-			*q_ptr = NULL;
-			return; // pointer not  referencing valid element
-		}
-		
-		if ( (*q_ptr) == q->array_end )
-			(*q_ptr) = q->array_start;
-		else
-			(*q_ptr)++;
-	}
-}*/
-/* @brief: decrement an auxiliary pointer to the previous item in the queue
- * this call is unsafe. only call if you are certain that there is another item in the queue before it,
- * since otherwise it does nothing.
- *//*
-void QUEUE_PointerDecrement(Queue* q, QueueElement** q_ptr)
-{
-	if ( QUEUE_IsEmpty(q) )
-		return; // empty case where q front and back are NULL
-
-	if ( QUEUE_Size(q) == 1 )
-		return; // case where can't decrement, and both q->front == q->back
-
-	if ( (*q_ptr) == q->front )
-		return; // case where we can't decrement, we are at the start
-
-	if (q->front < q->back) // queue is continuous block
-	{
-		q_ptr--;
-	}
-	else // queue is wrapped around
-	{
-		if ( (*q_ptr) == q->array_start )
-			(*q_ptr) = q->array_end;
-		else
-			(*q_ptr)--;
-	}	
-}*/
-
 QueueElement* QUEUE_BackPtr(Queue* q)
 {
-	return q->back;
+	QueueElement* ptr;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		ptr = q->back;
+	}
+	return ptr;
 }
 #endif //QUEUE_MODE
 

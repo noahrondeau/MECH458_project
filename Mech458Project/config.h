@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <avr/io.h>
+#include <util/atomic.h>
 
 /* ====== BUILD MODE CONFIG ====== */
 #define PROGRAM_MODE	(1)
