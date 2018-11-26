@@ -86,7 +86,7 @@ void TRAY_Rotate180(Tray* tray){
 
 void TRAY_Sort(Tray* tray, ItemClass class){
 	
-	TRAY_SetTarget(tray, (int16_t)class );
+	TRAY_SetTarget(tray, class);
 	
 	// if its an unclassified item don't do anything
 	if ( TRAY_GetTarget(tray) == UNCLASSIFIED )
@@ -94,7 +94,7 @@ void TRAY_Sort(Tray* tray, ItemClass class){
 	
 	// check the difference between the current position
 	// and the target and turn as necessary
-	switch ((tray->targetPos) - (tray->beltPos)){
+	switch ((uint16_t)(tray->targetPos) - (uint16_t)(tray->beltPos)){
 		case (0):
 		{
 			tray->beltPos = tray->targetPos;
@@ -139,7 +139,10 @@ void TRAY_Sort(Tray* tray, ItemClass class){
 		default: //should never reach here
 			break;			
 	}
-	tray->isReady = true;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		tray->isReady = true;
+	}
 }
 
 void TRAY_AccelRotate90(Tray* tray, MotorDirection dir){
@@ -228,32 +231,51 @@ void TRAY_AccelRotate180(Tray* tray){
 }
 
 
-void TRAY_SetTarget(Tray* tray, int16_t target)
+void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
 	if ( target != tray->targetPos) // new target and old target differ
 	{
-		tray->targetPos = target;
-		tray->isReady = false;
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+		{
+			tray->targetPos = target;
+			tray->isReady = false;
+		}
 	}
 	else
-		tray->isReady = true;
+	{
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+		{
+			tray->isReady = true;
+		}
+	}
 }
 
-int16_t TRAY_GetTarget(Tray* tray)
+uint8_t TRAY_GetTarget(Tray* tray)
 {
-	return tray->targetPos;
+	int16_t ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		ret = tray->targetPos;
+	}
+	return ret;
 }
 
-int16_t TRAY_GetCurrentPos(Tray* tray)
+uint8_t TRAY_GetCurrentPos(Tray* tray)
 {
-	 return tray->currentPos;	
+	int16_t ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		ret = tray->currentPos;
+	}
+	return ret;
 }
 
 bool TRAY_IsReady(Tray* tray)
-{/*
-	if (TRAY_GetCurrentPos(tray) == TRAY_GetTarget(tray))
-		return true;
-	else
-		return false;*/
-	return tray->isReady;
+{
+	bool ret;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		ret = tray->isReady;
+	}
+	return ret;
 }

@@ -166,7 +166,7 @@ typedef volatile struct FsmState
 
 typedef enum ItemClass
 {
-	UNCLASSIFIED = -999, // bogus value, need to check everywhere!!!
+	UNCLASSIFIED = 255, // bogus value, need to check everywhere!!!
 	STEEL = 50,
 	WHITE_PLASTIC = 100,
 	ALUMINIUM = 150,
