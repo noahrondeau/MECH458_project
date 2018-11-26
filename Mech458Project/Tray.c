@@ -16,6 +16,7 @@ void TRAY_Init(Tray* tray)
 {
 	tray->currentPos = 0;
 	tray->targetPos = 0;
+	tray->isReady = false;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -47,9 +48,6 @@ void TRAY_Home(Tray* tray)
 	
 	tray->currentPos = 0;
 	tray->beltPos = BLACK_PLASTIC;
-		
-		
-	
 }
 
 void TRAY_Rotate90(Tray* tray, MotorDirection dir){
@@ -104,44 +102,44 @@ void TRAY_Sort(Tray* tray, ItemClass class){
 			break;
 		case (50):
 		{
-			TRAY_Rotate90(tray,CCW);
+			TRAY_AccelRotate90(tray,CCW);
 			tray->beltPos = tray->targetPos;
 		}
 			break;
 		case (100):
 		{
-			TRAY_Rotate180(tray);
+			TRAY_AccelRotate180(tray);
 			tray->beltPos = tray->targetPos;
 			break;
 		}
 		case (150):
 		{
-			TRAY_Rotate90(tray,CW);
+			TRAY_AccelRotate90(tray,CW);
 			tray->beltPos = tray->targetPos;		
 			break;
 		}
 		case (-50):
 		{
-			TRAY_Rotate90(tray,CW);
+			TRAY_AccelRotate90(tray,CW);
 			tray->beltPos = tray->targetPos;
 			break;
 		}
 		case (-100):
 		{
-			TRAY_Rotate180(tray);
+			TRAY_AccelRotate180(tray);
 			tray->beltPos = tray->targetPos;
 		}
 			break;
 		case (-150):
 		{
-			TRAY_Rotate90(tray,CCW);
+			TRAY_AccelRotate90(tray,CCW);
 			tray->beltPos = tray->targetPos;
 		}
 			break;
 		default: //should never reach here
 			break;			
 	}
-	
+	tray->isReady = true;
 }
 
 void TRAY_AccelRotate90(Tray* tray, MotorDirection dir){
@@ -176,21 +174,31 @@ void TRAY_AccelRotate90(Tray* tray, MotorDirection dir){
 		{
 			STEPPER_StepCCW(&(tray->stepper));
 			TIMER1_DelayMs(20-1*i);
-			tray->currentPos= (tray->currentPos + 1) % 200;
+			if( tray->currentPos == 0 )
+				tray->currentPos = 199;
+			else
+				tray->currentPos--;
 		}
 		//12-37
 		for(int i=0;  i<26; i++)
 		{
 			STEPPER_StepCCW(&(tray->stepper));
 			TIMER1_DelayMs(8);
-			tray->currentPos= (tray->currentPos + 1) % 200;
+
+			if( tray->currentPos == 0 )
+				tray->currentPos = 199;
+			else
+				tray->currentPos--;
 		}
 		//38-49
 		for(int i=0;  i<12; i++)
 		{
 			STEPPER_StepCCW(&(tray->stepper));
 			TIMER1_DelayMs(8+1*i);
-			tray->currentPos= (tray->currentPos + 1) % 200;
+			if( tray->currentPos == 0 )
+				tray->currentPos = 199;
+			else
+				tray->currentPos--;
 		}
 	}
 }
@@ -222,7 +230,13 @@ void TRAY_AccelRotate180(Tray* tray){
 
 void TRAY_SetTarget(Tray* tray, int16_t target)
 {
-	tray->targetPos = target;
+	if ( target != tray->targetPos) // new target and old target differ
+	{
+		tray->targetPos = target;
+		tray->isReady = false;
+	}
+	else
+		tray->isReady = true;
 }
 
 int16_t TRAY_GetTarget(Tray* tray)
@@ -236,6 +250,10 @@ int16_t TRAY_GetCurrentPos(Tray* tray)
 }
 
 bool TRAY_IsReady(Tray* tray)
-{
-	return (TRAY_GetCurrentPos(tray) == TRAY_GetTarget(tray));
+{/*
+	if (TRAY_GetCurrentPos(tray) == TRAY_GetTarget(tray))
+		return true;
+	else
+		return false;*/
+	return tray->isReady;
 }

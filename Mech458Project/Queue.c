@@ -77,7 +77,7 @@ QueueElement QUEUE_Peak(Queue* q)
 
 uint16_t QUEUE_Size(Queue* q)
 {
-	return q->size;
+	return (q->size);
 }
 
 bool QUEUE_IsEmpty(Queue* q)

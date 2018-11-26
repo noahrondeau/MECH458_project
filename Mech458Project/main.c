@@ -93,39 +93,46 @@ volatile struct {
 int main()
 {
 	Initialize();
-	TRAY_Home(&tray);
 	TIMER1_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+	
 	
 	// main loop
 	while(true)
 	{	
+		
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
-			{
+			{	
 				if ( !QUEUE_IsEmpty(readyQueue))
 				{
-					// the tray is not in position! rotate!
+					// if the tray is not in position! rotate!
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
 				
-					// update target and turn belt
+					// initiate a turn if the target got updated
 					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
 					{
 						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
 					}
-				
+					
 					//do a safe read
 					bool itemReady = Stage3.itemReady;
-					while( itemReady != Stage3.itemReady)
-						itemReady = Stage3.itemReady;
+					/*while( itemReady != Stage3.itemReady)
+						itemReady = Stage3.itemReady;*/
 				
 					// if the item is ready, dequeue the item	
 					if(itemReady)
 					{
 						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-						if (dropItem.class == UNCLASSIFIED)
-							LED_Set(0xFF);
+						LED_Set(QUEUE_Size(readyQueue));
+						//if (dropItem.class == UNCLASSIFIED)
+						//	LED_Set(0xFF);
+						//else
+						//{
+						//	LED_Set(0x00);
+						//	LED_On(dropItem.class / 50);
+						//}
 						// sort stats here later!
 					
 						Stage3.itemReady = false;
@@ -178,6 +185,7 @@ void Initialize()
 	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
 	BUTTON_Init(&rampDownButton, RAMPDOWN_BUTTON);
 	TRAY_Init(&tray);
+	TRAY_Home(&tray);
 	
 	// initialize filter
 	float num[] = FILTER_NUMER_COEFFS;
@@ -196,10 +204,11 @@ void Initialize()
 
 ItemClass Classify(QueueElement elem)
 {
+	static ItemClass test = 50;
 	// for now, if the item falls within one of the ranges, we classify it
 	// as the material corresponding to that range.
 	// this will have to be improved upon, since overlap can occur
-	
+	/*
 	if		(	elem.reflectivity >= MIN_ALUMINIUM_VAL
 				&& elem.reflectivity <= MAX_ALUMINIUM_VAL )
 		return ALUMINIUM;
@@ -216,7 +225,10 @@ ItemClass Classify(QueueElement elem)
 				&& elem.reflectivity <= MAX_BLACK_PLASTIC_VAL )
 		return  BLACK_PLASTIC;
 	else
-		return UNCLASSIFIED; // this should never be reached
+		return UNCLASSIFIED; // this should never be reached*/
+	
+	test = (test + 50) % 200;
+	return test;
 }
 
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
@@ -279,6 +291,7 @@ ISR(INT2_vect)
 		//classify item and move to ready queue
 		processedItem.class = Classify(processedItem);
 		QUEUE_Enqueue(readyQueue, processedItem);
+		LED_Set(QUEUE_Size(readyQueue));
 	}
 }
 
@@ -294,17 +307,15 @@ ISR(INT0_vect)
 		// check tray readiness in a thread-safe way by reading twice
 		// this is allowed because tray-ready is 1 owner, mutiple client, only modified by the Tray object
 		bool trayReady = TRAY_IsReady(&tray);
-		bool trayReadyNew;
+		/*bool trayReadyNew;
 		while( trayReady != ( trayReadyNew = TRAY_IsReady(&tray))) // the ASSIGNMENT IS ON PURPOSE!!!!
 		{ 
 			trayReady = trayReadyNew;
-		}
+		}*/
 		
 		// stop the belt if not ready
 		if (!trayReady)
-		{
 			DCMOTOR_Brake(&belt);
-		}
 	}
 }
 

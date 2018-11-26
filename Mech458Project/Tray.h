@@ -19,6 +19,7 @@ typedef volatile struct Tray
 {
 	int16_t currentPos;
 	int16_t targetPos;
+	bool isReady;
 	ItemClass beltPos;
 	HallSensor hall;
 	StepperMotor stepper;
