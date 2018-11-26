@@ -115,18 +115,16 @@ int main()
 					{
 						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
 					}
-					
-					//do a safe read
-					bool itemReady = Stage3.itemReady;
-					/*while( itemReady != Stage3.itemReady)
-						itemReady = Stage3.itemReady;*/
 				
-					// if the item is ready, dequeue the item	
-					if(itemReady)
+					// if the item is ready, dequeue the item
+					// read doesn't need to be atomic since only EXIT interrupt could write it to true
+					// and we will see that on the next pass through this loop anyway	
+					if(Stage3.itemReady)
 					{
-						// queue is atomic
+						// dequeue is atomic
 						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 						LED_Set(QUEUE_Size(readyQueue));
+						
 						//if (dropItem.class == UNCLASSIFIED)
 						//	LED_Set(0xFF);
 						//else
@@ -135,8 +133,13 @@ int main()
 						//	LED_On(dropItem.class / 50);
 						//}
 						// sort stats here later!
-					
-						Stage3.itemReady = false;
+						
+						// atomically reset itemReady flag
+						// must be atomic so that EXIT interrupt doesn't overwrite it
+						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+						{
+							Stage3.itemReady = false;
+						}
 						// if in this time the EXIT interrupt fired, the belt would have been turned off,
 						// so turn it on again (if already on, this has no effect)
 						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
@@ -305,6 +308,7 @@ ISR(INT0_vect)
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		// signal that an item is ready
+		// call doesn't need to be atomic, we are in the highest priority interrupt
 		Stage3.itemReady = true;
 		
 		// this is an atomic call
