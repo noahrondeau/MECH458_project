@@ -66,6 +66,12 @@ volatile struct {
 	.adcContinueConversions = false,
 };
 
+volatile struct {
+	bool itemReady;
+} Stage3 = {
+	.itemReady = false,
+};
+
 // sorting stats singleton struct
 volatile struct {
 	unsigned int totalCount;
@@ -98,7 +104,36 @@ int main()
 		{
 		case RUN_STATE:
 			{
-
+				if ( !QUEUE_IsEmpty(readyQueue))
+				{
+					// the tray is not in position! rotate!
+					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+				
+					// update target and turn belt
+					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
+					{
+						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
+					}
+				
+					//do a safe read
+					bool itemReady = Stage3.itemReady;
+					while( itemReady != Stage3.itemReady)
+						itemReady = Stage3.itemReady;
+				
+					// if the item is ready, dequeue the item	
+					if(itemReady)
+					{
+						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+						if (dropItem.class == UNCLASSIFIED)
+							LED_Set(0xFF);
+						// sort stats here later!
+					
+						Stage3.itemReady = false;
+						// if in this time the EXIT interrupt fired, the belt would have been turned off,
+						// so turn it on again (if already on, this has no effect)
+						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+					}
+				}
 			}
 			break;
 			
@@ -250,27 +285,25 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
+	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
-		if(tray.beltPos == QUEUE_Peak(readyQueue).class)
-		{
-			if(!QUEUE_IsEmpty(readyQueue))
-			{
-				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-				TRAY_Sort(&tray, &dropItem);
-			}
+		// signal that an item is ready
+		Stage3.itemReady = true;
+		
+		// check tray readiness in a thread-safe way by reading twice
+		// this is allowed because tray-ready is 1 owner, mutiple client, only modified by the Tray object
+		bool trayReady = TRAY_IsReady(&tray);
+		bool trayReadyNew;
+		while( trayReady != ( trayReadyNew = TRAY_IsReady(&tray))) // the ASSIGNMENT IS ON PURPOSE!!!!
+		{ 
+			trayReady = trayReadyNew;
 		}
-		else if(tray.beltPos != QUEUE_Peak(readyQueue).class)
+		
+		// stop the belt if not ready
+		if (!trayReady)
 		{
-			
 			DCMOTOR_Brake(&belt);
-			
-			if(!QUEUE_IsEmpty(readyQueue))
-			{
-				QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-				TRAY_Sort(&tray, &dropItem);
-				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-			}			
 		}
 	}
 }
@@ -289,7 +322,7 @@ ISR(INT6_vect)
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
 	TIMER3_DelayMs(20);
-	LED_Toggle( 6);
+	LED_Toggle(6);
 	TIMER3_DelayMs(20);
 }
 

@@ -13,12 +13,19 @@
 
 #include "config.h"
 
-#define NUM_COMMUTATION_STEPS (4)
-#define STEP0 (0b110110)
-#define STEP1 (0b101110)
-#define STEP2 (0b101101)
-#define STEP3 (0b110101)
-
+#if MODE_ENABLED(TWO_PHASE_COMMUTATION_MODE)
+	#define NUM_COMMUTATION_STEPS (4)
+	#define STEP0 (0b110110)
+	#define STEP1 (0b101110)
+	#define STEP2 (0b101101)
+	#define STEP3 (0b110101)
+#else
+	#define NUM_COMMUTATION_STEPS (4)
+	#define STEP0 (0b110000)
+	#define STEP1 (0b000110)
+	#define STEP2 (0b101000)
+	#define STEP3 (0b000101)
+#endif
 
 // @name:	StepperMotor
 // @brief:	Represents a stepper motor

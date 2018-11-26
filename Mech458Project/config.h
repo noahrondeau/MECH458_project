@@ -21,6 +21,8 @@
 #define LINKED_QUEUE_MODE	(0)
 #define CIRCULAR_QUEUE_MODE	(!LINKED_QUEUE_MODE)
 
+#define TWO_PHASE_COMMUTATION_MODE (0)
+
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
 
@@ -163,11 +165,11 @@ typedef volatile struct FsmState
 
 typedef enum ItemClass
 {
-	UNCLASSIFIED,
-	STEEL = 0,
-	WHITE_PLASTIC = 50,
-	ALUMINIUM = 100,
-	BLACK_PLASTIC = 150,
+	UNCLASSIFIED = -999, // bogus value, need to check everywhere!!!
+	STEEL = 50,
+	WHITE_PLASTIC = 100,
+	ALUMINIUM = 150,
+	BLACK_PLASTIC = 0,
 }ItemClass;
 
 #endif /* CONFIG_H_ */

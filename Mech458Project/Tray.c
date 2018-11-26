@@ -57,6 +57,7 @@ void TRAY_Rotate90(Tray* tray, MotorDirection dir){
 		for(int i = 0; i<50; i++)
 		{
 			STEPPER_StepCW(&(tray->stepper));
+			tray->currentPos = (tray->currentPos + 1) % 200;
 			TIMER1_DelayMs(20);
 		}
 	}
@@ -65,6 +66,12 @@ void TRAY_Rotate90(Tray* tray, MotorDirection dir){
 		for(int i = 0; i<50; i++)
 		{
 			STEPPER_StepCCW(&(tray->stepper));
+			
+			if( tray->currentPos == 0 )
+				tray->currentPos = 199;
+			else
+				tray->currentPos--;
+			
 			TIMER1_DelayMs(20);
 		}
 	}
@@ -74,13 +81,21 @@ void TRAY_Rotate180(Tray* tray){
 	for(int i = 0; i<100; i++)
 	{
 		STEPPER_StepCW(&(tray->stepper));
+		tray->currentPos = (tray->currentPos + 1) % 200;
 		TIMER1_DelayMs(20);
 	}
 }
 
-void TRAY_Sort(Tray* tray, QueueElement* q){
-	tray->targetPos = q->class;
+void TRAY_Sort(Tray* tray, ItemClass class){
 	
+	TRAY_SetTarget(tray, (int16_t)class );
+	
+	// if its an unclassified item don't do anything
+	if ( TRAY_GetTarget(tray) == UNCLASSIFIED )
+		return;
+	
+	// check the difference between the current position
+	// and the target and turn as necessary
 	switch ((tray->targetPos) - (tray->beltPos)){
 		case (0):
 		{
@@ -124,15 +139,6 @@ void TRAY_Sort(Tray* tray, QueueElement* q){
 		}
 			break;
 		default: //should never reach here
-		{
-			while(1) //signifies sorting error
-			{
-				PORTC = 0b01010101;
-				TIMER1_DelayMs(500);
-				PORTC = 0b10101010;
-				TIMER1_DelayMs(500);
-			}
-		}
 			break;			
 	}
 	
@@ -211,4 +217,25 @@ void TRAY_AccelRotate180(Tray* tray){
 		TIMER1_DelayMs(8+1*i);
 		tray->currentPos= (tray->currentPos + 1) % 200;
 	}
+}
+
+
+void TRAY_SetTarget(Tray* tray, int16_t target)
+{
+	tray->targetPos = target;
+}
+
+int16_t TRAY_GetTarget(Tray* tray)
+{
+	return tray->targetPos;
+}
+
+int16_t TRAY_GetCurrentPos(Tray* tray)
+{
+	 return tray->currentPos;	
+}
+
+bool TRAY_IsReady(Tray* tray)
+{
+	return (TRAY_GetCurrentPos(tray) == TRAY_GetTarget(tray));
 }
