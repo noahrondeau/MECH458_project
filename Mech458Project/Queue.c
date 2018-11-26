@@ -36,10 +36,10 @@ void QUEUE_Enqueue(Queue* q, QueueElement elem)
 
 	// if was empty
 	if (q->front == NULL)
-	q->front = newNode;
+		q->front = newNode;
 	//if was not empty
 	else
-	q->back->next = newNode;
+		q->back->next = newNode;
 
 	q->back = newNode;
 	q->size++;
@@ -71,18 +71,21 @@ QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement elem = DEFAULT_QUEUE_ELEM;
 	if (q->front)
-	elem = q->front->data;
+		elem = q->front->data;
 	return elem;
 }
 
-int QUEUE_Size(Queue* q)
+uint16_t QUEUE_Size(Queue* q)
 {
 	return q->size;
 }
 
-int QUEUE_IsEmpty(Queue* q)
+bool QUEUE_IsEmpty(Queue* q)
 {
-	return (q->size == 0);
+	if (q->size == 0)
+		return true;
+	else
+		return false;
 }
 
 Queue* QUEUE_Create(void)
@@ -228,14 +231,17 @@ QueueElement QUEUE_Peak(Queue* q)
 	return retval;
 }
 
-int QUEUE_Size(Queue* q)
+uint16_t QUEUE_Size(Queue* q)
 {
 	return q->size;
 }
 
-int QUEUE_IsEmpty(Queue* q)
+bool QUEUE_IsEmpty(Queue* q)
 {
-	return (q->size == 0);
+	if (q->size == 0)
+		return true;
+	else 
+		return false;
 }
 
 Queue* QUEUE_Create(void)

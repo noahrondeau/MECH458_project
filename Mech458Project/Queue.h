@@ -46,7 +46,7 @@ typedef struct Queue
 	// Data Fields
 	QueueNode* front;
 	QueueNode* back;
-	int size;
+	uint16_t size;
 
 } Queue;
 
@@ -61,8 +61,8 @@ typedef volatile struct Queue
 	QueueElement* back;
 	QueueElement* array_start;
 	QueueElement* array_end;
-	int array_length;
-	int size;
+	uint16_t array_length;
+	uint16_t size;
 } Queue;
 
 #endif
@@ -77,8 +77,8 @@ void QUEUE_Deinit(Queue* q);
 void QUEUE_Enqueue(Queue* q, QueueElement elem);
 QueueElement QUEUE_Dequeue(Queue* q);
 QueueElement QUEUE_Peak(Queue* q);
-int QUEUE_Size(Queue* q);
-int QUEUE_IsEmpty(Queue* q);
+uint16_t QUEUE_Size(Queue* q);
+bool QUEUE_IsEmpty(Queue* q);
 Queue* QUEUE_Create(void);
 void QUEUE_Destroy(Queue** q);
 //void QUEUE_PointerIncrement(Queue* q, QueueElement** q_ptr);
