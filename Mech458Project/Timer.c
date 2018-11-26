@@ -57,7 +57,7 @@ void TIMER2_DelayInit(void)
 	TCCR2B |= _BV(CS21);
 }
 
-void TIMER2_DelayMs(int us){
+void TIMER2_DelayUs(int us){
 	// Index for loop
 	int i = 0;
 	// Set Waveform Gen Mode to CTC mode
