@@ -11,6 +11,7 @@
 
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <avr/io.h>
 
 /* ====== BUILD MODE CONFIG ====== */
@@ -142,12 +143,6 @@ typedef volatile uint8_t  GPIOMask;
 #define FILTER_DENOM_COEFFS		{2.3741, -1.9294, 0.5321}
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
-
-typedef enum bool
-{
-	false = 0,
-	true = 1,
-} bool;
 
 
 typedef enum ActiveLevel
