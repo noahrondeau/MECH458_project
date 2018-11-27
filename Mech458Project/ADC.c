@@ -52,5 +52,11 @@ void ADC_ReadConversion(ADCHandle* adc)
 {
 	uint8_t ADC_result_low = ADCL;
 	uint8_t ADC_result_high = ADCH;
-	adc->result = (uint16_t)( ((uint16_t)ADC_result_low) | (((uint16_t)ADC_result_high) << 8)  );
+	
+	// accessing 16 bit data -> do it in atomic mode
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// combine two registers to get 10-bit result in a uint16_t
+		adc->result = (uint16_t)( ((uint16_t)ADC_result_low) | (((uint16_t)ADC_result_high) << 8)  );
+	}
 }

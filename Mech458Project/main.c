@@ -124,17 +124,16 @@ int main()
 					{
 						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
 					}
-					
-					//do a safe read
-					bool itemReady = Stage3.itemReady;
-					/*while( itemReady != Stage3.itemReady)
-						itemReady = Stage3.itemReady;*/
 				
-					// if the item is ready, dequeue the item	
-					if(itemReady)
+					// if the item is ready, dequeue the item
+					// read doesn't need to be atomic since only EXIT interrupt could write it to true
+					// and we will see that on the next pass through this loop anyway	
+					if(Stage3.itemReady)
 					{
+						// dequeue is atomic
 						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 						LED_Set(QUEUE_Size(readyQueue));
+						
 						//if (dropItem.class == UNCLASSIFIED)
 						//	LED_Set(0xFF);
 						//else
@@ -143,8 +142,13 @@ int main()
 						//	LED_On(dropItem.class / 50);
 						//}
 						// sort stats here later!
-					
-						Stage3.itemReady = false;
+						
+						// atomically reset itemReady flag
+						// must be atomic so that EXIT interrupt doesn't overwrite it
+						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+						{
+							Stage3.itemReady = false;
+						}
 						// if in this time the EXIT interrupt fired, the belt would have been turned off,
 						// so turn it on again (if already on, this has no effect)
 						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
@@ -274,13 +278,11 @@ ISR(INT1_vect)
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
 	{	
-		//LED_Toggle( 0);
-		
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
 		new_elem.counter = ++(ItemStats.totalCount);
-		// initialize like this so that if no ferro interrupt flips then we are good
-		new_elem.isFerroMag = false;
+		
+		// enqueue is atomic
 		QUEUE_Enqueue(processQueue, new_elem);
 	}
 }
@@ -292,6 +294,7 @@ ISR(INT3_vect)
 	if (FERRO_Read(&ferro))
 	{
 		// don't need to check if queue is populated because it must be if we are here
+		// call is atomic
 		QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	}
 }
@@ -316,6 +319,7 @@ ISR(INT2_vect)
 		
 		//move item from the "process Queue", classify, and move to the "ready" Queue
 		// dequeue -- no need to check if we can, because we must if we got the interrupt
+		// call is atomic
 		QueueElement processedItem = QUEUE_Dequeue(processQueue);
 		// store minimum reflectivity and sample count in item
 		processedItem.reflectivity = Stage2.minReflectivity;
@@ -324,6 +328,8 @@ ISR(INT2_vect)
 			
 		//classify item and move to ready queue
 		processedItem.class = Classify(processedItem);
+		
+		// Atomic enqueue
 		QUEUE_Enqueue(readyQueue, processedItem);
 		LED_Set(QUEUE_Size(readyQueue));
 	}
@@ -336,19 +342,12 @@ ISR(INT0_vect)
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		// signal that an item is ready
+		// call doesn't need to be atomic, we are in the highest priority interrupt
 		Stage3.itemReady = true;
 		
-		// check tray readiness in a thread-safe way by reading twice
-		// this is allowed because tray-ready is 1 owner, mutiple client, only modified by the Tray object
-		bool trayReady = TRAY_IsReady(&tray);
-		/*bool trayReadyNew;
-		while( trayReady != ( trayReadyNew = TRAY_IsReady(&tray))) // the ASSIGNMENT IS ON PURPOSE!!!!
-		{ 
-			trayReady = trayReadyNew;
-		}*/
-		
-		// stop the belt if not ready
-		if (!trayReady)
+		// this is an atomic call
+		// check if the tray is in position, if not stop the belt
+		if (TRAY_IsReady(&tray))
 			DCMOTOR_Brake(&belt);
 	}
 }

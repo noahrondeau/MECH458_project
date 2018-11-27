@@ -17,8 +17,8 @@
 
 typedef volatile struct Tray
 {
-	int16_t currentPos;
-	int16_t targetPos;
+	uint8_t currentPos;
+	uint8_t targetPos;
 	bool isReady;
 	ItemClass beltPos;
 	HallSensor hall;
@@ -36,9 +36,9 @@ void TRAY_AccelRotate180(Tray* tray);
 
 void TRAY_Sort(Tray* tray, ItemClass);
 
-void TRAY_SetTarget(Tray* tray, int16_t target);
-int16_t TRAY_GetTarget(Tray* tray);
-int16_t TRAY_GetCurrentPos(Tray* tray);
+void TRAY_SetTarget(Tray* tray, uint8_t target);
+uint8_t TRAY_GetTarget(Tray* tray);
+uint8_t TRAY_GetCurrentPos(Tray* tray);
 bool TRAY_IsReady(Tray* tray);
 
 #endif /* TRAY_H_ */
