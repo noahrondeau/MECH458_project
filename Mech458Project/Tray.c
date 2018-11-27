@@ -252,7 +252,7 @@ void TRAY_SetTarget(Tray* tray, uint8_t target)
 
 uint8_t TRAY_GetTarget(Tray* tray)
 {
-	int16_t ret;
+	uint8_t ret;
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
 		ret = tray->targetPos;
@@ -262,7 +262,7 @@ uint8_t TRAY_GetTarget(Tray* tray)
 
 uint8_t TRAY_GetCurrentPos(Tray* tray)
 {
-	int16_t ret;
+	uint8_t ret;
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
 		ret = tray->currentPos;
