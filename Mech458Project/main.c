@@ -120,6 +120,7 @@ void Initialize()
 	SYSCLK_Init();
 	LED_Init(&led);
 	TIMER1_DelayInit();
+	TIMER2_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
 	ADC_Init();

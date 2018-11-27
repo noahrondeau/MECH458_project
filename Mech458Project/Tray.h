@@ -35,5 +35,8 @@ void TRAY_AccelRotate180(Tray* tray);
 
 void TRAY_Sort(Tray* tray, QueueElement* q);
 
+int TRAY_StepCalc(Tray* tray);
+int TRAY_AccelDelay(Tray* tray, int position);
+
 
 #endif /* TRAY_H_ */

@@ -212,3 +212,11 @@ void TRAY_AccelRotate180(Tray* tray){
 		tray->currentPos= (tray->currentPos + 1) % 200;
 	}
 }
+
+int TRAY_StepCalc(Tray* tray){
+	return(abs((&tray->currentPos)-(&tray->targetPos)));
+}
+
+int TRAY_AccelDelay(Tray* tray, int position){
+	
+}
