@@ -27,6 +27,7 @@
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
 ItemClass Classify(QueueElement elem);
+void PauseDisplay();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -44,7 +45,7 @@ Tray			tray;
 DigitalFilter	adcFilter; // butterworth LPF for ADC vals
 
 // State variable
-FsmState fsmState = {
+FiniteStateMachine fsmState = {
 	.state = RUN_STATE,
 	.rampDownInitFlag = false,
 	.rampDownEndFlag = false,
@@ -85,6 +86,14 @@ volatile struct {
 	.whitePlasticCount = 0,
 	.aluminiumCount = 0,
 	.steelCount = 0,
+};
+
+// for keeping track of whats going on in the display
+volatile struct 
+{
+	ItemClass currDispType;
+} DisplayStatus = {
+	.currDispType = 0,
 };
 
 
@@ -146,7 +155,7 @@ int main()
 			
 		case PAUSE_STATE:
 			{
-				// nothing lets us get here right now
+				PauseDisplay();
 			}
 			break;
 		
@@ -229,6 +238,31 @@ ItemClass Classify(QueueElement elem)
 	
 	test = (test + 50) % 200;
 	return test;
+}
+
+void PauseDisplay()
+{
+	// right now, just LED, in the future could be UART
+	switch(DisplayStatus.currDispType)
+	{
+	case ALUMINIUM:
+		LED_SetBottom8(0b10000000 | (ItemStats.aluminiumCount & 0x0F));
+		break;
+	case STEEL:
+		LED_SetBottom8(0b01000000 | (ItemStats.steelCount & 0x0F));
+		break;
+	case WHITE_PLASTIC:
+		LED_SetBottom8(0b00100000 | (ItemStats.whitePlasticCount & 0x0F));
+		break;
+	case BLACK_PLASTIC:
+		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		break;
+	default:
+		break;
+	}
+	// on next loop through, display this
+	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 200; 
+	TIMER1_DelayMs(1000);
 }
 
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
@@ -344,7 +378,34 @@ ISR(INT7_vect)
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
 	TIMER3_DelayMs(20);
-	LED_Toggle( 7);
+	
+	// this may need to be altered if we start doing some of the heavier computation in main
+	// what happens if here we change the state variable when a classification is pending?
+	// save the state variable? how do we distinguish between a state currently in execution, and a state that is pending?
+	// maybe always keep track of what the next state should be?
+	//
+	// also note that as it stands, the motor control in main will complete its move to target
+	// before we enter the pause state loop
+	// this will get optimized out
+	if (fsmState.state != RAMPDOWN_STATE)
+	{	
+		if (fsmState.state != PAUSE_STATE)
+		{
+			cli(); // immediately turn off interrupts so that nothing can change the state variable
+			// effectively, everything between now, and the next time the button is pressed, is atomic
+			fsmState.state = PAUSE_STATE;
+			// save relevant system state, right now is just the belt status in case it was stopped
+			fsmState.saved.beltWasRunning = belt.isRunning;
+			DCMOTOR_Brake(&belt);
+		}
+		else
+		{
+			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
+			if(fsmState.saved.beltWasRunning)
+				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+			sei(); // reenable interrupts
+		}
+	}
 	TIMER3_DelayMs(20);
 }
 

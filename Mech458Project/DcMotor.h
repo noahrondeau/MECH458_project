@@ -16,6 +16,7 @@ typedef volatile struct DcMotor
 {
 	GPIOReg portx;
 	GPIOReg ddrx;
+	bool isRunning;
 } DcMotor;
 
 void DCMOTOR_Init(DcMotor* motor);

@@ -45,6 +45,7 @@ void DCMOTOR_Init(DcMotor* motor)
 	motor->ddrx = DCMOTOR_DDRX;
 	*(motor->ddrx) = 0xFF;
 	PWM_Init(Scale_64);
+	motor->isRunning = false;
 
 }
 
@@ -52,9 +53,11 @@ void DCMOTOR_Run(DcMotor* motor, unsigned char speed)
 {
 	PWM_SetDutyCycle(speed);
 	DO_DCMOTOR_RUN(motor);
+	motor->isRunning = true;
 }
 
 void DCMOTOR_Brake(DcMotor* motor)
 {
 	DO_DCMOTOR_BRAKE(motor);
+	motor->isRunning = false;
 }

@@ -151,12 +151,23 @@ typedef enum ActiveLevel
 	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
-typedef volatile struct FsmState
+typedef enum FsmState
 {
-	enum { RUN_STATE, PAUSE_STATE, RAMPDOWN_STATE, } state;
+	 RUN_STATE,
+	 PAUSE_STATE,
+	 RAMPDOWN_STATE, 
+} FsmState;
+
+typedef volatile struct FiniteStateMachine
+{
+	FsmState state;
+	struct {
+		bool beltWasRunning;
+		FsmState returnToState;
+	} saved;
 	bool rampDownInitFlag;
 	bool rampDownEndFlag;
-} FsmState;
+} FiniteStateMachine;
 
 typedef enum ItemClass
 {
