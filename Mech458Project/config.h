@@ -11,7 +11,9 @@
 
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <avr/io.h>
+#include <util/atomic.h>
 
 /* ====== BUILD MODE CONFIG ====== */
 #define PROGRAM_MODE	(1)
@@ -20,6 +22,8 @@
 
 #define LINKED_QUEUE_MODE	(0)
 #define CIRCULAR_QUEUE_MODE	(!LINKED_QUEUE_MODE)
+
+#define TWO_PHASE_COMMUTATION_MODE (0)
 
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
@@ -119,15 +123,27 @@ typedef volatile uint8_t  GPIOMask;
 
 /* ====== RL SENSOR CONFIGS ====== */
 
-#define MAX_ADC_VAL (1024)
+#define LARGEST_UINT16_T ((uint16_t)(0xFFFF))
+
+#define MIN_ALUMINIUM_VAL		(0)
+#define MAX_ALUMINIUM_VAL		(28)
+
+#define MIN_STEEL_VAL			(351)
+#define MAX_STEEL_VAL			(496)
+
+#define MIN_WHITE_PLASTIC_VAL	(932)
+#define MAX_WHITE_PLASTIC_VAL	(969)
+
+#define MIN_BLACK_PLASTIC_VAL	(934)
+#define MAX_BLACK_PLASTIC_VAL	(982)
+
+		// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
+#define FILTER_NUMER_LEN		(4)
+#define FILTER_DENOM_LEN		(3)
+#define FILTER_NUMER_COEFFS		{0.0029, 0.0087, 0.0087, 0.0029}		
+#define FILTER_DENOM_COEFFS		{2.3741, -1.9294, 0.5321}
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
-
-typedef enum bool
-{
-	false = 0,
-	true = 1,
-} bool;
 
 
 typedef enum ActiveLevel
@@ -136,19 +152,31 @@ typedef enum ActiveLevel
 	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
-typedef volatile struct FsmState
+typedef enum FsmState
 {
-	enum { RUN_STATE, PAUSE_STATE, RAMPDOWN_STATE, } state;
+	 RUN_STATE,
+	 PAUSE_STATE,
+	 RAMPDOWN_STATE, 
+} FsmState;
+
+typedef volatile struct FiniteStateMachine
+{
+	FsmState state;
+	struct {
+		bool beltWasRunning;
+		FsmState returnToState;
+	} saved;
 	bool rampDownInitFlag;
 	bool rampDownEndFlag;
-} FsmState;
+} FiniteStateMachine;
 
 typedef enum ItemClass
 {
-	UNCLASSIFIED,
-	WHITE_PLASTIC = 50,
-	BLACK_PLASTIC = 150,
-	STEEL = 0,
-	ALUMINIUM = 100,
+	UNCLASSIFIED = 255, // bogus value, need to check everywhere!!!
+	STEEL = 50,
+	WHITE_PLASTIC = 100,
+	ALUMINIUM = 150,
+	BLACK_PLASTIC = 0,
 }ItemClass;
+
 #endif /* CONFIG_H_ */

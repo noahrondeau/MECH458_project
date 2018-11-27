@@ -13,17 +13,12 @@
 
 #define LED_BANK_LEN (8)
 
-typedef volatile struct LedBank
-{
-	bool ledStatus[LED_BANK_LEN];
-	uint8_t ledMask[LED_BANK_LEN];
-} LedBank;
-
-void LED_Init(LedBank* ledBank);
-void LED_on(LedBank* ledBank, uint8_t led);
-void LED_off(LedBank* ledBank, uint8_t led);
-void LED_toggle(LedBank* ledBank, uint8_t led);
-void LED_set(LedBank* ledBank, uint8_t seq);
+void LED_Init();
+void LED_On(uint8_t led);
+void LED_Off(uint8_t led);
+void LED_Toggle(uint8_t led);
+void LED_Set(uint16_t seq);
+void LED_SetBottom8(uint8_t seq);
 
 
 

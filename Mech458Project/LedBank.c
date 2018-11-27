@@ -7,43 +7,55 @@
 
 #include "LedBank.h"
 
-void LED_Init(LedBank* ledBank)
-{
-	for ( uint8_t i = 0; i < LED_BANK_LEN; i++)
-	{
-		ledBank->ledStatus[i] = false;
-		ledBank->ledMask[i] = (uint8_t)((uint8_t)(1) << i); 
-	}
-	
-	DDRC = 0xFF;
+void LED_Init()
+{	
+	DDRC |= 0xFF;
 	PORTC = 0x00;
+	
+	DDRD |= 0xF0; // LOWER FOUR BITS OF DDRD MUST BE INPUTS (0)!!!
+	PORTD &= 0x0F; // NEVER WRITE 1s to lower 4 bits of PORTD
 }
 
-void LED_on(LedBank* ledBank, uint8_t led)
+void LED_On(uint8_t led)
 {
-	ledBank->ledStatus[led] = true;
-	PORTC |= ledBank->ledMask[led];
+	if( led < 8 )// led is in lower 8 on port C
+		PORTC |= (uint8_t)((uint8_t)(1) << led);
+	else if ( led == 8 )
+		PORTD |= (((uint8_t)(1)) << 5);
+	else if ( led == 9 )
+		PORTD |= (((uint8_t)(1)) << 7);
 }
 
-void LED_off(LedBank* ledBank, uint8_t led)
+void LED_Off(uint8_t led)
 {
-	ledBank->ledStatus[led] = false;
-	PORTC &= ~(ledBank->ledMask[led]);
+	if (led < 8 )
+		PORTC &= ~((uint8_t)((uint8_t)(1) << led));
+	else if ( led == 8 )
+		PORTD &= ~(((uint8_t)(1)) << 5);
+	else if (led == 9)
+		PORTD &= ~(((uint8_t)(1)) << 7);
 }
 
-void LED_toggle(LedBank* ledBank, uint8_t led)
+void LED_Toggle(uint8_t led)
 {
-	if (ledBank->ledStatus[led] == false)
-		LED_on(ledBank, led);
-	else
-		LED_off(ledBank, led);
+	if (led < 8)
+		PORTC ^= (uint8_t)(((uint8_t)1) << led);
+	else if (led == 8)
+		PORTD ^= (((uint8_t)(1)) << 5);
+	else if (led == 9)
+		PORTD ^= (((uint8_t)(1)) << 7);
+		
 }
 
-void LED_set(LedBank* ledBank, uint8_t seq)
+void LED_Set(uint16_t seq)
 {
-	for(uint8_t i = 0; i < LED_BANK_LEN; i++)
-	{
-		ledBank->ledStatus[i] = (0b00000001 & (seq >> i));
-	}
-	PORTC = seq;	
+	PORTC = (uint8_t)(seq & 0x00FF);	
+	uint8_t MSB0 = ((uint8_t)((seq & 0xFF00) >> 8) & 0x01);
+	uint8_t MSB1 = ((uint8_t)((seq & 0xFF00) >> 9) & 0x01);
+	PORTD = (PORTD & 0x0F) | (MSB0 << 5) | (MSB1 << 7);
+}
+
+void LED_SetBottom8(uint8_t seq)
+{
+	PORTC = seq;
 }
