@@ -17,6 +17,9 @@ void TRAY_Init(Tray* tray)
 	tray->currentPos = 0;
 	tray->targetPos = 0;
 	tray->isReady = false;
+	tray->delay = 20;
+	tray->delayMax = 20;
+	tray->delayMin = 8;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -230,12 +233,15 @@ void TRAY_AccelRotate180(Tray* tray){
 	}
 }
 
-int TRAY_StepCalc(Tray* tray){
-	return(abs((&tray->currentPos)-(&tray->targetPos)));
+uint8_t TRAY_DistCalc(Tray* tray){
+	return (uint8_t)(abs((&tray->currentPos)-(&tray->targetPos)));
 }
 
-int TRAY_AccelDelay(Tray* tray, int position){
-	
+void TRAY_AccelDelay(Tray* tray){
+	int dist = TRAY_DistCalc(tray);
+	if(dist<12 && tray->delay > tray->delayMin) tray->delay--;
+	if(12 <= dist && dist < (tray->targetPos - 11)) tray->delay;
+	if((tray->targetPos - 11) <= dist && dist<(tray->targetPos) && tray->delay < tray->delayMax) tray->delay++;
 }
 
 void TRAY_SetTarget(Tray* tray, uint8_t target)
