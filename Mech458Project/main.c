@@ -190,8 +190,8 @@ void Initialize()
 	TRAY_Home(&tray);
 	
 	// initialize filter
-	float num[] = FILTER_NUMER_COEFFS;
-	float den[] = FILTER_DENOM_COEFFS;
+	accum num[] = FILTER_NUMER_COEFFS;
+	accum den[] = FILTER_DENOM_COEFFS;
 	FILTER_Init(&adcFilter, num, den, 1023); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
 	// perhaps in an ADC_Calibrate function
@@ -210,6 +210,7 @@ ItemClass Classify(QueueElement elem)
 	// the smaller z_score indicates higher likelihood of the object type
 	// this method works best if we have lots of data
 	// use fixed-point arithmetic types supported by avr-gcc for this
+	// NOTE: accum is unsigned
 	if( elem.isFerroMag )
 	{
 		accum z_alum  = ((accum)elem.reflectivity - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;

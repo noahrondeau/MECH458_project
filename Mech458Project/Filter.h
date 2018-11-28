@@ -16,25 +16,25 @@
 typedef volatile struct DigitalFilter
 {
 	// filter coefficients
-	float num[FILTER_NUMER_LEN];
-	float den[FILTER_DENOM_LEN];
+	accum num[FILTER_NUMER_LEN];
+	accum den[FILTER_DENOM_LEN];
 	
 	// circular buffer inputs and outputs
 	uint8_t currInputIndex;
 	uint8_t currOutputIndex;
-	float input[FILTER_NUMER_LEN];
-	float output[FILTER_DENOM_LEN];
+	accum input[FILTER_NUMER_LEN];
+	accum output[FILTER_DENOM_LEN];
 } DigitalFilter;
 
-void FILTER_Init(DigitalFilter* f, float* numerator, float* denominator, float padVal);
-void FILTER_ResetWithPadding(DigitalFilter* f, float padVal);
+void FILTER_Init(DigitalFilter* f, accum* numerator, accum* denominator, accum padVal);
+void FILTER_ResetWithPadding(DigitalFilter* f, accum padVal);
 
 // Utility functions
-void PushFilterOutput(DigitalFilter* f, float val);
-void PushFilterInput(DigitalFilter* f, float val);
+void PushFilterOutput(DigitalFilter* f, accum val);
+void PushFilterInput(DigitalFilter* f, accum val);
 
-float GetInput(DigitalFilter* f, uint8_t index);
-float GetOutput(DigitalFilter* f, uint8_t index);
+accum GetInput(DigitalFilter* f, uint8_t index);
+accum GetOutput(DigitalFilter* f, uint8_t index);
 
 
 // WARNING! need to avoid overflow, so arithmetic must be done carefully!
@@ -47,9 +47,9 @@ float GetOutput(DigitalFilter* f, uint8_t index);
  *	but beware.
  *	Use small coefficients if you know what is good for you
  *	NOTE: the output could end up negative at certain points for values very close to 0 in a transient
- *			so noise could possibly make the output negative. Check for negative floats before casting to an unsigned type!
+ *			so noise could possibly make the output negative. Check for negative accums before casting to an unsigned type!
  */
-float Filter(DigitalFilter* f, uint16_t next);
+accum Filter(DigitalFilter* f, uint16_t next);
 
 
 #endif /* INCFILE1_H_ */

@@ -15,6 +15,7 @@
 #include <avr/io.h>
 #include <util/atomic.h>
 #include <math.h>
+#include <stdfix.h>
 
 /* ====== BUILD MODE CONFIG ====== */
 #define PROGRAM_MODE	(1)

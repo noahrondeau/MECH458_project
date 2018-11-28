@@ -11,7 +11,7 @@
 // call this to reset the input and output buffers to a desired value
 // ideally, this value should be set as close to the expect first input in the data stream
 // as possible, to minimize the startup transient
-void FILTER_ResetWithPadding(DigitalFilter* f, float padVal)
+void FILTER_ResetWithPadding(DigitalFilter* f, accum padVal)
 {
 	for ( uint8_t i = 0; i < FILTER_NUMER_LEN; i++ )
 		f->input[i] = padVal;
@@ -22,19 +22,17 @@ void FILTER_ResetWithPadding(DigitalFilter* f, float padVal)
 	f->currOutputIndex = FILTER_NUMER_LEN - 1;
 }
 
-void FILTER_Init(DigitalFilter* f, float* numerator, float* denominator, float padVal)
+void FILTER_Init(DigitalFilter* f, accum* numerator, accum* denominator, accum padVal)
 {
 	for ( uint8_t i = 0; i < FILTER_NUMER_LEN; i++)
-	f->num[i] = numerator[i];
+		f->num[i] = numerator[i];
 	for ( uint8_t i = 0; i < FILTER_DENOM_LEN; i++)
-	f->den[i] = denominator[i];
+		f->den[i] = denominator[i];
 	
 	FILTER_ResetWithPadding(f, padVal);
-	f->currInputIndex = FILTER_NUMER_LEN - 1;
-	f->currOutputIndex = FILTER_DENOM_LEN - 1;
 }
 
-void PushFilterInput(DigitalFilter* f, float val)
+void PushFilterInput(DigitalFilter* f, accum val)
 {
 	//Push onto circular input buffer, this is an O(1) operation
 	if (f->currInputIndex == 0 ) f->currInputIndex = FILTER_NUMER_LEN - 1;
@@ -42,7 +40,7 @@ void PushFilterInput(DigitalFilter* f, float val)
 	f->input[f->currInputIndex] = val;
 }
 
-void PushFilterOutput(DigitalFilter* f, float val)
+void PushFilterOutput(DigitalFilter* f, accum val)
 {
 	// push onto circular output buffer, this is an O(1) operation	
 	if (f->currOutputIndex == 0) f->currOutputIndex = FILTER_DENOM_LEN - 1;
@@ -50,21 +48,21 @@ void PushFilterOutput(DigitalFilter* f, float val)
 	f->output[f->currOutputIndex] = val;
 }
 
-float GetInput(DigitalFilter* f, uint8_t index)
+accum GetInput(DigitalFilter* f, uint8_t index)
 {
 	return f->input[(f->currInputIndex + index) % FILTER_NUMER_LEN];
 }
 
-float GetOutput(DigitalFilter* f, uint8_t index)
+accum GetOutput(DigitalFilter* f, uint8_t index)
 {
 	return f->output[(f->currOutputIndex + index) % FILTER_DENOM_LEN];
 }
 
-float Filter(DigitalFilter* f, uint16_t new_input)
+accum Filter(DigitalFilter* f, uint16_t new_input)
 {
-	float yn = 0; // will hold return value
+	accum yn = 0.0K; // will hold return value
 	// push a new input in, get rid of un-needed past input
-	PushFilterInput(f,(float)new_input);
+	PushFilterInput(f,(accum)new_input);
 	
 	// implements the IIR different equation
 	// y[n] =   a_1*y[n-1] + ... + a_k*y[n-k]
@@ -79,5 +77,5 @@ float Filter(DigitalFilter* f, uint16_t new_input)
 	PushFilterOutput(f,yn);
 	
 	// return value as integer
-	return yn;
+	return (uint16_t)yn;
 }
