@@ -214,31 +214,74 @@ void Initialize()
 
 ItemClass Classify(QueueElement elem)
 {
-	static ItemClass test = 50;
-	// for now, if the item falls within one of the ranges, we classify it
-	// as the material corresponding to that range.
-	// this will have to be improved upon, since overlap can occur
+	// NOTE TO SELF:
+	// its possible that using a normalized distribution probability measurement
+	// is actually easier and cleaner
+	
+	
+	// reflectivity as a float for future calcs
+	float refl = (float)(elem.reflectivity);
+	// if ferromagnetic, this is easy and we can do an early return
+	if (elem.isFerroMag)
+	{
+		if ( elem.reflectivity >= MIN_ALUMINIUM_VAL && elem.reflectivity <= MAX_ALUMINIUM_VAL )
+		{
+			return ALUMINIUM;
+		}
+		else if ( elem.reflectivity >= MIN_STEEL_VAL && elem.reflectivity <= MAX_STEEL_VAL )
+		{
+			return  STEEL;
+		}
+		else
+		{
+			// if not right in a range, use normalized distances from mean minimum item reflectivity
+			float aluminiumDist = fabs( (refl - AVG_ALUMINIUM_VAL) / RANGE_ALUMINIUM);
+			float steelDist		= fabs( (refl - AVG_STEEL_VAL)     / RANGE_STEEL);
+			
+			if( aluminiumDist <= steelDist )
+				return ALUMINIUM;
+			else
+				return STEEL;
+		}
+	}
+	else // item is not ferromagnetic, and we have to arbitrate between white and black
+	{
+		// calculate normalized distances to mean minimum item reflectance
+		float whiteDist = fabs((refl - AVG_WHITE_VAL) / RANGE_WHITE);
+		float blackDist = fabs((refl - AVG_BLACK_VAL) / RANGE_BLACK);
+		
+		// in the event that the item is in the black and white overlap (if one exists)
+		if (elem.reflectivity >= MIN_BLACK_VAL && elem.reflectivity <= MAX_WHITE_VAL)
+		{
+			if (whiteDist <= blackDist)
+				return WHITE_PLASTIC;
+			else
+				return BLACK_PLASTIC;
+		}
+		// if the item is in the white range exclusively
+		else if (elem.reflectivity >= MIN_WHITE_VAL && elem.reflectivity <= MAX_WHITE_VAL)
+		{
+			return WHITE_PLASTIC;
+		}
+		// if the item is in the black range exclusively
+		else if (elem.reflectivity >= MIN_BLACK_VAL && elem.reflectivity <= MAX_BLACK_VAL)
+		{
+			return BLACK_PLASTIC;
+		}
+		else // the item is outside both ranges
+		{
+			if (whiteDist <= blackDist)
+				return WHITE_PLASTIC;
+			else
+				return BLACK_PLASTIC;
+		}
+	}
+	
 	/*
-	if		(	elem.reflectivity >= MIN_ALUMINIUM_VAL
-				&& elem.reflectivity <= MAX_ALUMINIUM_VAL )
-		return ALUMINIUM;
-		 
-	else if (	elem.reflectivity >= MIN_STEEL_VAL
-				&& elem.reflectivity <= MAX_STEEL_VAL )
-		return  STEEL;
-	
-	else if (	elem.reflectivity >= MIN_WHITE_PLASTIC_VAL
-				&& elem.reflectivity <= MAX_WHITE_PLASTIC_VAL )
-		return  WHITE_PLASTIC;
-	
-	else if (	elem.reflectivity >= MIN_BLACK_PLASTIC_VAL
-				&& elem.reflectivity <= MAX_BLACK_PLASTIC_VAL )
-		return  BLACK_PLASTIC;
-	else
-		return UNCLASSIFIED; // this should never be reached*/
-	
+	static ItemClass test = 50;
 	test = (test + 50) % 200;
 	return test;
+	*/
 }
 
 void PauseDisplay()
