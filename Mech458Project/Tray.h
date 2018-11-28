@@ -27,6 +27,7 @@ typedef volatile struct Tray
 	ItemClass beltPos;
 	HallSensor hall;
 	StepperMotor stepper;
+	MotorDirection lastDir;
 } Tray;
 
 void TRAY_Init(Tray* tray);

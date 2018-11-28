@@ -39,6 +39,7 @@ void TRAY_Home(Tray* tray)
 			TIMER1_DelayMs(20);	
 		}
 		STEPPER_StepCCW(&(tray->stepper));
+		tray->lastDir = CCW;
 	}
 	else
 	{
@@ -47,6 +48,7 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCW(&(tray->stepper));
 			TIMER1_DelayMs(20);
 		}
+		tray->lastDir = CW;
 	}
 	
 	tray->currentPos = 0;
@@ -55,18 +57,18 @@ void TRAY_Home(Tray* tray)
 
 void TRAY_Rotate(Tray* tray, MotorDirection dir){
 	if(dir == CW){
+		if(tray->lastDir == CCW) tray->delay = tray->delayMax;
 		STEPPER_StepCW(&(tray->stepper));
 		tray->currentPos = (tray->currentPos + 1) % 200;
-		//TIMER1_DelayMs(20);
+		tray->lastDir = CW;
 	}
 	
 	if(dir == CCW){
-		STEPPER_StepCCW(&(tray->stepper));
-			
+		if(tray->lastDir == CW) tray->delay = tray->delayMax;
+		STEPPER_StepCCW(&(tray->stepper));		
 		if( tray->currentPos == 0 ) tray->currentPos = 199;
 		else tray->currentPos--;
-			
-		//TIMER1_DelayMs(20);
+		tray->lastDir = CCW;
 	}
 }
 
@@ -82,11 +84,18 @@ void TRAY_Sort(Tray* tray, ItemClass class){
 	// and the target and turn as necessary
 	int dist = (tray->targetPos) - (tray->currentPos);
 	
-	if(dist == 0) tray->beltPos = tray->targetPos;
+	if(dist == 0)
+	{
+		tray->beltPos = tray->targetPos;
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+		{
+			tray->isReady = true;
+		}
+	}
 	else if(dist == 100 || dist == -100)
 	{
 		TRAY_Rotate(tray,CW);
-		TIMER1_DelayMs(15);
+		TIMER1_DelayMs(tray->delayMax);
 	}
 	else if(dist == 50 || dist == 100 || dist == -100 || dist == -150)
 	{
@@ -98,11 +107,13 @@ void TRAY_Sort(Tray* tray, ItemClass class){
 		TRAY_Rotate(tray,CCW);
 		TIMER1_DelayMs(TRAY_AccelDelay(tray));
 	}
-
+	
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		tray->isReady = true;
+		tray->isReady = false;
 	}
+	
+	
 }
 
 
