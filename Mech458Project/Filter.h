@@ -12,29 +12,23 @@
 
 #include "config.h"
 
-
 typedef volatile struct DigitalFilter
 {
-	// filter coefficients
-	float num[FILTER_NUMER_LEN];
-	float den[FILTER_DENOM_LEN];
-	
 	// circular buffer inputs and outputs
 	uint8_t currInputIndex;
 	uint8_t currOutputIndex;
-	float input[FILTER_NUMER_LEN];
-	float output[FILTER_DENOM_LEN];
+	uint16_t input[FILTER_NUMER_LEN];
+	uint16_t output[FILTER_DENOM_LEN];
 } DigitalFilter;
 
-void FILTER_Init(DigitalFilter* f, float* numerator, float* denominator, float padVal);
-void FILTER_ResetWithPadding(DigitalFilter* f, float padVal);
+void FILTER_Reset(DigitalFilter* f, uint16_t padVal);
 
 // Utility functions
-void PushFilterOutput(DigitalFilter* f, float val);
-void PushFilterInput(DigitalFilter* f, float val);
+void PushFilterOutput(DigitalFilter* f, uint16_t val);
+void PushFilterInput(DigitalFilter* f, uint16_t val);
 
-float GetInput(DigitalFilter* f, uint8_t index);
-float GetOutput(DigitalFilter* f, uint8_t index);
+uint16_t GetInput(DigitalFilter* f, uint8_t index);
+uint16_t GetOutput(DigitalFilter* f, uint8_t index);
 
 
 // WARNING! need to avoid overflow, so arithmetic must be done carefully!
@@ -49,7 +43,7 @@ float GetOutput(DigitalFilter* f, uint8_t index);
  *	NOTE: the output could end up negative at certain points for values very close to 0 in a transient
  *			so noise could possibly make the output negative. Check for negative floats before casting to an unsigned type!
  */
-float Filter(DigitalFilter* f, uint16_t next);
+uint16_t Filter(DigitalFilter* f, uint16_t next);
 
 
 #endif /* INCFILE1_H_ */

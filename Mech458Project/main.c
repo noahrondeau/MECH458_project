@@ -200,10 +200,7 @@ void Initialize()
 	TRAY_Init(&tray);
 	TRAY_Home(&tray);
 	
-	// initialize filter
-	float num[] = FILTER_NUMER_COEFFS;
-	float den[] = FILTER_DENOM_COEFFS;
-	FILTER_Init(&adcFilter, num, den, 1023); // initialize to most likely first value;
+	FILTER_Reset(&adcFilter,1023); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
 	// perhaps in an ADC_Calibrate function
 	
@@ -309,7 +306,7 @@ ISR(INT2_vect)
 		Stage2.adcContinueConversions = true;
 		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
-		FILTER_ResetWithPadding(&adcFilter, 1023);
+		FILTER_Reset(&adcFilter, 1023);
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
