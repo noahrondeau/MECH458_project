@@ -207,24 +207,25 @@ void Initialize()
 ItemClass Classify(QueueElement elem)
 {	
 	// calculate the z_scores of the object in each class' normal distribution
-	// the smaller z_score indicates higher likelihood of the object
+	// the smaller z_score indicates higher likelihood of the object type
 	// this method works best if we have lots of data
+	// use fixed-point arithmetic types supported by avr-gcc for this
 	if( elem.isFerroMag )
 	{
-		float z_alum  = ((float)(elem.reflectivity - AVG_ALUMINIUM_VAL)) / STDEV_ALUMINIUM;
-		float z_steel = ((float)(elem.reflectivity - AVG_STEEL_VAL)) / STDEV_STEEL;
+		accum z_alum  = ((accum)elem.reflectivity - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
+		accum z_steel = ((accum)elem.reflectivity - AVG_STEEL_VAL) / STDEV_STEEL;
 		
-		if( fabs(z_alum) <= fabs(z_steel) )
+		if( absk(z_alum) <= absk(z_steel) )
 			return ALUMINIUM;
 		else
 			return STEEL;
 	}
 	else
 	{
-		float z_white = ((float)(elem.reflectivity - AVG_WHITE_VAL)) / STDEV_WHITE;
-		float z_black = ((float)(elem.reflectivity - AVG_BLACK_VAL)) / STDEV_BLACK;
+		accum z_white = ((accum)elem.reflectivity - AVG_WHITE_VAL) / STDEV_WHITE;
+		accum z_black = ((accum)elem.reflectivity - AVG_BLACK_VAL) / STDEV_BLACK;
 		
-		if( fabs(z_white) <= fabs(z_black) )
+		if( absk(z_white) <= absk(z_black) )
 			return WHITE_PLASTIC;
 		else
 			return BLACK_PLASTIC;
@@ -319,13 +320,13 @@ ISR(INT2_vect)
 		
 		// Atomic enqueue
 		QUEUE_Enqueue(readyQueue, processedItem);
-		//LED_Set(QUEUE_Size(readyQueue));
 	}
 }
 
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
+
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
