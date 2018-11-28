@@ -24,7 +24,7 @@
 #define LINKED_QUEUE_MODE	(1)
 #define CIRCULAR_QUEUE_MODE	(!LINKED_QUEUE_MODE)
 
-#define TWO_PHASE_COMMUTATION_MODE (0)
+#define TWO_PHASE_COMMUTATION_MODE (1)
 
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
@@ -126,25 +126,29 @@ typedef volatile uint8_t  GPIOMask;
 
 #define LARGEST_UINT16_T ((uint16_t)(0xFFFF))
 
-#define MIN_ALUMINIUM_VAL		(0)
-#define MAX_ALUMINIUM_VAL		(28)
-#define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL + MAX_ALUMINIUM_VAL)
-#define AVG_ALUMINIUM_VAL		(RANGE_ALUMINIUM/2)
+#define MIN_ALUMINIUM_VAL		(10)
+#define MAX_ALUMINIUM_VAL		(34)
+#define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL - MIN_ALUMINIUM_VAL)
+#define AVG_ALUMINIUM_VAL		(15.8)
+#define STDEV_ALUMINIUM			(6.7)
 
-#define MIN_STEEL_VAL			(351)
-#define MAX_STEEL_VAL			(496)
-#define RANGE_STEEL				(MAX_STEEL_VAL + MIN_STEEL_VAL)
-#define AVG_STEEL_VAL			(RANGE_STEEL/2)
+#define MIN_STEEL_VAL			(558)
+#define MAX_STEEL_VAL			(664)
+#define RANGE_STEEL				(MAX_STEEL_VAL - MIN_STEEL_VAL)
+#define AVG_STEEL_VAL			(625.2)
+#define STDEV_STEEL				(39.8)
 
-#define MIN_WHITE_VAL			(932)
-#define MAX_WHITE_VAL			(969)
-#define RANGE_WHITE				(MAX_WHITE_VAL + MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(RANGE_WHITE/2)
+#define MIN_WHITE_VAL			(893)
+#define MAX_WHITE_VAL			(923)
+#define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
+#define AVG_WHITE_VAL			(908.8)
+#define STDEV_WHITE				(9.5)
 
-#define MIN_BLACK_VAL			(934)
-#define MAX_BLACK_VAL			(982)
-#define RANGE_BLACK				(MAX_BLACK_VAL + MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(RANGE_BLACK/2)
+#define MIN_BLACK_VAL			(924)
+#define MAX_BLACK_VAL			(947)
+#define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
+#define AVG_BLACK_VAL			(938.4545455)
+#define STDEV_BLACK				(7.6)
 
 		// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
 #define FILTER_NUMER_LEN		(4)

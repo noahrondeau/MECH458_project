@@ -118,10 +118,12 @@ int main()
 				{
 					// if the tray is not in position! rotate!
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+					//LED_Set(QUEUE_Peak(readyQueue).reflectivity);
 				
 					// initiate a turn if the target got updated
 					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
 					{
+						LED_On(nextClass / 50);
 						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
 					}
 				
@@ -132,7 +134,7 @@ int main()
 					{
 						// dequeue is atomic
 						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-						LED_Set(QUEUE_Size(readyQueue));
+						//LED_Set(QUEUE_Size(readyQueue));
 						
 						//if (dropItem.class == UNCLASSIFIED)
 						//	LED_Set(0xFF);
@@ -216,75 +218,30 @@ void Initialize()
 }
 
 ItemClass Classify(QueueElement elem)
-{
-	// NOTE TO SELF:
-	// its possible that using a normalized distribution probability measurement
-	// is actually easier and cleaner
-	
-	
-	// reflectivity as a float for future calcs
-	float refl = (float)(elem.reflectivity);
-	// if ferromagnetic, this is easy and we can do an early return
-	if (elem.isFerroMag)
+{	
+	// calculate the z_scores of the object in each class' normal distribution
+	// the smaller z_score indicates higher likelihood of the object
+	// this method works best if we have lots of data
+	if( elem.isFerroMag )
 	{
-		if ( elem.reflectivity >= MIN_ALUMINIUM_VAL && elem.reflectivity <= MAX_ALUMINIUM_VAL )
-		{
-			return ALUMINIUM;
-		}
-		else if ( elem.reflectivity >= MIN_STEEL_VAL && elem.reflectivity <= MAX_STEEL_VAL )
-		{
-			return  STEEL;
-		}
-		else
-		{
-			// if not right in a range, use normalized distances from mean minimum item reflectivity
-			float aluminiumDist = fabs( (refl - AVG_ALUMINIUM_VAL) / RANGE_ALUMINIUM);
-			float steelDist		= fabs( (refl - AVG_STEEL_VAL)     / RANGE_STEEL);
-			
-			if( aluminiumDist <= steelDist )
-				return ALUMINIUM;
-			else
-				return STEEL;
-		}
-	}
-	else // item is not ferromagnetic, and we have to arbitrate between white and black
-	{
-		// calculate normalized distances to mean minimum item reflectance
-		float whiteDist = fabs((refl - AVG_WHITE_VAL) / RANGE_WHITE);
-		float blackDist = fabs((refl - AVG_BLACK_VAL) / RANGE_BLACK);
+		float z_alum  = ((float)(elem.reflectivity) - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
+		float z_steel = ((float)(elem.reflectivity) - AVG_STEEL_VAL) / STDEV_STEEL;
 		
-		// in the event that the item is in the black and white overlap (if one exists)
-		if (elem.reflectivity >= MIN_BLACK_VAL && elem.reflectivity <= MAX_WHITE_VAL)
-		{
-			if (whiteDist <= blackDist)
-				return WHITE_PLASTIC;
-			else
-				return BLACK_PLASTIC;
-		}
-		// if the item is in the white range exclusively
-		else if (elem.reflectivity >= MIN_WHITE_VAL && elem.reflectivity <= MAX_WHITE_VAL)
-		{
-			return WHITE_PLASTIC;
-		}
-		// if the item is in the black range exclusively
-		else if (elem.reflectivity >= MIN_BLACK_VAL && elem.reflectivity <= MAX_BLACK_VAL)
-		{
-			return BLACK_PLASTIC;
-		}
-		else // the item is outside both ranges
-		{
-			if (whiteDist <= blackDist)
-				return WHITE_PLASTIC;
-			else
-				return BLACK_PLASTIC;
-		}
+		if( fabs(z_alum) <= fabs(z_steel) )
+			return ALUMINIUM;
+		else
+			return STEEL;
 	}
-	
-	/*
-	static ItemClass test = 50;
-	test = (test + 50) % 200;
-	return test;
-	*/
+	else
+	{
+		float z_white = ((float)(elem.reflectivity) - AVG_WHITE_VAL) / STDEV_WHITE;
+		float z_black = ((float)(elem.reflectivity) - AVG_BLACK_VAL) / STDEV_BLACK;
+		
+		if( fabs(z_white) <= fabs(z_black) )
+			return WHITE_PLASTIC;
+		else
+			return BLACK_PLASTIC;
+	}
 }
 
 void PauseDisplay()
@@ -321,6 +278,7 @@ ISR(INT1_vect)
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
 	{	
+		LED_Set(0x00);
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
 		new_elem.counter = ++(ItemStats.totalCount);
@@ -374,7 +332,7 @@ ISR(INT2_vect)
 		
 		// Atomic enqueue
 		QUEUE_Enqueue(readyQueue, processedItem);
-		LED_Set(QUEUE_Size(readyQueue));
+		//LED_Set(QUEUE_Size(readyQueue));
 	}
 }
 
