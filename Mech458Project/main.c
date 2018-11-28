@@ -211,10 +211,12 @@ ItemClass Classify(QueueElement elem)
 	// this method works best if we have lots of data
 	// use fixed-point arithmetic types supported by avr-gcc for this
 	// NOTE: accum is unsigned
+	accum refl = (accum)(elem.reflectivity);
+	
 	if( elem.isFerroMag )
 	{
-		accum z_alum  = ((accum)elem.reflectivity - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
-		accum z_steel = ((accum)elem.reflectivity - AVG_STEEL_VAL) / STDEV_STEEL;
+		accum z_alum  = (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
+		accum z_steel = (refl - AVG_STEEL_VAL) / STDEV_STEEL;
 		
 		if( absk(z_alum) <= absk(z_steel) )
 			return ALUMINIUM;
@@ -223,8 +225,8 @@ ItemClass Classify(QueueElement elem)
 	}
 	else
 	{
-		accum z_white = ((accum)elem.reflectivity - AVG_WHITE_VAL) / STDEV_WHITE;
-		accum z_black = ((accum)elem.reflectivity - AVG_BLACK_VAL) / STDEV_BLACK;
+		accum z_white = (refl - AVG_WHITE_VAL) / STDEV_WHITE;
+		accum z_black = (refl - AVG_BLACK_VAL) / STDEV_BLACK;
 		
 		if( absk(z_white) <= absk(z_black) )
 			return WHITE_PLASTIC;
