@@ -118,12 +118,10 @@ int main()
 				{
 					// if the tray is not in position! rotate!
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-					//LED_Set(QUEUE_Peak(readyQueue).reflectivity);
 				
 					// initiate a turn if the target got updated
 					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
 					{
-						LED_On(nextClass / 50);
 						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
 					}
 				
@@ -134,17 +132,6 @@ int main()
 					{
 						// dequeue is atomic
 						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-						//LED_Set(QUEUE_Size(readyQueue));
-						
-						//if (dropItem.class == UNCLASSIFIED)
-						//	LED_Set(0xFF);
-						//else
-						//{
-						//	LED_Set(0x00);
-						//	LED_On(dropItem.class / 50);
-						//}
-						// sort stats here later!
-						
 						// atomically reset itemReady flag
 						// must be atomic so that EXIT interrupt doesn't overwrite it
 						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -224,8 +211,8 @@ ItemClass Classify(QueueElement elem)
 	// this method works best if we have lots of data
 	if( elem.isFerroMag )
 	{
-		float z_alum  = ((float)(elem.reflectivity) - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
-		float z_steel = ((float)(elem.reflectivity) - AVG_STEEL_VAL) / STDEV_STEEL;
+		float z_alum  = ((float)(elem.reflectivity - AVG_ALUMINIUM_VAL)) / STDEV_ALUMINIUM;
+		float z_steel = ((float)(elem.reflectivity - AVG_STEEL_VAL)) / STDEV_STEEL;
 		
 		if( fabs(z_alum) <= fabs(z_steel) )
 			return ALUMINIUM;
@@ -234,8 +221,8 @@ ItemClass Classify(QueueElement elem)
 	}
 	else
 	{
-		float z_white = ((float)(elem.reflectivity) - AVG_WHITE_VAL) / STDEV_WHITE;
-		float z_black = ((float)(elem.reflectivity) - AVG_BLACK_VAL) / STDEV_BLACK;
+		float z_white = ((float)(elem.reflectivity - AVG_WHITE_VAL)) / STDEV_WHITE;
+		float z_black = ((float)(elem.reflectivity - AVG_BLACK_VAL)) / STDEV_BLACK;
 		
 		if( fabs(z_white) <= fabs(z_black) )
 			return WHITE_PLASTIC;

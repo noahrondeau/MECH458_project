@@ -129,25 +129,25 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_ALUMINIUM_VAL		(10)
 #define MAX_ALUMINIUM_VAL		(34)
 #define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL - MIN_ALUMINIUM_VAL)
-#define AVG_ALUMINIUM_VAL		(15.8)
+#define AVG_ALUMINIUM_VAL		(16)
 #define STDEV_ALUMINIUM			(6.7)
 
 #define MIN_STEEL_VAL			(558)
 #define MAX_STEEL_VAL			(664)
 #define RANGE_STEEL				(MAX_STEEL_VAL - MIN_STEEL_VAL)
-#define AVG_STEEL_VAL			(625.2)
+#define AVG_STEEL_VAL			(625)
 #define STDEV_STEEL				(39.8)
 
 #define MIN_WHITE_VAL			(893)
 #define MAX_WHITE_VAL			(923)
 #define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(908.8)
+#define AVG_WHITE_VAL			(909)
 #define STDEV_WHITE				(9.5)
 
 #define MIN_BLACK_VAL			(924)
 #define MAX_BLACK_VAL			(947)
 #define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(938.4545455)
+#define AVG_BLACK_VAL			(938)
 #define STDEV_BLACK				(7.6)
 
 		// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
