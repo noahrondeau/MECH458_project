@@ -114,6 +114,8 @@ int main()
 		{
 		case RUN_STATE:
 			{	
+				
+				
 				if ( !QUEUE_IsEmpty(readyQueue))
 				{
 					// if the tray is not in position! rotate!

@@ -173,9 +173,9 @@ typedef volatile struct FiniteStateMachine
 typedef enum ItemClass
 {
 	UNCLASSIFIED = 255, // bogus value, need to check everywhere!!!
-	STEEL = 50,
+	STEEL = 150,
 	WHITE_PLASTIC = 100,
-	ALUMINIUM = 150,
+	ALUMINIUM = 50,
 	BLACK_PLASTIC = 0,
 }ItemClass;
 

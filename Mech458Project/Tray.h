@@ -35,6 +35,8 @@ void TRAY_Home(Tray* tray);
 void TRAY_Rotate90(Tray* tray, MotorDirection dir);
 void TRAY_Rotate180(Tray* tray);
 
+void TRAY_Rotate(Tray* tray, MotorDirection dir);
+
 void TRAY_AccelRotate90(Tray* tray, MotorDirection dir);
 void TRAY_AccelRotate180(Tray* tray);
 
@@ -47,7 +49,7 @@ uint8_t TRAY_GetCurrentPos(Tray* tray);
 bool TRAY_IsReady(Tray* tray);
 
 uint8_t TRAY_DistCalc(Tray* tray);
-void TRAY_AccelDelay(Tray* tray);
+uint8_t TRAY_AccelDelay(Tray* tray);
 
 
 #endif /* TRAY_H_ */
