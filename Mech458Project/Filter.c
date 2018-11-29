@@ -76,6 +76,5 @@ accum Filter(DigitalFilter* f, uint16_t new_input)
 	// stash new output for future use in equation
 	PushFilterOutput(f,yn);
 	
-	// return value as integer
-	return (uint16_t)yn;
+	return yn;
 }
