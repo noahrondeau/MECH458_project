@@ -8,71 +8,80 @@
 #include "Filter.h"
 #include "config.h"
 
+static volatile struct
+{
+	// circular buffer inputs and outputs
+	uint8_t currInputIndex;
+	uint8_t currOutputIndex;
+	accum input[FILTER_NUMER_LEN];
+	accum output[FILTER_DENOM_LEN];
+} __myStaticIIR;
+
 // call this to reset the input and output buffers to a desired value
 // ideally, this value should be set as close to the expect first input in the data stream
 // as possible, to minimize the startup transient
-void FILTER_ResetWithPadding(DigitalFilter* f, accum padVal)
+void FILTER_ResetWithPadding(accum padVal)
 {
 	for ( uint8_t i = 0; i < FILTER_NUMER_LEN; i++ )
-		f->input[i] = padVal;
+		__myStaticIIR.input[i] = padVal;
 	for ( uint8_t i = 0; i < FILTER_DENOM_LEN; i++ )
-		f->output[i] = padVal;
+		__myStaticIIR.output[i] = padVal;
 
-	f->currInputIndex = FILTER_NUMER_LEN - 1;
-	f->currOutputIndex = FILTER_NUMER_LEN - 1;
+	__myStaticIIR.currInputIndex = FILTER_NUMER_LEN - 1;
+	__myStaticIIR.currOutputIndex = FILTER_NUMER_LEN - 1;
 }
 
-void FILTER_Init(DigitalFilter* f, accum padVal)
+void FILTER_Init(accum padVal)
 {	
-	FILTER_ResetWithPadding(f, padVal);
+	FILTER_ResetWithPadding(padVal);
 }
 
-void PushFilterInput(DigitalFilter* f, accum val)
+void PushFilterInput(accum val)
 {
 	//Push onto circular input buffer, this is an O(1) operation
-	if (f->currInputIndex == 0 ) f->currInputIndex = FILTER_NUMER_LEN - 1;
-	else f->currInputIndex--;
-	f->input[f->currInputIndex] = val;
+	if (__myStaticIIR.currInputIndex == 0 ) __myStaticIIR.currInputIndex = FILTER_NUMER_LEN - 1;
+	else __myStaticIIR.currInputIndex--;
+	__myStaticIIR.input[__myStaticIIR.currInputIndex] = val;
 }
 
-void PushFilterOutput(DigitalFilter* f, accum val)
+void PushFilterOutput(accum val)
 {
 	// push onto circular output buffer, this is an O(1) operation	
-	if (f->currOutputIndex == 0) f->currOutputIndex = FILTER_DENOM_LEN - 1;
-	else f->currOutputIndex--;
-	f->output[f->currOutputIndex] = val;
+	if (__myStaticIIR.currOutputIndex == 0) __myStaticIIR.currOutputIndex = FILTER_DENOM_LEN - 1;
+	else __myStaticIIR.currOutputIndex--;
+	__myStaticIIR.output[__myStaticIIR.currOutputIndex] = val;
 }
 
-accum GetInput(DigitalFilter* f, uint8_t index)
+accum GetInput(uint8_t index)
 {
-	return f->input[(f->currInputIndex + index) % FILTER_NUMER_LEN];
+	return __myStaticIIR.input[(__myStaticIIR.currInputIndex + index) % FILTER_NUMER_LEN];
 }
 
-accum GetOutput(DigitalFilter* f, uint8_t index)
+accum GetOutput(uint8_t index)
 {
-	return f->output[(f->currOutputIndex + index) % FILTER_DENOM_LEN];
+	return __myStaticIIR.output[(__myStaticIIR.currOutputIndex + index) % FILTER_DENOM_LEN];
 }
 
-accum Filter(DigitalFilter* f, uint16_t new_input)
+accum Filter(uint16_t next)
 {
 	accum yn = 0.0K; // will hold return value
 	// push a new input in, get rid of un-needed past input
-	PushFilterInput(f,(accum)new_input);
+	PushFilterInput((accum)next);
 	
 	// implements the IIR different equation
 	// y[n] =   a_1*y[n-1] + ... + a_k*y[n-k]
 	//		  + b_0*x[n] + b_1*x[n-1] + ... + b_j*x[n-j]
-	yn += (IIRB0*GetInput(f,0));
-	yn += (IIRB1*GetInput(f,1));
-	yn += (IIRB2*GetInput(f,2));
-	yn += (IIRB3*GetInput(f,3));
+	yn += (IIRB0*GetInput(0));
+	yn += (IIRB1*GetInput(1));
+	yn += (IIRB2*GetInput(2));
+	yn += (IIRB3*GetInput(3));
 	
-	yn += (IIRA0*GetOutput(f,0));
-	yn += (IIRA1*GetOutput(f,1));
-	yn += (IIRA2*GetOutput(f,2));
+	yn += (IIRA0*GetOutput(0));
+	yn += (IIRA1*GetOutput(1));
+	yn += (IIRA2*GetOutput(2));
 	
 	// stash new output for future use in equation
-	PushFilterOutput(f,yn);
+	PushFilterOutput(yn);
 	
 	return yn;
 }

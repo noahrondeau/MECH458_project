@@ -42,7 +42,6 @@ OpticalSensor	exit_optic;
 PushButton		pauseButton;
 PushButton		rampDownButton;
 Tray			tray;
-DigitalFilter	adcFilter; // butterworth LPF for ADC vals
 
 // State variable
 FiniteStateMachine fsmState = {
@@ -190,7 +189,7 @@ void Initialize()
 	TRAY_Init(&tray);
 	TRAY_Home(&tray);
 	
-	FILTER_Init(&adcFilter, 1023); // initialize to most likely first value;
+	FILTER_Init(1023.0K); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
 	// perhaps in an ADC_Calibrate function
 	
@@ -298,7 +297,7 @@ ISR(INT2_vect)
 		Stage2.adcContinueConversions = true;
 		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
-		FILTER_ResetWithPadding(&adcFilter, 1023);
+		FILTER_ResetWithPadding(1023.0K);
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
@@ -405,7 +404,7 @@ ISR(ADC_vect)
 		//LED_Set( (uint8_t)((adc.result) >> 2));
 		Stage2.sampleCount++;
 	
-		accum fx_out = Filter(&adcFilter, adc.result);
+		accum fx_out = Filter(adc.result);
 		uint16_t u_out;
 	
 		if ( fx_out < 0.0K ) u_out = 0;

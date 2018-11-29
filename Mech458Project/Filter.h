@@ -12,25 +12,15 @@
 
 #include "config.h"
 
-
-typedef volatile struct DigitalFilter
-{	
-	// circular buffer inputs and outputs
-	uint8_t currInputIndex;
-	uint8_t currOutputIndex;
-	accum input[FILTER_NUMER_LEN];
-	accum output[FILTER_DENOM_LEN];
-} DigitalFilter;
-
-void FILTER_Init(DigitalFilter* f, accum padVal);
-void FILTER_ResetWithPadding(DigitalFilter* f, accum padVal);
+void FILTER_Init(accum padVal);
+void FILTER_ResetWithPadding(accum padVal);
 
 // Utility functions
-void PushFilterOutput(DigitalFilter* f, accum val);
-void PushFilterInput(DigitalFilter* f, accum val);
+void PushFilterOutput(accum val);
+void PushFilterInput(accum val);
 
-accum GetInput(DigitalFilter* f, uint8_t index);
-accum GetOutput(DigitalFilter* f, uint8_t index);
+accum GetInput(uint8_t index);
+accum GetOutput(uint8_t index);
 
 
 // WARNING! need to avoid overflow, so arithmetic must be done carefully!
@@ -45,7 +35,7 @@ accum GetOutput(DigitalFilter* f, uint8_t index);
  *	NOTE: the output could end up negative at certain points for values very close to 0 in a transient
  *			so noise could possibly make the output negative. Check for negative accums before casting to an unsigned type!
  */
-accum Filter(DigitalFilter* f, uint16_t next);
+accum Filter(uint16_t next);
 
 
 #endif /* INCFILE1_H_ */
