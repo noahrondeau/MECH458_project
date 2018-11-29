@@ -8,6 +8,7 @@
 #include "Filter.h"
 #include "config.h"
 
+// singleton struct
 static volatile struct
 {
 	// circular buffer inputs and outputs
@@ -17,6 +18,13 @@ static volatile struct
 	accum output[FILTER_DENOM_LEN];
 } __myStaticIIR;
 
+// Utility functions forward declare
+static void PushFilterOutput(accum val);
+static void PushFilterInput(accum val);
+static accum GetInput(uint8_t index);
+static accum GetOutput(uint8_t index);
+
+// public functions
 void FILTER_InitReset(accum padVal)
 {	
 	for ( uint8_t i = 0; i < FILTER_NUMER_LEN; i++ )
@@ -26,32 +34,6 @@ void FILTER_InitReset(accum padVal)
 
 	__myStaticIIR.currInputIndex = FILTER_NUMER_LEN - 1;
 	__myStaticIIR.currOutputIndex = FILTER_NUMER_LEN - 1;
-}
-
-void PushFilterInput(accum val)
-{
-	//Push onto circular input buffer, this is an O(1) operation
-	if (__myStaticIIR.currInputIndex == 0 ) __myStaticIIR.currInputIndex = FILTER_NUMER_LEN - 1;
-	else __myStaticIIR.currInputIndex--;
-	__myStaticIIR.input[__myStaticIIR.currInputIndex] = val;
-}
-
-void PushFilterOutput(accum val)
-{
-	// push onto circular output buffer, this is an O(1) operation	
-	if (__myStaticIIR.currOutputIndex == 0) __myStaticIIR.currOutputIndex = FILTER_DENOM_LEN - 1;
-	else __myStaticIIR.currOutputIndex--;
-	__myStaticIIR.output[__myStaticIIR.currOutputIndex] = val;
-}
-
-accum GetInput(uint8_t index)
-{
-	return __myStaticIIR.input[(__myStaticIIR.currInputIndex + index) % FILTER_NUMER_LEN];
-}
-
-accum GetOutput(uint8_t index)
-{
-	return __myStaticIIR.output[(__myStaticIIR.currOutputIndex + index) % FILTER_DENOM_LEN];
 }
 
 accum Filter(uint16_t next)
@@ -76,4 +58,32 @@ accum Filter(uint16_t next)
 	PushFilterOutput(yn);
 	
 	return yn;
+}
+
+
+/* ====== Utility function defs ====== */
+static void PushFilterInput(accum val)
+{
+	//Push onto circular input buffer, this is an O(1) operation
+	if (__myStaticIIR.currInputIndex == 0 ) __myStaticIIR.currInputIndex = FILTER_NUMER_LEN - 1;
+	else __myStaticIIR.currInputIndex--;
+	__myStaticIIR.input[__myStaticIIR.currInputIndex] = val;
+}
+
+static void PushFilterOutput(accum val)
+{
+	// push onto circular output buffer, this is an O(1) operation	
+	if (__myStaticIIR.currOutputIndex == 0) __myStaticIIR.currOutputIndex = FILTER_DENOM_LEN - 1;
+	else __myStaticIIR.currOutputIndex--;
+	__myStaticIIR.output[__myStaticIIR.currOutputIndex] = val;
+}
+
+static accum GetInput(uint8_t index)
+{
+	return __myStaticIIR.input[(__myStaticIIR.currInputIndex + index) % FILTER_NUMER_LEN];
+}
+
+static accum GetOutput(uint8_t index)
+{
+	return __myStaticIIR.output[(__myStaticIIR.currOutputIndex + index) % FILTER_DENOM_LEN];
 }
