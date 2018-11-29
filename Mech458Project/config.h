@@ -154,8 +154,15 @@ typedef volatile uint8_t  GPIOMask;
 		// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
 #define FILTER_NUMER_LEN		(4)
 #define FILTER_DENOM_LEN		(3)
-#define FILTER_NUMER_COEFFS		{0.0029k, 0.0087k, 0.0087k, 0.0029k}		
-#define FILTER_DENOM_COEFFS		{2.3741k, -1.9294k, 0.5321k}
+	
+#define IIRB0					(0.0029K)
+#define IIRB1					(0.0087K)
+#define IIRB2					(0.0087K)
+#define IIRB3					(0.0029K)
+
+#define IIRA0					(2.3741K)
+#define IIRA1					(-1.9294K)
+#define IIRA2					(0.5321K)
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 

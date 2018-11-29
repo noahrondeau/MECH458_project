@@ -22,13 +22,8 @@ void FILTER_ResetWithPadding(DigitalFilter* f, accum padVal)
 	f->currOutputIndex = FILTER_NUMER_LEN - 1;
 }
 
-void FILTER_Init(DigitalFilter* f, accum* numerator, accum* denominator, accum padVal)
-{
-	for ( uint8_t i = 0; i < FILTER_NUMER_LEN; i++)
-		f->num[i] = numerator[i];
-	for ( uint8_t i = 0; i < FILTER_DENOM_LEN; i++)
-		f->den[i] = denominator[i];
-	
+void FILTER_Init(DigitalFilter* f, accum padVal)
+{	
 	FILTER_ResetWithPadding(f, padVal);
 }
 
@@ -67,11 +62,14 @@ accum Filter(DigitalFilter* f, uint16_t new_input)
 	// implements the IIR different equation
 	// y[n] =   a_1*y[n-1] + ... + a_k*y[n-k]
 	//		  + b_0*x[n] + b_1*x[n-1] + ... + b_j*x[n-j]
-	for (uint8_t i = 0; i < FILTER_NUMER_LEN; i++)
-		yn += (f->num[i])*GetInput(f,i);
-		
-	for (uint8_t i = 0; i < FILTER_DENOM_LEN; i++)
-		yn += (f->den[i])*GetOutput(f,i);
+	yn += (IIRB0*GetInput(f,0));
+	yn += (IIRB1*GetInput(f,1));
+	yn += (IIRB2*GetInput(f,2));
+	yn += (IIRB3*GetInput(f,3));
+	
+	yn += (IIRA0*GetOutput(f,0));
+	yn += (IIRA1*GetOutput(f,1));
+	yn += (IIRA2*GetOutput(f,2));
 	
 	// stash new output for future use in equation
 	PushFilterOutput(f,yn);

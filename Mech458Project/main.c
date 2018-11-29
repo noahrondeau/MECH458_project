@@ -190,10 +190,7 @@ void Initialize()
 	TRAY_Init(&tray);
 	TRAY_Home(&tray);
 	
-	// initialize filter
-	accum num[] = FILTER_NUMER_COEFFS;
-	accum den[] = FILTER_DENOM_COEFFS;
-	FILTER_Init(&adcFilter, num, den, 1023); // initialize to most likely first value;
+	FILTER_Init(&adcFilter, 1023); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
 	// perhaps in an ADC_Calibrate function
 	

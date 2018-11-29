@@ -14,11 +14,7 @@
 
 
 typedef volatile struct DigitalFilter
-{
-	// filter coefficients
-	accum num[FILTER_NUMER_LEN];
-	accum den[FILTER_DENOM_LEN];
-	
+{	
 	// circular buffer inputs and outputs
 	uint8_t currInputIndex;
 	uint8_t currOutputIndex;
@@ -26,7 +22,7 @@ typedef volatile struct DigitalFilter
 	accum output[FILTER_DENOM_LEN];
 } DigitalFilter;
 
-void FILTER_Init(DigitalFilter* f, accum* numerator, accum* denominator, accum padVal);
+void FILTER_Init(DigitalFilter* f, accum padVal);
 void FILTER_ResetWithPadding(DigitalFilter* f, accum padVal);
 
 // Utility functions
