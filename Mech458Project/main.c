@@ -408,15 +408,15 @@ ISR(ADC_vect)
 		//LED_Set( (uint8_t)((adc.result) >> 2));
 		Stage2.sampleCount++;
 	
-		float f_filteredOutput = Filter(&adcFilter, adc.result);
-		uint16_t u_filteredOutput;
+		accum fx_out = Filter(&adcFilter, adc.result);
+		uint16_t u_out;
 	
-		if ( f_filteredOutput < 0.0 ) u_filteredOutput = 0;
-		else if (f_filteredOutput > 1023.0) u_filteredOutput = 1023;
-		else u_filteredOutput = (uint16_t)f_filteredOutput;
+		if ( fx_out < 0.0K ) u_out = 0;
+		else if (fx_out > 1023.0K) u_out = 1023;
+		else u_out = (uint16_t)fx_out;
 	
-		if (u_filteredOutput < Stage2.minReflectivity)
-			Stage2.minReflectivity = u_filteredOutput;
+		if (u_out < Stage2.minReflectivity)
+			Stage2.minReflectivity = u_out;
 		
 		if (OPTICAL_IsBlocked(&s2_optic))
 			ADC_StartConversion(&adc);
