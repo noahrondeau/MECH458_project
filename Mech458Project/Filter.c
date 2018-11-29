@@ -42,6 +42,8 @@ accum Filter(uint16_t next)
 	// implements the IIR different equation
 	// y[n] =   a_1*y[n-1] + ... + a_k*y[n-k]
 	//		  + b_0*x[n] + b_1*x[n-1] + ... + b_j*x[n-j]
+	
+	// it is critical these be done separately and with matched indices
 	yn += (IIRB0*GetInput(0));
 	yn += (IIRB1*GetInput(1));
 	yn += (IIRB2*GetInput(2));

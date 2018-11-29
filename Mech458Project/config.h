@@ -151,18 +151,19 @@ typedef volatile uint8_t  GPIOMask;
 #define AVG_BLACK_VAL			(908.8181k)
 #define STDEV_BLACK				(7.5546k)
 
-		// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.1pi rad/sample
+	// CURRENTLY a 3rd order butterworth filter, w_cutoff = 0.075pi rad/sample
+	// since we sample approximately 220 times per run
 #define FILTER_NUMER_LEN		(4)
 #define FILTER_DENOM_LEN		(3)
 	
-#define IIRB0					(0.0029K)
-#define IIRB1					(0.0087K)
-#define IIRB2					(0.0087K)
-#define IIRB3					(0.0029K)
+#define IIRB0					(0.0013K)
+#define IIRB1					(0.0039K)
+#define IIRB2					(0.0039K)
+#define IIRB3					(0.0013K)
 
-#define IIRA0					(2.3741K)
-#define IIRA1					(-1.9294K)
-#define IIRA2					(0.5321K)
+#define IIRA0					(2.5298K)
+#define IIRA1					(-2.1638K)
+#define IIRA2					(0.6235K)
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 
