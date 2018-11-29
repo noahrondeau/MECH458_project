@@ -42,7 +42,6 @@ OpticalSensor	exit_optic;
 PushButton		pauseButton;
 PushButton		rampDownButton;
 Tray			tray;
-DigitalFilter	adcFilter; // butterworth LPF for ADC vals
 
 // State variable
 FiniteStateMachine fsmState = {
@@ -118,6 +117,7 @@ int main()
 				{
 					// if the tray is not in position! rotate!
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+					LED_Set(QUEUE_Peak(readyQueue).reflectivity);
 				
 					// initiate a turn if the target got updated
 					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
@@ -189,10 +189,7 @@ void Initialize()
 	TRAY_Init(&tray);
 	TRAY_Home(&tray);
 	
-	// initialize filter
-	accum num[] = FILTER_NUMER_COEFFS;
-	accum den[] = FILTER_DENOM_COEFFS;
-	FILTER_Init(&adcFilter, num, den, 1023); // initialize to most likely first value;
+	FILTER_InitReset(1023.0K); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
 	// perhaps in an ADC_Calibrate function
 	
@@ -269,7 +266,6 @@ ISR(INT1_vect)
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
 	{	
-		LED_Set(0x00);
 		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
 		// increment total stat count and tag item with its count ID
 		new_elem.counter = ++(ItemStats.totalCount);
@@ -301,7 +297,7 @@ ISR(INT2_vect)
 		Stage2.adcContinueConversions = true;
 		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
-		FILTER_ResetWithPadding(&adcFilter, 1023);
+		FILTER_InitReset(1023.0K);
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
@@ -408,15 +404,15 @@ ISR(ADC_vect)
 		//LED_Set( (uint8_t)((adc.result) >> 2));
 		Stage2.sampleCount++;
 	
-		float f_filteredOutput = Filter(&adcFilter, adc.result);
-		uint16_t u_filteredOutput;
+		accum fx_out = Filter(adc.result);
+		uint16_t u_out;
 	
-		if ( f_filteredOutput < 0.0 ) u_filteredOutput = 0;
-		else if (f_filteredOutput > 1023.0) u_filteredOutput = 1023;
-		else u_filteredOutput = (uint16_t)f_filteredOutput;
+		if ( fx_out < 0.0K ) u_out = 0;
+		else if (fx_out > 1023.0K) u_out = 1023;
+		else u_out = (uint16_t)fx_out;
 	
-		if (u_filteredOutput < Stage2.minReflectivity)
-			Stage2.minReflectivity = u_filteredOutput;
+		if (u_out < Stage2.minReflectivity)
+			Stage2.minReflectivity = u_out;
 		
 		if (OPTICAL_IsBlocked(&s2_optic))
 			ADC_StartConversion(&adc);
