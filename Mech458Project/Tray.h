@@ -41,7 +41,7 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir);
 void TRAY_AccelRotate90(Tray* tray, MotorDirection dir);
 void TRAY_AccelRotate180(Tray* tray);
 
-void TRAY_Sort(Tray* tray, ItemClass);
+void TRAY_Sort(Tray* tray);
 
 void TRAY_SetTarget(Tray* tray, uint8_t target);
 uint8_t TRAY_GetTarget(Tray* tray);

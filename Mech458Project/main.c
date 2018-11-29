@@ -21,6 +21,7 @@
 #include "Queue.h"
 #include "Tray.h"
 #include "Filter.h"
+#include "time.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
 
@@ -103,7 +104,11 @@ int main()
 {
 	Initialize();
 	TIMER1_DelayMs(2000);
-	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+	
+	
+	int test = 0;
+	tray.targetPos = tray.beltPos;
 	
 	
 	// main loop
@@ -114,47 +119,33 @@ int main()
 		{
 		case RUN_STATE:
 			{	
-				
-				
-				if ( !QUEUE_IsEmpty(readyQueue))
-				{
-					// if the tray is not in position! rotate!
-					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-				
-					// initiate a turn if the target got updated
-					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
+				if(!tray.isReady) TRAY_Sort(&tray);
+				if(tray.isReady){
+					tray.isReady = false;
+					test = rand() % 5;
+					switch (test)
 					{
-						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
-					}
-				
-					// if the item is ready, dequeue the item
-					// read doesn't need to be atomic since only EXIT interrupt could write it to true
-					// and we will see that on the next pass through this loop anyway	
-					if(Stage3.itemReady)
-					{
-						// dequeue is atomic
-						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-						LED_Set(QUEUE_Size(readyQueue));
+						case 0:
+							tray.targetPos = tray.beltPos;
+						break;
 						
-						//if (dropItem.class == UNCLASSIFIED)
-						//	LED_Set(0xFF);
-						//else
-						//{
-						//	LED_Set(0x00);
-						//	LED_On(dropItem.class / 50);
-						//}
-						// sort stats here later!
+						case 1:
+							tray.targetPos = BLACK_PLASTIC;
+						break;
 						
-						// atomically reset itemReady flag
-						// must be atomic so that EXIT interrupt doesn't overwrite it
-						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-						{
-							Stage3.itemReady = false;
-						}
-						// if in this time the EXIT interrupt fired, the belt would have been turned off,
-						// so turn it on again (if already on, this has no effect)
-						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						case 2:
+							tray.targetPos = WHITE_PLASTIC;
+						break;
+						
+						case 3:
+							tray.targetPos = STEEL;
+						break;
+						
+						case 4:
+							tray.targetPos = ALUMINIUM;
+						break;
 					}
+					
 				}
 			}
 			break;

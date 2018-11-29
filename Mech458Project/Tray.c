@@ -81,7 +81,7 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir){
 	}
 }
 
-void TRAY_Sort(Tray* tray, ItemClass class){	
+void TRAY_Sort(Tray* tray){	
 
 	// check the difference between the current position and target
 	// and the target and turn as necessary
