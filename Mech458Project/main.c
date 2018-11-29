@@ -120,8 +120,10 @@ int main()
 		case RUN_STATE:
 			{	
 				if(!tray.isReady) TRAY_Sort(&tray);
-				if(tray.isReady){
+				if(tray.isReady)
+				{
 					tray.isReady = false;
+					/*	
 					test = rand() % 5;
 					switch (test)
 					{
@@ -145,7 +147,7 @@ int main()
 							tray.targetPos = ALUMINIUM;
 						break;
 					}
-					
+					*/
 				}
 			}
 			break;
