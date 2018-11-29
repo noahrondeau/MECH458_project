@@ -56,35 +56,41 @@ void TRAY_Home(Tray* tray)
 }
 
 void TRAY_Rotate(Tray* tray, MotorDirection dir){
-	if(dir == CW){
+	
+	if(dir == CW){ //CW rotation
+		//check if direction change and change delay as check safe
 		if(tray->lastDir == CCW) tray->delay = tray->delayMax;
+		//Step motor once CW
 		STEPPER_StepCW(&(tray->stepper));
+		//update current position
 		tray->currentPos = (tray->currentPos + 1) % 200;
+		//set last rotation direction to CW
 		tray->lastDir = CW;
 	}
 	
-	if(dir == CCW){
+	if(dir == CCW){ //CCW rotation
+		//check if direction change and change delay as check safe
 		if(tray->lastDir == CW) tray->delay = tray->delayMax;
-		STEPPER_StepCCW(&(tray->stepper));		
+		//Step motor once CCW	
+		STEPPER_StepCCW(&(tray->stepper));
+		//update current position	
 		if( tray->currentPos == 0 ) tray->currentPos = 199;
 		else tray->currentPos--;
+		//set last rotation direction to CW		
 		tray->lastDir = CCW;
 	}
 }
 
-void TRAY_Sort(Tray* tray, ItemClass class){
-	
-	TRAY_SetTarget(tray, class);
-	
-	// if its an unclassified item don't do anything
-	if ( TRAY_GetTarget(tray) == UNCLASSIFIED )
-		return;
-	
-	// check the difference between the current position
+void TRAY_Sort(Tray* tray, ItemClass class){	
+
+	// check the difference between the current position and target
 	// and the target and turn as necessary
 	int dist = (tray->targetPos) - (tray->currentPos);
+	int dist_abs = abs(dist);
 	
-	if(dist == 0)
+
+	
+	if(dist == 0) //if tray 
 	{
 		tray->beltPos = tray->targetPos;
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -92,28 +98,24 @@ void TRAY_Sort(Tray* tray, ItemClass class){
 			tray->isReady = true;
 		}
 	}
-	else if(dist == 100 || dist == -100)
+	
+	else if(dist_abs == 100) //180 deg away, starts the CW turn with 1 steps
 	{
 		TRAY_Rotate(tray,CW);
-		TIMER1_DelayMs(tray->delayMax);
+		TIMER1_DelayMs(tray->delay);
 	}
-	else if(dist == 50 || dist == 100 || dist == -100 || dist == -150)
+	//Check statements to determine direction of rotation
+	else if( (dist_abs < 100 && dist > 0) || (dist_abs > 100 && dist < 0)) //CW rotation
 	{
 		TRAY_Rotate(tray,CW);
 		TIMER1_DelayMs(TRAY_AccelDelay(tray));
 	}
-	else if(dist == 150 || dist == -50)
+	else if((dist_abs < 100 && dist < 0) || (dist_abs > 100 && dist > 0)) //CCW Rotation
 	{
 		TRAY_Rotate(tray,CCW);
 		TIMER1_DelayMs(TRAY_AccelDelay(tray));
 	}
-	
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	{
-		tray->isReady = false;
-	}
-	
-	
+		
 }
 
 
@@ -132,6 +134,16 @@ uint8_t TRAY_AccelDelay(Tray* tray){
 
 void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
+	//if target is unclassified do nothing and return
+	if ( target == UNCLASSIFIED )
+	{
+		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+		{
+			tray->isReady = true;
+		}
+		return;
+	}
+	
 	if ( target != tray->targetPos) // new target and old target differ
 	{
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
