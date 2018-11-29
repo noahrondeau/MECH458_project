@@ -12,8 +12,7 @@
 
 #include "config.h"
 
-void FILTER_Init(accum padVal);
-void FILTER_ResetWithPadding(accum padVal);
+void FILTER_InitReset(accum padVal);
 
 // Utility functions
 void PushFilterOutput(accum val);

@@ -17,23 +17,15 @@ static volatile struct
 	accum output[FILTER_DENOM_LEN];
 } __myStaticIIR;
 
-// call this to reset the input and output buffers to a desired value
-// ideally, this value should be set as close to the expect first input in the data stream
-// as possible, to minimize the startup transient
-void FILTER_ResetWithPadding(accum padVal)
-{
+void FILTER_InitReset(accum padVal)
+{	
 	for ( uint8_t i = 0; i < FILTER_NUMER_LEN; i++ )
-		__myStaticIIR.input[i] = padVal;
+	__myStaticIIR.input[i] = padVal;
 	for ( uint8_t i = 0; i < FILTER_DENOM_LEN; i++ )
-		__myStaticIIR.output[i] = padVal;
+	__myStaticIIR.output[i] = padVal;
 
 	__myStaticIIR.currInputIndex = FILTER_NUMER_LEN - 1;
 	__myStaticIIR.currOutputIndex = FILTER_NUMER_LEN - 1;
-}
-
-void FILTER_Init(accum padVal)
-{	
-	FILTER_ResetWithPadding(padVal);
 }
 
 void PushFilterInput(accum val)

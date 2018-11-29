@@ -189,7 +189,7 @@ void Initialize()
 	TRAY_Init(&tray);
 	TRAY_Home(&tray);
 	
-	FILTER_Init(1023.0K); // initialize to most likely first value;
+	FILTER_InitReset(1023.0K); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
 	// perhaps in an ADC_Calibrate function
 	
@@ -297,7 +297,7 @@ ISR(INT2_vect)
 		Stage2.adcContinueConversions = true;
 		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
-		FILTER_ResetWithPadding(1023.0K);
+		FILTER_InitReset(1023.0K);
 		ADC_StartConversion(&adc);
 	}
 	else // just saw rising edge
