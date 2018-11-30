@@ -108,9 +108,9 @@ typedef volatile uint8_t  GPIOMask;
 
 /* ====== FERRO SENSOR CONFIG ====== */
 
-#define FERRO_PINX				(PIND_REG)
-#define FERRO_DDRX				(DDRD_REG)
-#define FERRO_PORTPIN			(3)
+#define FERRO_PINX				(PINE_REG)
+#define FERRO_DDRX				(DDRE_REG)
+#define FERRO_PORTPIN			(5)
 
 /* ====== SW1 PAUSE SWITCH CONFIG ====== */
 

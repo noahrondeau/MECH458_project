@@ -290,7 +290,7 @@ ISR(INT1_vect)
 }
 
 // ISR for Ferro Sensor
-ISR(INT3_vect)
+ISR(INT5_vect)
 {
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
