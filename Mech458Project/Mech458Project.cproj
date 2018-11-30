@@ -143,6 +143,12 @@
     <Compile Include="FerroSensor.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="fifo.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="fifo.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Filter.c">
       <SubType>compile</SubType>
     </Compile>
@@ -210,6 +216,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Tray.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="uart.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="uart.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="UnitTest.c">
