@@ -88,7 +88,7 @@ void TRAY_Sort(Tray* tray){
 	
 
 	
-	if(dist == 0) //if tray 
+	if(dist == 0) //if tray is already in position
 	{
 		tray->beltPos = tray->targetPos;
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -100,7 +100,7 @@ void TRAY_Sort(Tray* tray){
 	else if(dist_abs == 100) //180 deg away, starts the CW turn with 1 steps
 	{
 		TRAY_Rotate(tray,CW);
-		TIMER1_DelayMs(tray->delay);
+		TIMER1_DelayMs(TRAY_AccelDelay(tray));
 	}
 	//Check statements to determine direction of rotation
 	else if( (dist_abs < 100 && dist > 0) || (dist_abs > 100 && dist < 0)) //CW rotation
@@ -126,10 +126,17 @@ uint8_t TRAY_DistCalc(Tray* tray){
 uint8_t TRAY_AccelDelay(Tray* tray){
 	int dist = TRAY_DistCalc(tray);
 	int m_dist = (abs((&tray->targetPos)-(&tray->beltPos)));
-	if( (m_dist - dist) < STEPPER_accelRamp && tray->delay > STEPPER_delayMin) tray->delay--;
-	//if(12 <= dist && dist < (tray->targetPos - 11)) tray->delay;
-	if( (m_dist - dist) > (m_dist - STEPPER_accelRamp) && tray->delay < STEPPER_delayMax) tray->delay++;
 	
+	if(m_dist >= 2*STEPPER_accelRamp) //trap acceleration profile
+	{
+		if( (m_dist - dist) < STEPPER_accelRamp && tray->delay > STEPPER_delayMin) tray->delay--;
+		if( (m_dist - dist) > (m_dist - STEPPER_accelRamp) && tray->delay < STEPPER_delayMax) tray->delay++;
+	}
+	else //triangle acceleration profile
+	{
+		if( (m_dist - dist) < (m_dist/2) && tray->delay > STEPPER_delayMin) tray->delay--;
+		if( (m_dist - dist) > (m_dist/2) && tray->delay < STEPPER_delayMax) tray->delay++;
+	}
 	return tray->delay;
 }
 
