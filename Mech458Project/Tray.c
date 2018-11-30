@@ -17,9 +17,7 @@ void TRAY_Init(Tray* tray)
 	tray->currentPos = 0;
 	tray->targetPos = 0;
 	tray->isReady = false;
-	tray->delay = 20;
-	tray->delayMax = 20;
-	tray->delayMin = 8;
+	tray->delay = STEPPER_delayMax;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -59,7 +57,7 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir){
 	
 	if(dir == CW){ //CW rotation
 		//check if direction change and change delay as check safe
-		if(tray->lastDir == CCW) tray->delay = tray->delayMax;
+		if(tray->lastDir == CCW) tray->delay = STEPPER_delayMax;
 		//Step motor once CW
 		STEPPER_StepCW(&(tray->stepper));
 		//update current position
@@ -70,7 +68,7 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir){
 	
 	if(dir == CCW){ //CCW rotation
 		//check if direction change and change delay as check safe
-		if(tray->lastDir == CW) tray->delay = tray->delayMax;
+		if(tray->lastDir == CW) tray->delay = STEPPER_delayMax;
 		//Step motor once CCW	
 		STEPPER_StepCCW(&(tray->stepper));
 		//update current position	
@@ -123,11 +121,14 @@ uint8_t TRAY_DistCalc(Tray* tray){
 	return (uint8_t)(abs((&tray->targetPos)-(&tray->currentPos)));
 }
 
+
+//dist starts large, gets smaller as it rotates to target
 uint8_t TRAY_AccelDelay(Tray* tray){
 	int dist = TRAY_DistCalc(tray);
-	if(dist<12 && tray->delay > tray->delayMin) tray->delay--;
-	if(12 <= dist && dist < (tray->targetPos - 11)) tray->delay;
-	if((tray->targetPos - 11) <= dist && dist<(tray->targetPos) && tray->delay < tray->delayMax) tray->delay++;
+	int m_dist = (abs((&tray->targetPos)-(&tray->beltPos)));
+	if( (m_dist - dist) < STEPPER_accelRamp && tray->delay > STEPPER_delayMin) tray->delay--;
+	//if(12 <= dist && dist < (tray->targetPos - 11)) tray->delay;
+	if( (m_dist - dist) > (m_dist - STEPPER_accelRamp) && tray->delay < STEPPER_delayMax) tray->delay++;
 	
 	return tray->delay;
 }

@@ -108,7 +108,7 @@ int main()
 	
 	
 	int test = 0;
-	tray.targetPos = tray.beltPos;
+	tray.targetPos = WHITE_PLASTIC;
 	
 	
 	// main loop
@@ -122,29 +122,35 @@ int main()
 				if(!tray.isReady) TRAY_Sort(&tray);
 				if(tray.isReady)
 				{
-					tray.isReady = false;
+					TIMER1_DelayMs(500);
+					LED_Set(tray.delay);
 					/*	
 					test = rand() % 5;
 					switch (test)
 					{
 						case 0:
 							tray.targetPos = tray.beltPos;
+							LED_Toggle(test);
 						break;
 						
 						case 1:
 							tray.targetPos = BLACK_PLASTIC;
+							LED_Toggle(test);
 						break;
 						
 						case 2:
 							tray.targetPos = WHITE_PLASTIC;
+							LED_Toggle(test);
 						break;
 						
 						case 3:
 							tray.targetPos = STEEL;
+							LED_Toggle(test);
 						break;
 						
 						case 4:
 							tray.targetPos = ALUMINIUM;
+							LED_Toggle(test);
 						break;
 					}
 					*/

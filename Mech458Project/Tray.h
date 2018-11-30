@@ -20,8 +20,6 @@ typedef volatile struct Tray
 	uint8_t currentPos;
 	uint8_t targetPos;
 	uint8_t delay;
-	uint8_t delayMax;
-	uint8_t delayMin;
 	
 	bool isReady;
 	ItemClass beltPos;
