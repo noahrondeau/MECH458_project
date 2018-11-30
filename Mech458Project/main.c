@@ -26,13 +26,6 @@
 
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
-void UART_Init(uint32_t baudrate);
-void UART_SendChar(char c);
-void UART_SendString(const char* s, size_t len);
-void uint16ToString(uint16_t byte, char* out);
-
-
-
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -41,18 +34,20 @@ void uint16ToString(uint16_t byte, char* out);
 DcMotor			belt;
 ADCHandle		adc;
 OpticalSensor	s2_optic;
-OpticalSensor	exit_optic;
 PushButton		pauseButton;
-PushButton		rampDownButton;
 Queue*			itemQ;
 
 // sensor stage 2 stats singleton struct
 volatile struct {
 	uint16_t minReflectivity;
-	uint16_t sampleCount;
+	uint32_t sampleCount;
+	uint32_t itemCount;
+	unsigned long accum avgSampleCount;
 } Stage2 = {
 	.minReflectivity = LARGEST_UINT16_T,
 	.sampleCount = 0,
+	.itemCount = 0,
+	.avgSampleCount = 0.0k,
 };
 
 enum
@@ -80,28 +75,40 @@ int main()
 	
 	while(true)
 	{
-		QUEUE_Deinit(itemQ);
 		LED_Set(0x000);
+		QUEUE_Deinit(itemQ);
+		TIMER1_DelayMs(1000);
 		
 		switch(MaterialState)
 		{
 		case ALUMINIUM_STATE:
 			LED_On(0);
-			UART_SendString("ALUMINIUM",9);
+			TIMER1_DelayMs(1000);
+			UART_SendString("ALUMINIUM\n",10);
 			break;
 		case STEEL_STATE:
 			LED_On(1);
-			UART_SendString("STEEL",5);
+			TIMER1_DelayMs(1000);
+			UART_SendString("STEEL\n",6);
 			break;
 		case WHITE_STATE:
 			LED_On(2);
-			UART_SendString("WHITE",5);
+			TIMER1_DelayMs(1000);
+			UART_SendString("WHITE\n",6);
 			break;
 		case BLACK_STATE:
 			LED_On(3);
-			UART_SendString("BLACK",5);
+			TIMER1_DelayMs(1000);
+			UART_SendString("BLACK\n",6);
 			break;
 		case END_STATE:
+			Stage2.avgSampleCount = ((unsigned long accum)Stage2.sampleCount) / ((unsigned long accum)Stage2.itemCount);
+			LED_Set((uint16_t)Stage2.avgSampleCount);
+			UART_SendString("AVERAGE_SAMPLE_COUNT\n",21);
+			char sendString[16];
+			uint16ToString((uint16_t)Stage2.avgSampleCount, sendString);
+			UART_SendString(sendString, 16);
+			UART_SendChar('\n');
 			LED_Set(0xFF);
 			TIMER1_DelayMs(1000);
 			LED_Set(0b10101010);
@@ -118,9 +125,11 @@ int main()
 			if(!QUEUE_IsEmpty(itemQ))
 			{
 				uint16_t sendval = QUEUE_Dequeue(itemQ).reflectivity;
+				//LED_Set(sendval);
 				char sendString[16];
 				uint16ToString(sendval,sendString);
 				UART_SendString(sendString, 16);
+				//UART_SendChar('\n');
 			}
 		}
 		
@@ -149,9 +158,7 @@ void Initialize()
 	DCMOTOR_Init(&belt);
 	ADC_Init(&adc, ADC_PRESCALE_32);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
-	OPTICAL_Init(&exit_optic,EXIT_OPTICAL);
 	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
-	BUTTON_Init(&rampDownButton, RAMPDOWN_BUTTON);
 	UART_Init(9600);
 	itemQ = QUEUE_Create();
 	FILTER_InitReset(1023.0K); // initialize to most likely first value;
@@ -174,13 +181,13 @@ ISR(INT2_vect)
 	
 	if (OPTICAL_IsBlocked(&s2_optic))
 	{
-		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
 		FILTER_InitReset(1023.0K);
 		ADC_StartConversion(&adc);
 	}
 	else
 	{	
+		Stage2.itemCount++;
 		//move item from the "process Queue", classify, and move to the "ready" Queue
 		// dequeue -- no need to check if we can, because we must if we got the interrupt
 		// call is atomic
@@ -188,17 +195,6 @@ ISR(INT2_vect)
 		newItem.reflectivity = Stage2.minReflectivity;
 		QUEUE_Enqueue(itemQ, newItem);
 	}
-}
-
-
-ISR(INT6_vect)
-{
-	// Debounce
-	// We should probably set up a new different timer for this
-	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
-	LED_Toggle(6);
-	TIMER3_DelayMs(20);
 }
 
 // ISR for PAUSE button
@@ -210,6 +206,12 @@ ISR(INT7_vect)
 	TIMER3_DelayMs(20);
 	if (MaterialState != END_STATE)
 		MaterialState++;
+		
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		breakSignal = true;
+	}
+	breakSignal = true;
 	TIMER3_DelayMs(20);
 }
 
