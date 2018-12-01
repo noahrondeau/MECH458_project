@@ -21,6 +21,7 @@
 #include "Queue.h"
 #include "Tray.h"
 #include "Filter.h"
+#include "time.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
 
@@ -101,14 +102,12 @@ volatile struct
 int main()
 {
 	Initialize();
-	TIMER1_DelayMs(2000);
+	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
-	
 	
 	// main loop
 	while(true)
 	{	
-		
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
@@ -121,27 +120,28 @@ int main()
 				
 					// initiate a turn if the target got updated
 					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
-					{
-						TRAY_Sort(&tray, nextClass); // this waits a lot and updates the target
-					}
+						TRAY_SetTarget(&tray, nextClass);
+				}
 				
-					// if the item is ready, dequeue the item
-					// read doesn't need to be atomic since only EXIT interrupt could write it to true
-					// and we will see that on the next pass through this loop anyway	
-					if(Stage3.itemReady)
+				TRAY_Sort(&tray);
+				
+				// if the item is ready, dequeue the item
+				// read doesn't need to be atomic since only EXIT interrupt could write it to true
+				// and we will see that on the next pass through this loop anyway	
+				if(TRAY_IsReady(&tray) && Stage3.itemReady)
+				{
+					// dequeue is atomic
+					QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+					
+					// atomically reset itemReady flag
+					// must be atomic so that EXIT interrupt doesn't overwrite it
+					ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 					{
-						// dequeue is atomic
-						QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-						// atomically reset itemReady flag
-						// must be atomic so that EXIT interrupt doesn't overwrite it
-						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-						{
-							Stage3.itemReady = false;
-						}
-						// if in this time the EXIT interrupt fired, the belt would have been turned off,
-						// so turn it on again (if already on, this has no effect)
-						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						Stage3.itemReady = false;
 					}
+					// if in this time the EXIT interrupt fired, the belt would have been turned off,
+					// so turn it on again (if already on, this has no effect)
+					DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 				}
 			}
 			break;
@@ -177,6 +177,7 @@ void Initialize()
 	SYSCLK_Init();
 	LED_Init();
 	TIMER1_DelayInit();
+	TIMER2_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
 	ADC_Init(&adc, ADC_PRESCALE_32);
@@ -254,7 +255,7 @@ void PauseDisplay()
 	}
 	// on next loop through, display this
 	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 200; 
-	TIMER1_DelayMs(1000);
+	TIMER2_DelayMs(1000);
 }
 
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
@@ -335,7 +336,7 @@ ISR(INT0_vect)
 		
 		// this is an atomic call
 		// check if the tray is in position, if not stop the belt
-		if (TRAY_IsReady(&tray))
+		if (!TRAY_IsReady(&tray))
 			DCMOTOR_Brake(&belt);
 	}
 }
@@ -436,9 +437,9 @@ ISR(BADISR_vect)
 	while(1)
 	{
 		LED_Set( 0b01010101);
-		TIMER1_DelayMs(500);
+		TIMER2_DelayMs(500);
 		LED_Set( 0b10101010);
-		TIMER1_DelayMs(500);
+		TIMER2_DelayMs(500);
 	}
 }
 

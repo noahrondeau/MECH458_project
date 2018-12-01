@@ -30,14 +30,14 @@ void ADC_Init(ADCHandle* adc, ADCPrescale prescale)
 	// initialize the ADC, start one conversion at the beginning
 	ADC_StartConversion(adc);
 	// wait because no interupts are enabled yet -- first conversion takes 25 clock cycles
-	TIMER1_DelayMs(20);
+	TIMER2_DelayMs(20);
 	// poll for conversion value
 	ADC_ReadConversion(adc);
 	// clear useless conversion result
 	adc->result = 0;
 	adc->result_finished = false;
 	
-	TIMER1_DelayMs(20);
+	TIMER2_DelayMs(20);
 	// this should probably go at the end so no interrupt gets queued for the startup conversion
 	ADCSRA |= _BV(ADIE); // enable interrupt of ADC
 }

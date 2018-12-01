@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "Timer.h"
+#include "config.h"
 
 #define TIMER_COUNT_REACHED (0x02)
 #define LED_DIR_LEFT (0)
@@ -23,33 +24,22 @@ void TIMER1_DelayInit(void)
 	TCCR1B |= _BV(CS11);
 }
 
-void TIMER1_DelayMs(int ms)
+void TIMER1_DelayUs(uint16_t us)
 {
-	// Index for loop
-	int i = 0;
-	// Set Waveform Gen Mode to CTC mode
-	TCCR1B |= _BV(WGM12);
-	// Set output compare register to count 1000 cycles = 1ms
-	OCR1A = 0x03e8;
-	// Reset the timer
-	TCNT1 = 0x0000;
-
-	//DONT DO THIS!!! we dont want interrupt
-	// Enable the output compare interrupt enable
-	//TIMSK1 = TIMSK1 | 0b00000010;
-	// clear interrupt flag and begin counting
-	TIFR1 |= _BV(OCF1A);
-
-	// loop "ms" times, each loop iteration is one millisecond
-	while (i < ms)
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		// wait for the timer to be reached
-		while ((TIFR1 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
-		// increment loop counter
-		i++;
+		// Set Waveform Gen Mode to CTC mode
+		TCCR1B |= _BV(WGM12);
+		// Set output compare register to count "us" cycles
+		OCR1A = us;
+		// Reset the timer
+		TCNT1 = 0x0000;
 		// clear interrupt flag and begin counting
 		TIFR1 |= _BV(OCF1A);
 	}
+	
+	// wait for "us" ticks to be reached
+	while ((TIFR1 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
 }
 
 void TIMER2_DelayInit(void)
@@ -57,21 +47,28 @@ void TIMER2_DelayInit(void)
 	TCCR2B |= _BV(CS21);
 }
 
-void TIMER2_DelayUs(int us){
+void TIMER2_DelayMs(uint16_t ms){
+	
+	// this is an 8-bit timer, the max output compare is 255
+	// we need to keep setting it to 100, and then loop 10*ms
 	// Index for loop
-	int i = 0;
-	// Set Waveform Gen Mode to CTC mode
-	TCCR2A |= _BV(WGM21);
-	// Set output compare register to count 1cycles = 1us
-	OCR2A = 0x0001;
-	// Reset the timer
-	TCNT2 = 0x0000;
+	uint16_t i = 0;
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// Set Waveform Gen Mode to CTC mode
+		TCCR2A |= _BV(WGM21);
+		// Set output compare register to count 100
+		OCR2A = 0x64;
+		// Reset the timer
+		TCNT2 = 0x0000;
 
-	// clear interrupt flag and begin counting
-	TIFR2 |= _BV(OCF2A);
+		// clear interrupt flag and begin counting
+		TIFR2 |= _BV(OCF2A);
+	}
 
-	// loop "ms" times, each loop iteration is one millisecond
-	while (i < us)
+	// loop "10*ms" times, each loop iteration is one millisecond
+	while (i < 10*ms)
 	{
 		// wait for the timer to be reached
 		while ((TIFR2 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
