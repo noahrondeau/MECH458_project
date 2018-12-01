@@ -79,7 +79,7 @@ typedef volatile uint8_t  GPIOMask;
 #define STEPPER_PORT			(PORTA_REG)
 #define STEPPER_DELAY_MAX		(20000) // microseconds
 #define STEPPER_DELAY_MIN		(6000)  // microseconds
-#define STEPPER_ACCEL_RAMP		(STEPPER_DELAY_MAX - STEPPER_DELAY_MIN)
+#define STEPPER_ACCEL_RAMP		(12) // this has to be a number of steps, not a function of two microsecond values
 #define STEPPER_MIN_DELAY_INCREMENT		(1000) // microseconds
 #define STEPPER_STARTUP_DELAY		(STEPPER_DELAY_MAX + STEPPER_MIN_DELAY_INCREMENT) // for the math to work out
 
