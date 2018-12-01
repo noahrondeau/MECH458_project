@@ -29,12 +29,12 @@ void TRAY_Home(Tray* tray)
 		for(int i = 0; i<25; i++)
 		{
 			STEPPER_StepCW(&(tray->stepper));
-			TIMER1_DelayMs(20);
+			TIMER1_DelayUs(STEPPER_DELAY_MAX);
 		}
 		while(!HALL_IsActive(&(tray->hall)))
 		{
 			STEPPER_StepCCW(&(tray->stepper));
-			TIMER1_DelayMs(20);	
+			TIMER1_DelayUs(STEPPER_DELAY_MAX);	
 		}
 		STEPPER_StepCCW(&(tray->stepper));
 		//tray->lastDir = CCW;
@@ -44,7 +44,7 @@ void TRAY_Home(Tray* tray)
 		while(!HALL_IsActive(&(tray->hall)))
 		{
 			STEPPER_StepCW(&(tray->stepper));
-			TIMER1_DelayMs(20);
+			TIMER1_DelayUs(STEPPER_DELAY_MAX);
 		}
 		//tray->lastDir = CW;
 	}
@@ -93,7 +93,7 @@ void TRAY_Sort(Tray* tray){
 	// if the tray needs step, we need to calculate the required delay
 	// THIS MUST BE DONE BEFORE TAKING THE STEP!!!!!
 	
-	uint8_t newDelay = TRAY_CalcStepDelay(tray, (uint16_t)abs(shortest_path_dist));
+	uint16_t newDelay = TRAY_CalcStepDelay(tray, (uint16_t)abs(shortest_path_dist));
 	// save the newDelay for use in the next step
 	tray->lastDelay = newDelay;
 	
@@ -105,8 +105,8 @@ void TRAY_Sort(Tray* tray){
 	// since we took care of the 0 case up top and returned from it, these are the only options
 	
 	// delay according to the calculated delay and exit
-	LED_Set(newDelay);
-	TIMER1_DelayMs(newDelay);
+	LED_Set(newDelay/1000);
+	TIMER1_DelayUs(newDelay);
 }
 
 
@@ -148,20 +148,19 @@ int TRAY_CalcShortestPath(Tray* tray){
 uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
 	
 	uint16_t newDelay;
-	if(dist > STEPPER_ACCEL_RAMP)					// we haven't reached the deceleration zone
-	{
+	if(MS_TO_US(dist) > STEPPER_ACCEL_RAMP)					// we haven't reached the deceleration zone
+	{													// 1000 is to put on same order of magnitude
 		if (tray->lastDelay > STEPPER_DELAY_MIN)			// we aren't going full speed yet
-			newDelay = tray->lastDelay - 1;							// make it faster
+			newDelay = tray->lastDelay
+						- STEPPER_MIN_DELAY_INCREMENT;				// make it faster
 		else												// we are going at full speed
 			newDelay = STEPPER_DELAY_MIN;							// keep it at full speed
 	}
 	else											// we are in the deceleration zone
-	{
-		//if(tray->lastDelay <= (STEPPER_delayMax - dist))
-			//newDelay = tray->lastDelay + 1;
-		//else
+	{	
 		if(tray->lastDelay < STEPPER_DELAY_MAX)				// we aren't going at minimum speed yet
-			newDelay = tray->lastDelay + 1;							// increase delay (decrease speed)
+			newDelay = tray->lastDelay
+						+ STEPPER_MIN_DELAY_INCREMENT;				// increase delay (decrease speed)
 		else												// we are going at minimum speed
 			newDelay = STEPPER_DELAY_MAX;							// keep it at minimum speed
 	}

@@ -103,7 +103,7 @@ volatile struct
 int main()
 {
 	Initialize();
-	TIMER1_DelayMs(2000);
+	TIMER2_DelayMs(2000);
 	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 	
 	uint8_t testIndex = 0;
@@ -119,7 +119,7 @@ int main()
 				
 				if(TRAY_IsReady(&tray))
 				{
-					//TIMER1_DelayMs(500);
+					//TIMER2_DelayMs(500);
 					LED_Set(tray.lastDelay);
 					TRAY_SetTarget(&tray, testPos[testIndex]);
 					testIndex = (testIndex + 1) %7;
@@ -237,7 +237,7 @@ void PauseDisplay()
 	}
 	// on next loop through, display this
 	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 200; 
-	TIMER1_DelayMs(1000);
+	TIMER2_DelayMs(1000);
 }
 
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
@@ -419,9 +419,9 @@ ISR(BADISR_vect)
 	while(1)
 	{
 		LED_Set( 0b01010101);
-		TIMER1_DelayMs(500);
+		TIMER2_DelayMs(500);
 		LED_Set( 0b10101010);
-		TIMER1_DelayMs(500);
+		TIMER2_DelayMs(500);
 	}
 }
 

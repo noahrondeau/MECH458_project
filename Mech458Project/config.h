@@ -75,10 +75,13 @@ typedef volatile uint8_t  GPIOMask;
 
 #define STEPPER_DDR				(DDRA_REG)
 #define STEPPER_PORT			(PORTA_REG)
-#define STEPPER_DELAY_MAX		(20)
-#define STEPPER_DELAY_MIN		(6)
+#define STEPPER_DELAY_MAX		(20000) // microseconds
+#define STEPPER_DELAY_MIN		(6000)  // microseconds
 #define STEPPER_ACCEL_RAMP		(STEPPER_DELAY_MAX - STEPPER_DELAY_MIN)
-#define STEPPER_STARTUP_DELAY		(STEPPER_DELAY_MAX + 1) // for the math to work out
+#define STEPPER_MIN_DELAY_INCREMENT		(1000) // microseconds
+#define STEPPER_STARTUP_DELAY		(STEPPER_DELAY_MAX + STEPPER_MIN_DELAY_INCREMENT) // for the math to work out
+
+#define MS_TO_US(__ms__) (1000*__ms__)
 
 /* ====== DC MOTOR CONFIG ====== */
 

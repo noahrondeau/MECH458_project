@@ -11,10 +11,10 @@
 
 
 void TIMER1_DelayInit(void);
-void TIMER1_DelayMs(int ms);
+void TIMER1_DelayUs(uint16_t ms);
 
 void TIMER2_DelayInit(void);
-void TIMER2_DelayUs(int us);
+void TIMER2_DelayMs(uint16_t us);
 
 void TIMER3_DelayInit(void);
 void TIMER3_DelayMs(int ms);
