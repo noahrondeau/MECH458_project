@@ -106,54 +106,23 @@ int main()
 	TIMER1_DelayMs(2000);
 	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 	
-	
-	int test = 0;
-	tray.targetPos = WHITE_PLASTIC;
-	
-	
+	uint8_t testIndex = 0;
+	uint8_t testPos[7] = {100,0,150,100,50,150,0};
 	// main loop
 	while(true)
 	{	
-		
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
-			{	
-				if(!tray.isReady) TRAY_Sort(&tray);
-				if(tray.isReady)
+			{
+				TRAY_Sort(&tray);
+				
+				if(TRAY_IsReady(&tray))
 				{
-					TIMER1_DelayMs(500);
-					LED_Set(tray.delay);
-					/*	
-					test = rand() % 5;
-					switch (test)
-					{
-						case 0:
-							tray.targetPos = tray.beltPos;
-							LED_Toggle(test);
-						break;
-						
-						case 1:
-							tray.targetPos = BLACK_PLASTIC;
-							LED_Toggle(test);
-						break;
-						
-						case 2:
-							tray.targetPos = WHITE_PLASTIC;
-							LED_Toggle(test);
-						break;
-						
-						case 3:
-							tray.targetPos = STEEL;
-							LED_Toggle(test);
-						break;
-						
-						case 4:
-							tray.targetPos = ALUMINIUM;
-							LED_Toggle(test);
-						break;
-					}
-					*/
+					//TIMER1_DelayMs(500);
+					LED_Set(tray.lastDelay);
+					TRAY_SetTarget(&tray, testPos[testIndex]);
+					testIndex = (testIndex + 1) %7;
 				}
 			}
 			break;

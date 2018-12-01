@@ -19,7 +19,7 @@ typedef volatile struct Tray
 {
 	uint8_t currentPos;
 	uint8_t targetPos;
-	uint8_t delay;
+	uint8_t lastDelay;
 	
 	bool isReady;
 	ItemClass beltPos;
@@ -30,25 +30,15 @@ typedef volatile struct Tray
 
 void TRAY_Init(Tray* tray);
 void TRAY_Home(Tray* tray);
-
-void TRAY_Rotate90(Tray* tray, MotorDirection dir);
-void TRAY_Rotate180(Tray* tray);
-
 void TRAY_Rotate(Tray* tray, MotorDirection dir);
-
-void TRAY_AccelRotate90(Tray* tray, MotorDirection dir);
-void TRAY_AccelRotate180(Tray* tray);
-
 void TRAY_Sort(Tray* tray);
 
 void TRAY_SetTarget(Tray* tray, uint8_t target);
 uint8_t TRAY_GetTarget(Tray* tray);
 uint8_t TRAY_GetCurrentPos(Tray* tray);
-
 bool TRAY_IsReady(Tray* tray);
-
-uint8_t TRAY_DistCalc(Tray* tray);
-uint8_t TRAY_AccelDelay(Tray* tray);
+int TRAY_CalcShortestPath(Tray* tray);
+uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist);
 
 
 #endif /* TRAY_H_ */

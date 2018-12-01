@@ -17,7 +17,7 @@ void TRAY_Init(Tray* tray)
 	tray->currentPos = 0;
 	tray->targetPos = 0;
 	tray->isReady = false;
-	tray->delay = STEPPER_delayMax;
+	tray->lastDelay = STEPPER_STARTUP_DELAY;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -37,7 +37,7 @@ void TRAY_Home(Tray* tray)
 			TIMER1_DelayMs(20);	
 		}
 		STEPPER_StepCCW(&(tray->stepper));
-		tray->lastDir = CCW;
+		//tray->lastDir = CCW;
 	}
 	else
 	{
@@ -46,7 +46,7 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCW(&(tray->stepper));
 			TIMER1_DelayMs(20);
 		}
-		tray->lastDir = CW;
+		//tray->lastDir = CW;
 	}
 	
 	tray->currentPos = 0;
@@ -56,101 +56,130 @@ void TRAY_Home(Tray* tray)
 void TRAY_Rotate(Tray* tray, MotorDirection dir){
 	
 	if(dir == CW){ //CW rotation
-		//check if direction change and change delay as check safe
-		if(tray->lastDir == CCW) tray->delay = STEPPER_delayMax;
 		//Step motor once CW
 		STEPPER_StepCW(&(tray->stepper));
+		
 		//update current position
 		tray->currentPos = (tray->currentPos + 1) % 200;
-		//set last rotation direction to CW
-		tray->lastDir = CW;
 	}
 	
 	if(dir == CCW){ //CCW rotation
-		//check if direction change and change delay as check safe
-		if(tray->lastDir == CW) tray->delay = STEPPER_delayMax;
 		//Step motor once CCW	
 		STEPPER_StepCCW(&(tray->stepper));
+		
 		//update current position	
 		if( tray->currentPos == 0 ) tray->currentPos = 199;
 		else tray->currentPos--;
-		//set last rotation direction to CW		
-		tray->lastDir = CCW;
 	}
 }
 
 void TRAY_Sort(Tray* tray){	
 
-	// check the difference between the current position and target
-	// and the target and turn as necessary
-	int dist = (tray->targetPos) - (tray->currentPos);
-	int dist_abs = abs(dist);
+	// figure out shortest path to current target
+	int shortest_path_dist = TRAY_CalcShortestPath(tray);
 	
-
-	
-	if(dist == 0) //if tray is already in position
+	//if tray is already in position, no turning to do, just signal that the tray is ready
+	if(shortest_path_dist == 0)
 	{
-		tray->beltPos = tray->targetPos;
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 		{
+			tray->beltPos = tray->targetPos;
+			tray->lastDelay = STEPPER_STARTUP_DELAY;
 			tray->isReady = true;
 		}
+		return; // early return in this case
 	}
 	
-	else if(dist_abs == 100) //180 deg away, starts the CW turn with 1 steps
-	{
-		TRAY_Rotate(tray,CW);
-		TIMER1_DelayMs(TRAY_AccelDelay(tray));
-	}
-	//Check statements to determine direction of rotation
-	else if( (dist_abs < 100 && dist > 0) || (dist_abs > 100 && dist < 0)) //CW rotation
-	{
-		TRAY_Rotate(tray,CW);
-		TIMER1_DelayMs(TRAY_AccelDelay(tray));
-	}
-	else if((dist_abs < 100 && dist < 0) || (dist_abs > 100 && dist > 0)) //CCW Rotation
-	{
-		TRAY_Rotate(tray,CCW);
-		TIMER1_DelayMs(TRAY_AccelDelay(tray));
-	}
-		
+	// if the tray needs step, we need to calculate the required delay
+	// THIS MUST BE DONE BEFORE TAKING THE STEP!!!!!
+	
+	uint8_t newDelay = TRAY_CalcStepDelay(tray, (uint16_t)abs(shortest_path_dist));
+	// save the newDelay for use in the next step
+	tray->lastDelay = newDelay;
+	
+	// now figure out the direction and take the step
+	if(shortest_path_dist > 0) // we need to go CW, since the shortest path is positive
+		TRAY_Rotate(tray, CW);
+	else //if(shortest_path_dist < 0) // go CCW, since the shortest path is negative
+		TRAY_Rotate(tray, CCW);
+	// since we took care of the 0 case up top and returned from it, these are the only options
+	
+	// delay according to the calculated delay and exit
+	LED_Set(newDelay);
+	TIMER1_DelayMs(newDelay);
 }
 
 
-uint8_t TRAY_DistCalc(Tray* tray){
-	return (uint8_t)(abs((&tray->targetPos)-(&tray->currentPos)));
+int TRAY_CalcShortestPath(Tray* tray){
+	
+	int shortest_path_dist;
+	
+	// check the difference between the target and current position
+	int dist = (tray->targetPos) - (tray->currentPos);
+	
+	// a positive distance corresponds to |dist| steps in the CW direction
+	// e.g., 50 is 50 steps CW
+	// e.g., 150 is 150 steps CW
+	// however in the case that dist > 100, we want to turn CCW to get there
+	
+	// a negative distance corresponds to |dist| steps in the CCW direction
+	// e.g. -50 is 50 steps CCW from the current position
+	// e.g. -150 is 150 steps CCW from the current position.
+	// however, we want to turn 50 steps clockwise in that case.
+	
+	// so we want to transform a dist >  100 -> -200 + dist, e.g.  120 -> -80
+	// and transform a			 dist < -100 ->  200 + dist, e.g. -120 ->  80
+	// a distance of magnitude 100 just becomes +100, because clockwise is our preferred direction
+
+	if ( dist > 100 )
+		shortest_path_dist = dist - 200;
+	else if (dist < -100 )
+		shortest_path_dist = dist + 200;
+	else if (abs(dist) == 100) // for 100, we want this to be clockwise
+		shortest_path_dist = 100;
+	else // covers the |dist| < 100 case
+		shortest_path_dist = dist;
+		
+	return shortest_path_dist;
 }
 
 
 //dist starts large, gets smaller as it rotates to target
-uint8_t TRAY_AccelDelay(Tray* tray){
-	int dist = TRAY_DistCalc(tray);
-	int m_dist = (abs((&tray->targetPos)-(&tray->beltPos)));
+uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
 	
-	if(m_dist >= 2*STEPPER_accelRamp) //trap acceleration profile
+	uint16_t newDelay;
+	if(dist > STEPPER_ACCEL_RAMP)					// we haven't reached the deceleration zone
 	{
-		if( (m_dist - dist) < STEPPER_accelRamp && tray->delay > STEPPER_delayMin) tray->delay--;
-		if( (m_dist - dist) > (m_dist - STEPPER_accelRamp) && tray->delay < STEPPER_delayMax) tray->delay++;
+		if (tray->lastDelay > STEPPER_DELAY_MIN)			// we aren't going full speed yet
+			newDelay = tray->lastDelay - 1;							// make it faster
+		else												// we are going at full speed
+			newDelay = STEPPER_DELAY_MIN;							// keep it at full speed
 	}
-	else //triangle acceleration profile
+	else											// we are in the deceleration zone
 	{
-		if( (m_dist - dist) < (m_dist/2) && tray->delay > STEPPER_delayMin) tray->delay--;
-		if( (m_dist - dist) > (m_dist/2) && tray->delay < STEPPER_delayMax) tray->delay++;
+		//if(tray->lastDelay <= (STEPPER_delayMax - dist))
+			//newDelay = tray->lastDelay + 1;
+		//else
+		if(tray->lastDelay < STEPPER_DELAY_MAX)				// we aren't going at minimum speed yet
+			newDelay = tray->lastDelay + 1;							// increase delay (decrease speed)
+		else												// we are going at minimum speed
+			newDelay = STEPPER_DELAY_MAX;							// keep it at minimum speed
 	}
-	return tray->delay;
+	
+	return newDelay;
 }
 
 void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
 	//if target is unclassified do nothing and return
-	if ( target == UNCLASSIFIED )
-	{
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-		{
-			tray->isReady = true;
-		}
-		return;
-	}
+	//if ( (target == UNCLASSIFIED) || (tray->targetPos == target))
+	//{
+	//	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	//	{
+	//		tray->isReady = true;
+	//	}
+	//	return; // return if there is nothing to do
+	//}
 	
 	if ( target != tray->targetPos) // new target and old target differ
 	{
@@ -158,13 +187,6 @@ void TRAY_SetTarget(Tray* tray, uint8_t target)
 		{
 			tray->targetPos = target;
 			tray->isReady = false;
-		}
-	}
-	else
-	{
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-		{
-			tray->isReady = true;
 		}
 	}
 }
@@ -198,66 +220,3 @@ bool TRAY_IsReady(Tray* tray)
 	}
 	return ret;
 }
-
-//Legacy
-
-/*
-void TRAY_Rotate90(Tray* tray, MotorDirection dir){
-	if(dir == CW){
-		for(int i = 0; i<50; i++)
-		{
-			STEPPER_StepCW(&(tray->stepper));
-			tray->currentPos = (tray->currentPos + 1) % 200;
-			TIMER1_DelayMs(20);
-		}
-	}
-	
-	if(dir == CCW){
-		for(int i = 0; i<50; i++)
-		{
-			STEPPER_StepCCW(&(tray->stepper));
-			
-			if( tray->currentPos == 0 )
-			tray->currentPos = 199;
-			else
-			tray->currentPos--;
-			
-			TIMER1_DelayMs(20);
-		}
-	}
-}
-
-void TRAY_Rotate180(Tray* tray){
-	for(int i = 0; i<100; i++)
-	{
-		STEPPER_StepCW(&(tray->stepper));
-		tray->currentPos = (tray->currentPos + 1) % 200;
-		TIMER1_DelayMs(20);
-	}
-}
-
-void TRAY_AccelRotate90(Tray* tray, MotorDirection dir){
-	if(dir == CW){
-		STEPPER_StepCW(&(tray->stepper));
-		TIMER2_DelayUs(TRAY_AccelDelay(tray)*1000);
-		tray->currentPos= (tray->currentPos + 1) % 200;
-	}
-	
-	
-	if(dir == CCW){
-		STEPPER_StepCCW(&(tray->stepper));
-		TIMER2_DelayUs(TRAY_AccelDelay(tray)*1000);
-		if( tray->currentPos == 0 )
-		tray->currentPos = 199;
-		else
-		tray->currentPos--;
-	}
-}
-
-void TRAY_AccelRotate180(Tray* tray){
-	STEPPER_StepCW(&(tray->stepper));
-	TIMER2_DelayUs(TRAY_AccelDelay(tray)*1000);
-	tray->currentPos= (tray->currentPos + 1) % 200;
-}
-
-*/
