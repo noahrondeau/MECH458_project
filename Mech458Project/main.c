@@ -291,35 +291,14 @@ ISR(INT5_vect)
 // ISR for S2_OPTICAL
 ISR(INT2_vect)
 {
-	// poll sensor state to determine whether falling or rising edge was seen
+	// poll sensor state to make sure not spurious
 	
-	if (OPTICAL_IsBlocked(&s2_optic)) //just saw falling edge
+	if (OPTICAL_IsBlocked(&s2_optic))
 	{
-		Stage2.adcContinueConversions = true;
 		Stage2.sampleCount = 0; // reset sample counter
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
 		FILTER_InitReset(1023.0K);
 		ADC_StartConversion(&adc);
-	}
-	else // just saw rising edge
-	{
-		// stop the ADC from converting
-		Stage2.adcContinueConversions = false;
-		
-		//move item from the "process Queue", classify, and move to the "ready" Queue
-		// dequeue -- no need to check if we can, because we must if we got the interrupt
-		// call is atomic
-		QueueElement processedItem = QUEUE_Dequeue(processQueue);
-		// store minimum reflectivity and sample count in item
-		processedItem.reflectivity = Stage2.minReflectivity;
-		processedItem.sampleCount = Stage2.sampleCount;
-		
-			
-		//classify item and move to ready queue
-		processedItem.class = Classify(processedItem);
-		
-		// Atomic enqueue
-		QUEUE_Enqueue(readyQueue, processedItem);
 	}
 }
 
@@ -399,23 +378,36 @@ ISR(INT7_vect)
 
 ISR(ADC_vect)
 {
-	if (Stage2.adcContinueConversions)
+	ADC_ReadConversion(&adc);
+	Stage2.sampleCount++;
+	
+	accum fx_out = Filter((accum)(adc.result));
+	uint16_t u_out;
+	
+	if ( fx_out < 0.0K ) u_out = 0;
+	else if (fx_out > 1023.0K) u_out = 1023;
+	else u_out = (uint16_t)fx_out;
+	
+	if (u_out < Stage2.minReflectivity)
+	Stage2.minReflectivity = u_out;
+	
+	if (OPTICAL_IsBlocked(&s2_optic))
 	{
-		ADC_ReadConversion(&adc);
-		Stage2.sampleCount++;
-	
-		accum fx_out = Filter((accum)(adc.result));
-		uint16_t u_out;
-	
-		if ( fx_out < 0.0K ) u_out = 0;
-		else if (fx_out > 1023.0K) u_out = 1023;
-		else u_out = (uint16_t)fx_out;
-	
-		if (u_out < Stage2.minReflectivity)
-			Stage2.minReflectivity = u_out;
-		
-		if (OPTICAL_IsBlocked(&s2_optic))
-			ADC_StartConversion(&adc);
+		ADC_StartConversion(&adc);
+	}
+	else // last ADC sample, process and dequeue
+	{
+		//move item from the "process Queue", classify, and move to the "ready" Queue
+		// dequeue -- no need to check if we can, because we must if we got the interrupt
+		// call is atomic
+		QueueElement processedItem = QUEUE_Dequeue(processQueue);
+		// store minimum reflectivity and sample count in item
+		processedItem.reflectivity = Stage2.minReflectivity;
+		processedItem.sampleCount = Stage2.sampleCount;
+		//classify item and move to ready queue
+		processedItem.class = Classify(processedItem);
+		// Atomic enqueue
+		QUEUE_Enqueue(readyQueue, processedItem);	
 	}
 }
 
