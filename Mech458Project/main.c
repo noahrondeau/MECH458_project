@@ -154,8 +154,9 @@ int main()
 		
 		case RAMPDOWN_STATE:
 			{
-				// nothing lets us get here right now
-				return 0;
+				cli();
+				DCMOTOR_Brake(&belt);
+				PauseDisplay();
 			}
 			break;
 		}
@@ -178,7 +179,6 @@ void Initialize()
 	LED_Init();
 	TIMER1_DelayInit();
 	TIMER2_DelayInit();
-	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
 	ADC_Init(&adc, ADC_PRESCALE_32);
 	FERRO_Init(&ferro);
@@ -239,16 +239,16 @@ void PauseDisplay()
 	switch(DisplayStatus.currDispType)
 	{
 	case ALUMINIUM:
-		LED_SetBottom8(0b10000000 | (ItemStats.aluminiumCount & 0x0F));
+		PORTC = (0b10000000 | (ItemStats.aluminiumCount & 0x0F));
 		break;
 	case STEEL:
-		LED_SetBottom8(0b01000000 | (ItemStats.steelCount & 0x0F));
+		PORTC = (0b01000000 | (ItemStats.steelCount & 0x0F));
 		break;
 	case WHITE_PLASTIC:
-		LED_SetBottom8(0b00100000 | (ItemStats.whitePlasticCount & 0x0F));
+		PORTC = (0b00100000 | (ItemStats.whitePlasticCount & 0x0F));
 		break;
 	case BLACK_PLASTIC:
-		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		PORTC = (0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
 		break;
 	default:
 		break;
@@ -273,6 +273,10 @@ ISR(INT1_vect)
 		
 		// enqueue is atomic
 		QUEUE_Enqueue(processQueue, new_elem);
+	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		TCNT3 = 0x0000;
 	}
 }
 
@@ -355,7 +359,11 @@ ISR(INT6_vect)
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
 	TIMER2_DelayMs(20);
-	LED_Toggle(6);
+	if(!fsmState.rampDownInitFlag)
+	{
+		TIMER3_InterruptInit();
+		fsmState.rampDownInitFlag = true;
+	}
 	TIMER2_DelayMs(20);
 }
 
@@ -420,17 +428,12 @@ ISR(ADC_vect)
 	}
 }
 
-/*
-ISR(TIMER3_COMPB_vect)
+
+ISR(TIMER3_COMPA_vect)
 {
-	
-	LED_Toggle(1);
-	TCNT3 = 0x0000;			//reset counter
-	TIFR3 |= _BV(OCF3B);	//Clear interrupt flag begin counting
-	
-	PORTC = 0xFF;
+	fsmState.state = RAMPDOWN_STATE;
 }
-*/
+
 
 ISR(BADISR_vect)
 {

@@ -16,9 +16,6 @@ void TIMER1_DelayUs(uint16_t ms);
 void TIMER2_DelayInit(void);
 void TIMER2_DelayMs(uint16_t us);
 
-void TIMER3_DelayInit(void);
-void TIMER3_DelayMs(int ms);
-
 void TIMER3_InterruptInit(void);
 
 
