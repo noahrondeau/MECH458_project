@@ -100,7 +100,7 @@ volatile struct
 /* ====== MAIN FUNCTION ====== */
 
 int main()
-{
+{/*
 	Initialize();
 	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
@@ -144,8 +144,33 @@ int main()
 					DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 				}
 			}
-			break;
-			
+			break;*/
+		
+		// ------ SNIP ------ //
+		Initialize();
+		TIMER2_DelayMs(2000);
+		//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+		
+		uint8_t testIndex = 0;
+		uint8_t testPos[7] = {100,0,150,100,50,150,0};
+		// main loop
+		while(true)
+		{
+			switch(fsmState.state)
+			{
+				case RUN_STATE:
+				{	
+					if(TRAY_IsReady(&tray))
+					{
+						//TIMER2_DelayMs(500);
+						TRAY_SetTarget(&tray, testPos[testIndex]);
+						testIndex = (testIndex + 1) %7;
+					}
+					
+					TRAY_Sort(&tray);
+				}
+				break;
+		// ----- SNIP ------ //
 		case PAUSE_STATE:
 			{
 				PauseDisplay();

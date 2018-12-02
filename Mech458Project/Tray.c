@@ -12,11 +12,19 @@
 #include "Timer.h"
 #include "LedBank.h"
 
+#if MODE_ENABLED(S_CURVE_MODE)
 // delays for accel and deccel in microseconds
 static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = 
 {
-	20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000, 8000, 7000,
+	19970, 19920, 19784,	19431,	18570,	16773,	14000,	11227,	9430,	8569,	8216,	8080,
 };
+
+#else
+static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] =
+{
+	20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,
+};
+#endif
 
 
 
@@ -100,12 +108,12 @@ void TRAY_Sort(Tray* tray){
 	if (tray->stepCounter < STEPPER_ACCEL_RAMP) // need to accelerate
 		TIMER1_DelayUs(delayProfile[tray->stepCounter]);
 	else if ((tray->pathDist - tray->stepCounter) <= STEPPER_ACCEL_RAMP) // need to decelerate
-		TIMER1_DelayUs(delayProfile[tray->pathDist - tray->stepCounter - 1]);
+		TIMER1_DelayUs(delayProfile[tray->pathDist - tray->stepCounter - 1 ]);
 	else // max speed
 		TIMER1_DelayUs(STEPPER_DELAY_MIN);
 	
 	// increment step counter
-	tray->stepCounter++;
+	(tray->stepCounter)++;
 }
 
 
@@ -176,11 +184,10 @@ void TRAY_SetTarget(Tray* tray, uint8_t target)
 			tray->isReady = false;
 			tray->targetPos = target;
 			int shortest_path_dist = TRAY_CalcShortestPath(tray);
-			tray->currDir = (shortest_path_dist > 0) ? CW : CCW;
+			tray->currDir = (shortest_path_dist >= 0) ? CW : CCW;
 			tray->pathDist = abs(shortest_path_dist);
 		}
 	}
-	
 }
 
 uint8_t TRAY_GetTarget(Tray* tray)

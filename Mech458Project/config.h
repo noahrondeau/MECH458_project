@@ -27,6 +27,8 @@
 
 #define TWO_PHASE_COMMUTATION_MODE (1)
 
+#define S_CURVE_MODE (1)
+
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
 
@@ -78,8 +80,8 @@ typedef volatile uint8_t  GPIOMask;
 #define STEPPER_DDR				(DDRA_REG)
 #define STEPPER_PORT			(PORTA_REG)
 #define STEPPER_DELAY_MAX		(20000) // microseconds
-#define STEPPER_DELAY_MIN		(6000)  // microseconds
-#define STEPPER_ACCEL_RAMP		(14) // this has to be a number of steps, not a function of two microsecond values
+#define STEPPER_DELAY_MIN		(8000)  // microseconds
+#define STEPPER_ACCEL_RAMP		(12) // this has to be a number of steps, not a function of two microsecond values
 
 #define MS_TO_US(__ms__) (1000*(__ms__))
 
