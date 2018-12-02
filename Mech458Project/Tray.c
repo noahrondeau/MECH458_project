@@ -12,12 +12,22 @@
 #include "Timer.h"
 #include "LedBank.h"
 
+// delays for accel and deccel in microseconds
+static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = 
+{
+	20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000, 8000, 7000,
+};
+
+
+
 void TRAY_Init(Tray* tray)
 {
 	tray->currentPos = 0;
 	tray->targetPos = 0;
 	tray->isReady = false;
-	tray->lastDelay = STEPPER_STARTUP_DELAY;
+	tray->stepCounter = 0;
+	tray->pathDist = 0;
+	tray->currDir = CW;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -37,7 +47,6 @@ void TRAY_Home(Tray* tray)
 			TIMER1_DelayUs(STEPPER_DELAY_MAX);	
 		}
 		STEPPER_StepCCW(&(tray->stepper));
-		//tray->lastDir = CCW;
 	}
 	else
 	{
@@ -46,24 +55,23 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCW(&(tray->stepper));
 			TIMER1_DelayUs(STEPPER_DELAY_MAX);
 		}
-		//tray->lastDir = CW;
 	}
 	
 	tray->currentPos = 0;
-	tray->beltPos = BLACK_PLASTIC;
 }
 
-void TRAY_Rotate(Tray* tray, MotorDirection dir){
+void TRAY_Rotate(Tray* tray)
+{
 	
-	if(dir == CW){ //CW rotation
+	if(tray->currDir == CW){ //CW rotation
 		//Step motor once CW
 		STEPPER_StepCW(&(tray->stepper));
 		
 		//update current position
 		tray->currentPos = (tray->currentPos + 1) % 200;
 	}
-	
-	if(dir == CCW){ //CCW rotation
+	else
+	{ //CCW rotation
 		//Step motor once CCW	
 		STEPPER_StepCCW(&(tray->stepper));
 		
@@ -74,38 +82,30 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir){
 }
 
 void TRAY_Sort(Tray* tray){	
-
-	// figure out shortest path to current target
-	int shortest_path_dist = TRAY_CalcShortestPath(tray);
 	
 	//if tray is already in position, no turning to do, just signal that the tray is ready
-	if(shortest_path_dist == 0)
+	if(tray->stepCounter == tray->pathDist)
 	{
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 		{
-			tray->beltPos = tray->targetPos;
-			tray->lastDelay = STEPPER_STARTUP_DELAY;
+			tray->stepCounter = 0;
+			tray->pathDist = 0;
 			tray->isReady = true;
 		}
 		return; // early return in this case
 	}
 	
-	// if the tray needs step, we need to calculate the required delay
-	// THIS MUST BE DONE BEFORE TAKING THE STEP!!!!!
-	
-	uint16_t newDelay = TRAY_CalcStepDelay(tray, (uint16_t)abs(shortest_path_dist));
-	// save the newDelay for use in the next step
-	tray->lastDelay = newDelay;
-	
-	// now figure out the direction and take the step
-	if(shortest_path_dist > 0) // we need to go CW, since the shortest path is positive
-		TRAY_Rotate(tray, CW);
-	else //if(shortest_path_dist < 0) // go CCW, since the shortest path is negative
-		TRAY_Rotate(tray, CCW);
-	// since we took care of the 0 case up top and returned from it, these are the only options
-	
+	TRAY_Rotate(tray);
 	// delay according to the calculated delay and exit
-	TIMER1_DelayUs(newDelay);
+	if (tray->stepCounter < STEPPER_ACCEL_RAMP) // need to accelerate
+		TIMER1_DelayUs(delayProfile[tray->stepCounter]);
+	else if ((tray->pathDist - tray->stepCounter) <= STEPPER_ACCEL_RAMP) // need to decelerate
+		TIMER1_DelayUs(delayProfile[tray->pathDist - tray->stepCounter - 1]);
+	else // max speed
+		TIMER1_DelayUs(STEPPER_DELAY_MIN);
+	
+	// increment step counter
+	tray->stepCounter++;
 }
 
 
@@ -114,7 +114,7 @@ int TRAY_CalcShortestPath(Tray* tray){
 	int shortest_path_dist;
 	
 	// check the difference between the target and current position
-	int dist = (tray->targetPos) - (tray->currentPos);
+	int dist = (int)(tray->targetPos) - (int)(tray->currentPos);
 	
 	// a positive distance corresponds to |dist| steps in the CW direction
 	// e.g., 50 is 50 steps CW
@@ -142,7 +142,7 @@ int TRAY_CalcShortestPath(Tray* tray){
 	return shortest_path_dist;
 }
 
-
+/*
 //dist starts large, gets smaller as it rotates to target
 uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
 	
@@ -165,28 +165,22 @@ uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
 	}
 	
 	return newDelay;
-}
+}*/
 
 void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
-	//if target is unclassified do nothing and return
-	//if ( (target == UNCLASSIFIED) || (tray->targetPos == target))
-	//{
-	//	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	//	{
-	//		tray->isReady = true;
-	//	}
-	//	return; // return if there is nothing to do
-	//}
-	
 	if ( target != tray->targetPos) // new target and old target differ
-	{
+	{	
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 		{
-			tray->targetPos = target;
 			tray->isReady = false;
+			tray->targetPos = target;
+			int shortest_path_dist = TRAY_CalcShortestPath(tray);
+			tray->currDir = (shortest_path_dist > 0) ? CW : CCW;
+			tray->pathDist = abs(shortest_path_dist);
 		}
 	}
+	
 }
 
 uint8_t TRAY_GetTarget(Tray* tray)
