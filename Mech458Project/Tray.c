@@ -105,7 +105,6 @@ void TRAY_Sort(Tray* tray){
 	// since we took care of the 0 case up top and returned from it, these are the only options
 	
 	// delay according to the calculated delay and exit
-	LED_Set(newDelay/1000);
 	TIMER1_DelayUs(newDelay);
 }
 

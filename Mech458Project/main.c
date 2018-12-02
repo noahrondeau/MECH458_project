@@ -116,7 +116,6 @@ int main()
 				{
 					// if the tray is not in position! rotate!
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-					LED_Set(QUEUE_Peak(readyQueue).reflectivity);
 				
 					// initiate a turn if the target got updated
 					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
@@ -132,6 +131,7 @@ int main()
 				{
 					// dequeue is atomic
 					QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+					LED_Set(dropItem.sampleCount);
 					
 					// atomically reset itemReady flag
 					// must be atomic so that EXIT interrupt doesn't overwrite it
@@ -180,7 +180,7 @@ void Initialize()
 	TIMER2_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
-	ADC_Init(&adc, ADC_PRESCALE_32);
+	ADC_Init(&adc, ADC_PRESCALE_128);
 	FERRO_Init(&ferro);
 	OPTICAL_Init(&s1_optic,S1_OPTICAL);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
@@ -402,7 +402,6 @@ ISR(ADC_vect)
 	if (Stage2.adcContinueConversions)
 	{
 		ADC_ReadConversion(&adc);
-		//LED_Set( (uint8_t)((adc.result) >> 2));
 		Stage2.sampleCount++;
 	
 		accum fx_out = Filter(adc.result);
