@@ -29,6 +29,7 @@
 void Initialize();
 ItemClass Classify(QueueElement elem);
 void PauseDisplay();
+void RampDisplay();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -91,7 +92,7 @@ volatile struct {
 // for keeping track of whats going on in the display
 volatile struct 
 {
-	ItemClass currDispType;
+	uint8_t currDispType;
 } DisplayStatus = {
 	.currDispType = 0,
 };
@@ -156,7 +157,7 @@ int main()
 			{
 				cli();
 				DCMOTOR_Brake(&belt);
-				PauseDisplay();
+				RampDisplay();
 			}
 			break;
 		}
@@ -233,22 +234,22 @@ ItemClass Classify(QueueElement elem)
 	}
 }
 
-void PauseDisplay()
+void RampDisplay()
 {
 	// right now, just LED, in the future could be UART
 	switch(DisplayStatus.currDispType)
 	{
+	case BLACK_PLASTIC:
+		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		break;		
 	case ALUMINIUM:
-		PORTC = (0b10000000 | (ItemStats.aluminiumCount & 0x0F));
-		break;
-	case STEEL:
-		PORTC = (0b01000000 | (ItemStats.steelCount & 0x0F));
+		LED_SetBottom8(0b00100000 | (ItemStats.aluminiumCount & 0x0F));
 		break;
 	case WHITE_PLASTIC:
-		PORTC = (0b00100000 | (ItemStats.whitePlasticCount & 0x0F));
+		LED_SetBottom8(0b01000000 | (ItemStats.whitePlasticCount & 0x0F));
 		break;
-	case BLACK_PLASTIC:
-		PORTC = (0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+	case STEEL:
+		LED_SetBottom8(0b10000000 | (ItemStats.steelCount & 0x0F));
 		break;
 	default:
 		break;
@@ -258,6 +259,32 @@ void PauseDisplay()
 	TIMER2_DelayMs(1000);
 }
 
+void PauseDisplay()
+{
+	// right now, just LED, in the future could be UART
+	switch(DisplayStatus.currDispType)
+	{
+		case BLACK_PLASTIC:
+		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		break;
+		case ALUMINIUM:
+		LED_SetBottom8(0b00100000 | (ItemStats.aluminiumCount & 0x0F));
+		break;
+		case WHITE_PLASTIC:
+		LED_SetBottom8(0b01000000 | (ItemStats.whitePlasticCount & 0x0F));
+		break;
+		case STEEL:
+		LED_SetBottom8(0b10000000 | (ItemStats.steelCount & 0x0F));
+		break;
+		case 200:
+		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
+		default:
+		break;
+	}
+	// on next loop through, display this
+	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
+	TIMER2_DelayMs(1000);
+}
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
 
 // ISR for S1_OPTICAL
