@@ -12,20 +12,8 @@
 #include "Timer.h"
 #include "LedBank.h"
 
-#if MODE_ENABLED(S_CURVE_MODE)
-// delays for accel and deccel in microseconds
-static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = 
-{
-	19970, 19920, 19784,	19431,	18570,	16773,	14000,	11227,	9430,	8569,	8216,	8080,
-};
-
-#else
-static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] =
-{
-	20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,
-};
-#endif
-
+// accel/deccel profile delay timings
+static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
 
 
 void TRAY_Init(Tray* tray)
