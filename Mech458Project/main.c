@@ -156,7 +156,7 @@ void Initialize()
 	TIMER1_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
-	ADC_Init(&adc, ADC_PRESCALE_32);
+	ADC_Init(&adc, ADC_PRESCALE_128);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
 	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
 	UART_Init(9600);
