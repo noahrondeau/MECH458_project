@@ -177,23 +177,13 @@ void Initialize()
 // ISR for S2_OPTICAL
 ISR(INT2_vect)
 {
-	// poll sensor state to determine whether falling or rising edge was seen
+	// poll sensor state to make sure not spurious
 	
 	if (OPTICAL_IsBlocked(&s2_optic))
 	{
 		Stage2.minReflectivity = LARGEST_UINT16_T; // reset to default reflectivity
 		FILTER_InitReset(1023.0K);
 		ADC_StartConversion(&adc);
-	}
-	else
-	{	
-		Stage2.itemCount++;
-		//move item from the "process Queue", classify, and move to the "ready" Queue
-		// dequeue -- no need to check if we can, because we must if we got the interrupt
-		// call is atomic
-		QueueElement newItem;
-		newItem.reflectivity = Stage2.minReflectivity;
-		QUEUE_Enqueue(itemQ, newItem);
 	}
 }
 
@@ -218,7 +208,6 @@ ISR(INT7_vect)
 ISR(ADC_vect)
 {
 	ADC_ReadConversion(&adc);
-	//LED_Set( (uint8_t)((adc.result) >> 2));
 	Stage2.sampleCount++;
 	
 	accum fx_out = Filter((accum)(adc.result));
@@ -229,10 +218,19 @@ ISR(ADC_vect)
 	else u_out = (uint16_t)fx_out;
 	
 	if (u_out < Stage2.minReflectivity)
-		Stage2.minReflectivity = u_out;
-		
+	Stage2.minReflectivity = u_out;
+	
 	if (OPTICAL_IsBlocked(&s2_optic))
+	{
 		ADC_StartConversion(&adc);
+	}
+	else
+	{	
+		Stage2.itemCount++;
+		QueueElement newItem;
+		newItem.reflectivity = Stage2.minReflectivity;
+		QUEUE_Enqueue(itemQ, newItem);
+	}
 }
 
 /*
