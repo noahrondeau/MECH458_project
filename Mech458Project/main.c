@@ -96,11 +96,11 @@ volatile struct
 	.currDispType = 0,
 };
 
-
 /* ====== MAIN FUNCTION ====== */
 
 int main()
-{/*
+{
+	
 	Initialize();
 	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
@@ -111,66 +111,10 @@ int main()
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
-			{	
-				if ( !QUEUE_IsEmpty(readyQueue))
-				{
-					// if the tray is not in position! rotate!
-					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-				
-					// initiate a turn if the target got updated
-					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
-						TRAY_SetTarget(&tray, nextClass);
-				}
-				
-				TRAY_Sort(&tray);
-				
-				// if the item is ready, dequeue the item
-				// read doesn't need to be atomic since only EXIT interrupt could write it to true
-				// and we will see that on the next pass through this loop anyway	
-				if(TRAY_IsReady(&tray) && Stage3.itemReady)
-				{
-					// dequeue is atomic
-					QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-					LED_Set(dropItem.sampleCount);
-					
-					// atomically reset itemReady flag
-					// must be atomic so that EXIT interrupt doesn't overwrite it
-					ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-					{
-						Stage3.itemReady = false;
-					}
-					// if in this time the EXIT interrupt fired, the belt would have been turned off,
-					// so turn it on again (if already on, this has no effect)
-					DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-				}
-			}
-			break;*/
-		
-		// ------ SNIP ------ //
-		Initialize();
-		TIMER2_DelayMs(2000);
-		//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
-		
-		uint8_t testIndex = 0;
-		uint8_t testPos[7] = {100,0,150,100,50,150,0};
-		// main loop
-		while(true)
-		{
-			switch(fsmState.state)
 			{
-				case RUN_STATE:
-				{	
-					if(TRAY_IsReady(&tray))
-					{
-						//TIMER2_DelayMs(500);
-						TRAY_SetTarget(&tray, testPos[testIndex]);
-						testIndex = (testIndex + 1) %7;
-					}
-					
-					TRAY_Sort(&tray);
-				}
-				break;
-		// ----- SNIP ------ //
+			}
+			break;
+
 		case PAUSE_STATE:
 			{
 				PauseDisplay();
@@ -201,7 +145,7 @@ void Initialize()
 	// Initialize all required resources and peripherals
 	SYSCLK_Init();
 	LED_Init();
-	TIMER1_DelayInit();
+	TIMER1_Init();
 	TIMER2_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
@@ -434,6 +378,13 @@ ISR(ADC_vect)
 		// Atomic enqueue
 		QUEUE_Enqueue(readyQueue, processedItem);	
 	}
+}
+
+
+// ISR for stepper motor commutation
+ISR(TIMER1_COMPA_vect)
+{
+	TIMER1_DisableInt();
 }
 
 /*

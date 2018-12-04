@@ -18,18 +18,26 @@
 #define LED_RIGHT_END (0b00000011)
 #define LED_LEFT_END (0b11000000)
 
-void TIMER1_DelayInit(void)
+/* ====== TIMER1 functions ======*/
+// TIMER 1 is used for millisecond timing
+// it can be used either for delay or for interrupt-driven operation, but not simultaneously
+
+// initlializes timer 1
+void TIMER1_Init(void)
 {
 	//prescale to 1/8 to tick at a 1MHz rate
 	TCCR1B |= _BV(CS11);
+	// Set Waveform Gen Mode to CTC mode
+	TCCR1B |= _BV(WGM12);
 }
 
+// delay for a certain number of milliseconds
 void TIMER1_DelayUs(uint16_t us)
 {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		// Set Waveform Gen Mode to CTC mode
-		TCCR1B |= _BV(WGM12);
+		// turn off interrupts if they are on:
+		TIMSK1 &= ~(1<<OCIE1A);
 		// Set output compare register to count "us" cycles
 		OCR1A = us;
 		// Reset the timer
@@ -42,9 +50,41 @@ void TIMER1_DelayUs(uint16_t us)
 	while ((TIFR1 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
 }
 
+void TIMER1_EnableInt(void)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// turn on interrupts
+		TIMSK1 |= (1<<OCIE1A);
+	}
+}
+void TIMER1_DisableInt(void)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// turn off interrupts
+		TIMSK1 &= ~(1<<OCIE1A);	
+	}
+}
+
+// interrupt on output match A after a given number of microseconds
+void TIMER1_ScheduleIntUs(uint16_t us)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// Set output compare register to count "us" cycles
+		OCR1A = us;
+		// Reset the timer
+		TCNT1 = 0x0000;
+	}
+}
+
+/* ====== TIMER2 Functions ====== */
+// timer 2 is used exclusively for the millisecond delays
+
 void TIMER2_DelayInit(void)
 {
-	TCCR2B |= _BV(CS21);
+	TCCR2B |= _BV(CS21); // 1MH clock rate
 }
 
 void TIMER2_DelayMs(uint16_t ms){
@@ -79,14 +119,18 @@ void TIMER2_DelayMs(uint16_t ms){
 	}
 }
 
+
+/* ====== TIMER 3 functions ====== */
+// timer 2 is used both as a delay on a ms basis and for interrupt on the order of seconds long basis
+
+// init for delay
 void TIMER3_DelayInit(void)
 {
 	//prescale to 1/8 to tick at a 1MHz rate
 	TCCR3B |= _BV(CS31);
-
-	
 }
 
+// delay for ms
 void TIMER3_DelayMs(int ms)
 {
 	// Index for loop
@@ -112,6 +156,7 @@ void TIMER3_DelayMs(int ms)
 		TIFR3 |= _BV(OCF3A);
 	}
 }
+
 
 void TIMER3_InterruptInit()
 {
