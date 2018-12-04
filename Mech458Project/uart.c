@@ -39,8 +39,9 @@ void UART_SendChar(char c)
 	UDRn = c;
 	*/
 }
-void UART_SendString(const char* s, uint16_t len)
+void UART_SendString(const char* s)
 {
-	for( int i = 0; i < len; i++)
-	UART_SendChar(s[i]);
+	unsigned int counter = 0;
+	while( s[counter] != '\0')
+		UART_SendChar(s[counter]);
 }

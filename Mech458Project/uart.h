@@ -14,7 +14,7 @@
 void uint16ToString(uint16_t byte, char* out);
 void UART_Init(uint32_t baud);
 void UART_SendChar(char c);
-void UART_SendString( const char* s, uint16_t len);
+void UART_SendString( const char* s);
 
 
 #endif /* UART_H_ */

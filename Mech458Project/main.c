@@ -5,6 +5,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* ====== USER INCLUDES ======*/
 
@@ -84,31 +85,30 @@ int main()
 		case ALUMINIUM_STATE:
 			LED_On(0);
 			TIMER1_DelayMs(1000);
-			UART_SendString("ALUMINIUM\n",10);
+			UART_SendString("ALUMINIUM\n");
 			break;
 		case STEEL_STATE:
 			LED_On(1);
 			TIMER1_DelayMs(1000);
-			UART_SendString("STEEL\n",6);
+			UART_SendString("STEEL\n");
 			break;
 		case WHITE_STATE:
 			LED_On(2);
 			TIMER1_DelayMs(1000);
-			UART_SendString("WHITE\n",6);
+			UART_SendString("WHITE\n");
 			break;
 		case BLACK_STATE:
 			LED_On(3);
 			TIMER1_DelayMs(1000);
-			UART_SendString("BLACK\n",6);
+			UART_SendString("BLACK\n");
 			break;
 		case END_STATE:
 			Stage2.avgSampleCount = ((unsigned long accum)Stage2.sampleCount) / ((unsigned long accum)Stage2.itemCount);
 			LED_Set((uint16_t)Stage2.avgSampleCount);
-			UART_SendString("AVERAGE_SAMPLE_COUNT\n",21);
-			char sendString[16];
-			uint16ToString((uint16_t)Stage2.avgSampleCount, sendString);
-			UART_SendString(sendString, 16);
-			UART_SendChar('\n');
+			UART_SendString("AVERAGE_SAMPLE_COUNT\n");
+			char sendString[20];
+			sprintf(sendString, "%u\n", (uint16_t)Stage2.avgSampleCount);
+			UART_SendString(sendString);
 			LED_Set(0xFF);
 			TIMER1_DelayMs(1000);
 			LED_Set(0b10101010);
@@ -125,11 +125,10 @@ int main()
 			if(!QUEUE_IsEmpty(itemQ))
 			{
 				uint16_t sendval = QUEUE_Dequeue(itemQ).reflectivity;
-				//LED_Set(sendval);
-				char sendString[16];
-				uint16ToString(sendval,sendString);
-				UART_SendString(sendString, 16);
-				//UART_SendChar('\n');
+				//LED_Set(sendval)
+				char sendString[10]; // ten bit numbers go up to 4 digits in decimal. need fifth for '\n' char, sixth for '\0'
+				sprintf(sendString, "%u\n", sendval);
+				UART_SendString(sendString);
 			}
 		}
 		
