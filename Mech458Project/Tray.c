@@ -12,15 +12,17 @@
 #include "Timer.h"
 #include "LedBank.h"
 
-// accel/deccel profile delay timings
-static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
-
+#if MODE_ENABLED(ACCEL_MODE)
+	// accel/deccel profile delay timings
+	static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
+	
+#endif
 
 void TRAY_Init(Tray* tray)
 {
 	tray->currentPos = 0;
 	tray->targetPos = 0;
-	tray->isReady = false;
+	tray->isReady = true;
 	tray->stepCounter = 0;
 	tray->pathDist = 0;
 	tray->currDir = CW;
@@ -28,6 +30,9 @@ void TRAY_Init(Tray* tray)
 	HALL_Init(&(tray->hall));
 }
 
+// used to home the tray during system initialization
+// if already over the hall effect sensor (position 0) then move a set amount to home the stepper
+// otherwise turn all the way until we are in position 0
 void TRAY_Home(Tray* tray)
 {
 	
@@ -56,6 +61,9 @@ void TRAY_Home(Tray* tray)
 	tray->currentPos = 0;
 }
 
+
+// rotates the stepper in the direction known the to tray object
+// called from TRAY_Process to rotate the tray
 void TRAY_Rotate(Tray* tray)
 {
 	
@@ -77,9 +85,12 @@ void TRAY_Rotate(Tray* tray)
 	}
 }
 
-void TRAY_Sort(Tray* tray){	
-	
-	//if tray is already in position, no turning to do, just signal that the tray is ready
+// get called from TIMER1_COMPA_vect ISR
+// fetches the next delay, increments the internal tray state, rotates the tray, and schedules the next step
+void TRAY_Process(Tray* tray){	
+	LED_Set(tray->currentPos);
+	// if tray is already in position, no turning to do, just signal that the tray is ready
+	// do not start the interrupt again 
 	if(tray->stepCounter == tray->pathDist)
 	{
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -88,23 +99,35 @@ void TRAY_Sort(Tray* tray){
 			tray->pathDist = 0;
 			tray->isReady = true;
 		}
-		return; // early return in this case
+		return; // early return -- don't do this inside the atomic block
 	}
-	
+		
+	// give a step to the tray
 	TRAY_Rotate(tray);
-	// delay according to the calculated delay and exit
+		
+	// figure out next delay... do this before stepCounter is incremented!
+	uint16_t nextDelay;
+#if MODE_ENABLED(ACCEL_MODE)
 	if (tray->stepCounter < STEPPER_ACCEL_RAMP) // need to accelerate
-		TIMER1_DelayUs(delayProfile[tray->stepCounter]);
+		nextDelay = delayProfile[tray->stepCounter];
 	else if ((tray->pathDist - tray->stepCounter) <= STEPPER_ACCEL_RAMP) // need to decelerate
-		TIMER1_DelayUs(delayProfile[tray->pathDist - tray->stepCounter - 1 ]);
+		nextDelay = delayProfile[tray->pathDist - tray->stepCounter - 1 ];
 	else // max speed
-		TIMER1_DelayUs(STEPPER_DELAY_MIN);
-	
+		nextDelay = STEPPER_DELAY_MIN;
+#else
+	// if we aren't building in acceleration mode, just always make delay max
+	nextDelay = STEPPER_DELAY_MAX;
+#endif
 	// increment step counter
 	(tray->stepCounter)++;
+		
+	// schedule the next interrupt
+	TIMER1_ScheduleIntUs(nextDelay);
+	TIMER1_EnableInt();
 }
 
-
+// calculates the shortest path to the target (distance + direction)
+// called from TRAY_SetTarget
 int TRAY_CalcShortestPath(Tray* tray){
 	
 	int shortest_path_dist;
@@ -138,31 +161,10 @@ int TRAY_CalcShortestPath(Tray* tray){
 	return shortest_path_dist;
 }
 
-/*
-//dist starts large, gets smaller as it rotates to target
-uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
-	
-	uint16_t newDelay;
-	if(MS_TO_US(dist) > STEPPER_ACCEL_RAMP)					// we haven't reached the deceleration zone
-	{													// 1000 is to put on same order of magnitude
-		if (tray->lastDelay > STEPPER_DELAY_MIN)			// we aren't going full speed yet
-			newDelay = tray->lastDelay
-						- STEPPER_MIN_DELAY_INCREMENT;				// make it faster
-		else												// we are going at full speed
-			newDelay = STEPPER_DELAY_MIN;							// keep it at full speed
-	}
-	else											// we are in the deceleration zone
-	{	
-		if(tray->lastDelay < STEPPER_DELAY_MAX)				// we aren't going at minimum speed yet
-			newDelay = tray->lastDelay
-						+ STEPPER_MIN_DELAY_INCREMENT;				// increase delay (decrease speed)
-		else												// we are going at minimum speed
-			newDelay = STEPPER_DELAY_MAX;							// keep it at minimum speed
-	}
-	
-	return newDelay;
-}*/
 
+// sets the tray target
+// updates the tray's internal state including target, path distance to target, readiness and step count
+// called in main to update the target when a new item is on the belt
 void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
 	if ( target != tray->targetPos) // new target and old target differ

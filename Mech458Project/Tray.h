@@ -31,7 +31,7 @@ typedef volatile struct Tray
 void TRAY_Init(Tray* tray);
 void TRAY_Home(Tray* tray);
 void TRAY_Rotate(Tray* tray);
-void TRAY_Sort(Tray* tray);
+void TRAY_Process(Tray* tray);
 
 void TRAY_SetTarget(Tray* tray, uint8_t target);
 uint8_t TRAY_GetTarget(Tray* tray);

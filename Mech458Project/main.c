@@ -112,6 +112,27 @@ int main()
 		{
 		case RUN_STATE:
 			{
+				
+				if(!QUEUE_IsEmpty(readyQueue))
+				{
+					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+					if (nextClass != TRAY_GetTarget(&tray))
+					{
+						TRAY_SetTarget(&tray, nextClass);
+						TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
+						TIMER1_EnableInt();
+					}
+					
+					if (Stage3.itemReady && TRAY_IsReady(&tray))
+					{
+						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+						{
+							Stage3.itemReady = false;
+							QUEUE_Dequeue(readyQueue);
+							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						}
+					}
+				}
 			}
 			break;
 
@@ -385,6 +406,8 @@ ISR(ADC_vect)
 ISR(TIMER1_COMPA_vect)
 {
 	TIMER1_DisableInt();
+	// reenables interrupts if necessary
+	TRAY_Process(&tray);
 }
 
 /*
