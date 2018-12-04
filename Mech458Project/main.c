@@ -109,6 +109,7 @@ int main()
 			char sendString[20];
 			sprintf(sendString, "%u\n", (uint16_t)Stage2.avgSampleCount);
 			UART_SendString(sendString);
+			UART_SendString("END\n");
 			LED_Set(0xFF);
 			TIMER1_DelayMs(1000);
 			LED_Set(0b10101010);
