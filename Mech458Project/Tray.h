@@ -38,7 +38,6 @@ uint8_t TRAY_GetTarget(Tray* tray);
 uint8_t TRAY_GetCurrentPos(Tray* tray);
 bool TRAY_IsReady(Tray* tray);
 int TRAY_CalcShortestPath(Tray* tray);
-uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist);
 
 
 #endif /* TRAY_H_ */

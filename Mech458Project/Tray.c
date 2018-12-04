@@ -21,7 +21,7 @@ void TRAY_Init(Tray* tray)
 	tray->currentPos = 0;
 	tray->targetPos = 0;
 	tray->isReady = false;
-	tray->lastDelay = STEPPER_STARTUP_DELAY;
+	tray->beltPos = 0;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -82,34 +82,25 @@ void TRAY_Sort(Tray* tray){
 	// figure out shortest path to current target
 	int shortest_path_dist = TRAY_CalcShortestPath(tray);
 	
-	//if tray is already in position, no turning to do, just signal that the tray is ready
-	if(shortest_path_dist == 0)
+	for (int step = 0; step < abs(shortest_path_dist); step++)
 	{
-		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-		{
-			tray->beltPos = tray->targetPos;
-			tray->lastDelay = STEPPER_STARTUP_DELAY;
-			tray->isReady = true;
-		}
-		return; // early return in this case
+	
+		// now figure out the direction and take the step
+		if(shortest_path_dist > 0) // we need to go CW, since the shortest path is positive
+			TRAY_Rotate(tray, CW);
+		else //if(shortest_path_dist < 0) // go CCW, since the shortest path is negative
+			TRAY_Rotate(tray, CCW);
+		// since we took care of the 0 case up top and returned from it, these are the only options
+		uint16_t nextDelay;
+		if (step < STEPPER_ACCEL_RAMP) // need to accelerate
+			nextDelay = delayProfile[step];
+		else if (abs(shortest_path_dist) - step <= STEPPER_ACCEL_RAMP) // need to decelerate
+			nextDelay = delayProfile[abs(shortest_path_dist) - step - 1 ];
+		else // max speed
+			nextDelay = STEPPER_DELAY_MIN;
+		// delay according to the calculated delay and exit
+		TIMER1_DelayUs(nextDelay);
 	}
-	
-	// if the tray needs step, we need to calculate the required delay
-	// THIS MUST BE DONE BEFORE TAKING THE STEP!!!!!
-	
-	uint16_t newDelay = TRAY_CalcStepDelay(tray, (uint16_t)abs(shortest_path_dist));
-	// save the newDelay for use in the next step
-	tray->lastDelay = newDelay;
-	
-	// now figure out the direction and take the step
-	if(shortest_path_dist > 0) // we need to go CW, since the shortest path is positive
-		TRAY_Rotate(tray, CW);
-	else //if(shortest_path_dist < 0) // go CCW, since the shortest path is negative
-		TRAY_Rotate(tray, CCW);
-	// since we took care of the 0 case up top and returned from it, these are the only options
-	
-	// delay according to the calculated delay and exit
-	TIMER1_DelayUs(newDelay);
 }
 
 
@@ -144,31 +135,6 @@ int TRAY_CalcShortestPath(Tray* tray){
 		shortest_path_dist = dist;
 		
 	return shortest_path_dist;
-}
-
-
-//dist starts large, gets smaller as it rotates to target
-uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
-	
-	uint16_t newDelay;
-	if(MS_TO_US(dist) > STEPPER_ACCEL_RAMP)					// we haven't reached the deceleration zone
-	{													// 1000 is to put on same order of magnitude
-		if (tray->lastDelay > STEPPER_DELAY_MIN)			// we aren't going full speed yet
-			newDelay = tray->lastDelay
-						- STEPPER_MIN_DELAY_INCREMENT;				// make it faster
-		else												// we are going at full speed
-			newDelay = STEPPER_DELAY_MIN;							// keep it at full speed
-	}
-	else											// we are in the deceleration zone
-	{	
-		if(tray->lastDelay < STEPPER_DELAY_MAX)				// we aren't going at minimum speed yet
-			newDelay = tray->lastDelay
-						+ STEPPER_MIN_DELAY_INCREMENT;				// increase delay (decrease speed)
-		else												// we are going at minimum speed
-			newDelay = STEPPER_DELAY_MAX;							// keep it at minimum speed
-	}
-	
-	return newDelay;
 }
 
 void TRAY_SetTarget(Tray* tray, uint8_t target)
