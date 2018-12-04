@@ -221,7 +221,7 @@ ISR(ADC_vect)
 	//LED_Set( (uint8_t)((adc.result) >> 2));
 	Stage2.sampleCount++;
 	
-	accum fx_out = Filter(adc.result);
+	accum fx_out = Filter((accum)(adc.result));
 	uint16_t u_out;
 	
 	if ( fx_out < 0.0K ) u_out = 0;

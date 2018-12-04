@@ -7,13 +7,13 @@
 
 
 
-#ifndef INCFILE1_H_
-#define INCFILE1_H_
+#ifndef FILTER_H
+#define FILTER_H
 
 #include "config.h"
 
 void FILTER_InitReset(accum padVal);
-accum Filter(uint16_t next);
+accum Filter(accum new_input);
 
 
 #endif /* INCFILE1_H_ */
