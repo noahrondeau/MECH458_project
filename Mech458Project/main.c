@@ -130,6 +130,7 @@ int main()
 							Stage3.itemReady = false;
 							QUEUE_Dequeue(readyQueue);
 							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+							TIMER2_DelayMs(30);
 						}
 					}
 				}

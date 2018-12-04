@@ -105,7 +105,7 @@ typedef volatile uint8_t  GPIOMask;
 #define DCMOTOR_PORTX			(PORTB_REG)
 #define DCMOTOR_DDRX			(DDRB_REG)
 
-#define DCMOTOR_SPEED			(60)
+#define DCMOTOR_SPEED			(90)
 
 /* ====== HALL SENSOR CONFIG ====== */
 
