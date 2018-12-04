@@ -25,7 +25,7 @@
 #define LINKED_QUEUE_MODE	(1)
 #define CIRCULAR_QUEUE_MODE	(!LINKED_QUEUE_MODE)
 
-#define TWO_PHASE_COMMUTATION_MODE (1)
+#define TWO_PHASE_COMMUTATION_MODE (0)
 
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
@@ -82,6 +82,12 @@ typedef volatile uint8_t  GPIOMask;
 #define STEPPER_ACCEL_RAMP		(12) // this has to be a number of steps, not a function of two microsecond values
 #define STEPPER_MIN_DELAY_INCREMENT		(1000) // microseconds
 #define STEPPER_STARTUP_DELAY		(STEPPER_DELAY_MAX + STEPPER_MIN_DELAY_INCREMENT) // for the math to work out
+
+#if MODE_ENABLED(S_CURVE_MODE) // use s-curve
+	#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,} // microseconds
+#else // use trapezoid
+	#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,} // microseconds
+#endif
 
 #define MS_TO_US(__ms__) (1000*(__ms__))
 

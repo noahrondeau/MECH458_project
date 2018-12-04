@@ -12,6 +12,10 @@
 #include "Timer.h"
 #include "LedBank.h"
 
+// accel/deccel profile delay timings
+static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
+
+
 void TRAY_Init(Tray* tray)
 {
 	tray->currentPos = 0;
