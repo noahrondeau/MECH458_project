@@ -12,16 +12,27 @@
 #include "Timer.h"
 #include "LedBank.h"
 
+#if MODE_ENABLED(ACCEL_MODE)
+	// accel/deccel profile delay timings
+	static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
+	
+#endif
+
 void TRAY_Init(Tray* tray)
 {
 	tray->currentPos = 0;
 	tray->targetPos = 0;
-	tray->isReady = false;
-	tray->lastDelay = STEPPER_STARTUP_DELAY;
+	tray->isReady = true;
+	tray->stepCounter = 0;
+	tray->pathDist = 0;
+	tray->currDir = CW;
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
 
+// used to home the tray during system initialization
+// if already over the hall effect sensor (position 0) then move a set amount to home the stepper
+// otherwise turn all the way until we are in position 0
 void TRAY_Home(Tray* tray)
 {
 	
@@ -37,7 +48,6 @@ void TRAY_Home(Tray* tray)
 			TIMER1_DelayUs(STEPPER_DELAY_MAX);	
 		}
 		STEPPER_StepCCW(&(tray->stepper));
-		//tray->lastDir = CCW;
 	}
 	else
 	{
@@ -46,24 +56,26 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCW(&(tray->stepper));
 			TIMER1_DelayUs(STEPPER_DELAY_MAX);
 		}
-		//tray->lastDir = CW;
 	}
 	
 	tray->currentPos = 0;
-	tray->beltPos = BLACK_PLASTIC;
 }
 
-void TRAY_Rotate(Tray* tray, MotorDirection dir){
+
+// rotates the stepper in the direction known the to tray object
+// called from TRAY_Process to rotate the tray
+void TRAY_Rotate(Tray* tray)
+{
 	
-	if(dir == CW){ //CW rotation
+	if(tray->currDir == CW){ //CW rotation
 		//Step motor once CW
 		STEPPER_StepCW(&(tray->stepper));
 		
 		//update current position
 		tray->currentPos = (tray->currentPos + 1) % 200;
 	}
-	
-	if(dir == CCW){ //CCW rotation
+	else
+	{ //CCW rotation
 		//Step motor once CCW	
 		STEPPER_StepCCW(&(tray->stepper));
 		
@@ -73,48 +85,55 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir){
 	}
 }
 
-void TRAY_Sort(Tray* tray){	
-
-	// figure out shortest path to current target
-	int shortest_path_dist = TRAY_CalcShortestPath(tray);
-	
-	//if tray is already in position, no turning to do, just signal that the tray is ready
-	if(shortest_path_dist == 0)
+// get called from TIMER1_COMPA_vect ISR
+// fetches the next delay, increments the internal tray state, rotates the tray, and schedules the next step
+void TRAY_Process(Tray* tray){	
+	LED_Set(tray->currentPos);
+	// if tray is already in position, no turning to do, just signal that the tray is ready
+	// do not start the interrupt again 
+	if(tray->stepCounter == tray->pathDist)
 	{
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 		{
-			tray->beltPos = tray->targetPos;
-			tray->lastDelay = STEPPER_STARTUP_DELAY;
+			tray->stepCounter = 0;
+			tray->pathDist = 0;
 			tray->isReady = true;
 		}
-		return; // early return in this case
+		return; // early return -- don't do this inside the atomic block
 	}
-	
-	// if the tray needs step, we need to calculate the required delay
-	// THIS MUST BE DONE BEFORE TAKING THE STEP!!!!!
-	
-	uint16_t newDelay = TRAY_CalcStepDelay(tray, (uint16_t)abs(shortest_path_dist));
-	// save the newDelay for use in the next step
-	tray->lastDelay = newDelay;
-	
-	// now figure out the direction and take the step
-	if(shortest_path_dist > 0) // we need to go CW, since the shortest path is positive
-		TRAY_Rotate(tray, CW);
-	else //if(shortest_path_dist < 0) // go CCW, since the shortest path is negative
-		TRAY_Rotate(tray, CCW);
-	// since we took care of the 0 case up top and returned from it, these are the only options
-	
-	// delay according to the calculated delay and exit
-	TIMER1_DelayUs(newDelay);
+		
+	// give a step to the tray
+	TRAY_Rotate(tray);
+		
+	// figure out next delay... do this before stepCounter is incremented!
+	uint16_t nextDelay;
+#if MODE_ENABLED(ACCEL_MODE)
+	if (tray->stepCounter < STEPPER_ACCEL_RAMP) // need to accelerate
+		nextDelay = delayProfile[tray->stepCounter];
+	else if ((tray->pathDist - tray->stepCounter) <= STEPPER_ACCEL_RAMP) // need to decelerate
+		nextDelay = delayProfile[tray->pathDist - tray->stepCounter - 1 ];
+	else // max speed
+		nextDelay = STEPPER_DELAY_MIN;
+#else
+	// if we aren't building in acceleration mode, just always make delay max
+	nextDelay = STEPPER_DELAY_MAX;
+#endif
+	// increment step counter
+	(tray->stepCounter)++;
+		
+	// schedule the next interrupt
+	TIMER1_ScheduleIntUs(nextDelay);
+	TIMER1_EnableInt();
 }
 
-
+// calculates the shortest path to the target (distance + direction)
+// called from TRAY_SetTarget
 int TRAY_CalcShortestPath(Tray* tray){
 	
 	int shortest_path_dist;
 	
 	// check the difference between the target and current position
-	int dist = (tray->targetPos) - (tray->currentPos);
+	int dist = (int)(tray->targetPos) - (int)(tray->currentPos);
 	
 	// a positive distance corresponds to |dist| steps in the CW direction
 	// e.g., 50 is 50 steps CW
@@ -143,48 +162,20 @@ int TRAY_CalcShortestPath(Tray* tray){
 }
 
 
-//dist starts large, gets smaller as it rotates to target
-uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist){
-	
-	uint16_t newDelay;
-	if(MS_TO_US(dist) > STEPPER_ACCEL_RAMP)					// we haven't reached the deceleration zone
-	{													// 1000 is to put on same order of magnitude
-		if (tray->lastDelay > STEPPER_DELAY_MIN)			// we aren't going full speed yet
-			newDelay = tray->lastDelay
-						- STEPPER_MIN_DELAY_INCREMENT;				// make it faster
-		else												// we are going at full speed
-			newDelay = STEPPER_DELAY_MIN;							// keep it at full speed
-	}
-	else											// we are in the deceleration zone
-	{	
-		if(tray->lastDelay < STEPPER_DELAY_MAX)				// we aren't going at minimum speed yet
-			newDelay = tray->lastDelay
-						+ STEPPER_MIN_DELAY_INCREMENT;				// increase delay (decrease speed)
-		else												// we are going at minimum speed
-			newDelay = STEPPER_DELAY_MAX;							// keep it at minimum speed
-	}
-	
-	return newDelay;
-}
-
+// sets the tray target
+// updates the tray's internal state including target, path distance to target, readiness and step count
+// called in main to update the target when a new item is on the belt
 void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
-	//if target is unclassified do nothing and return
-	//if ( (target == UNCLASSIFIED) || (tray->targetPos == target))
-	//{
-	//	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	//	{
-	//		tray->isReady = true;
-	//	}
-	//	return; // return if there is nothing to do
-	//}
-	
 	if ( target != tray->targetPos) // new target and old target differ
-	{
+	{	
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 		{
-			tray->targetPos = target;
 			tray->isReady = false;
+			tray->targetPos = target;
+			int shortest_path_dist = TRAY_CalcShortestPath(tray);
+			tray->currDir = (shortest_path_dist >= 0) ? CW : CCW;
+			tray->pathDist = abs(shortest_path_dist);
 		}
 	}
 }

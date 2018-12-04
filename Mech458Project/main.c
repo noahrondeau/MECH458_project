@@ -96,11 +96,11 @@ volatile struct
 	.currDispType = 0,
 };
 
-
 /* ====== MAIN FUNCTION ====== */
 
 int main()
 {
+	
 	Initialize();
 	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
@@ -111,41 +111,31 @@ int main()
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
-			{	
-				if ( !QUEUE_IsEmpty(readyQueue))
+			{
+				
+				if(!QUEUE_IsEmpty(readyQueue))
 				{
-					// if the tray is not in position! rotate!
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-				
-					// initiate a turn if the target got updated
-					if ( nextClass != UNCLASSIFIED && nextClass != TRAY_GetTarget(&tray))
-						TRAY_SetTarget(&tray, nextClass);
-				}
-				
-				TRAY_Sort(&tray);
-				
-				// if the item is ready, dequeue the item
-				// read doesn't need to be atomic since only EXIT interrupt could write it to true
-				// and we will see that on the next pass through this loop anyway	
-				if(TRAY_IsReady(&tray) && Stage3.itemReady)
-				{
-					// dequeue is atomic
-					QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-					LED_Set(dropItem.sampleCount);
-					
-					// atomically reset itemReady flag
-					// must be atomic so that EXIT interrupt doesn't overwrite it
-					ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+					if (nextClass != TRAY_GetTarget(&tray))
 					{
-						Stage3.itemReady = false;
+						TRAY_SetTarget(&tray, nextClass);
+						TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
+						TIMER1_EnableInt();
 					}
-					// if in this time the EXIT interrupt fired, the belt would have been turned off,
-					// so turn it on again (if already on, this has no effect)
-					DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+					
+					if (Stage3.itemReady && TRAY_IsReady(&tray))
+					{
+						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+						{
+							Stage3.itemReady = false;
+							QUEUE_Dequeue(readyQueue);
+							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						}
+					}
 				}
 			}
 			break;
-			
+
 		case PAUSE_STATE:
 			{
 				PauseDisplay();
@@ -176,7 +166,7 @@ void Initialize()
 	// Initialize all required resources and peripherals
 	SYSCLK_Init();
 	LED_Init();
-	TIMER1_DelayInit();
+	TIMER1_Init();
 	TIMER2_DelayInit();
 	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
@@ -409,6 +399,15 @@ ISR(ADC_vect)
 		// Atomic enqueue
 		QUEUE_Enqueue(readyQueue, processedItem);	
 	}
+}
+
+
+// ISR for stepper motor commutation
+ISR(TIMER1_COMPA_vect)
+{
+	TIMER1_DisableInt();
+	// reenables interrupts if necessary
+	TRAY_Process(&tray);
 }
 
 /*
