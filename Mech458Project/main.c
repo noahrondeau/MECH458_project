@@ -349,7 +349,7 @@ ISR(INT6_vect)
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
 	TIMER3_DelayMs(20);
-	LED_Toggle(6);
+	//LED_Toggle(6);
 	TIMER3_DelayMs(20);
 }
 
@@ -385,7 +385,7 @@ ISR(INT7_vect)
 			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
 			if(fsmState.saved.beltWasRunning)
 				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-			LED_Set(0x00);
+				LED_Set(0x00);
 			sei(); // reenable interrupts
 		}
 	}
