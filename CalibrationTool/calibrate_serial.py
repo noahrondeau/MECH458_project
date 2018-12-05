@@ -6,6 +6,16 @@ import serial
 import statistics
 import csv
 
+if len(sys.argv) < 2:
+	print("No serial port specified")
+	print("Windows Usage:\t\t\tpython calibrate_serial.py <port>")
+	print("\t\t\t\t\twhere <port> is e.g. COM4")
+	print("Linux Usage:\t\t\tcalibrate_serial.py <port>")
+	print("\t\t\t\t\twhere <port> is e.g. /dev/tty1")
+	exit()
+
+
+
 port = sys.argv[1]; #write the com port on command line
 
 outputfilename = 'calibration_data.csv'
