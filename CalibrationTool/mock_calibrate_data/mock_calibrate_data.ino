@@ -2,7 +2,7 @@
 unsigned int counter = 0;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(9600, SERIAL_8N1);
   delay(1000);
   randomSeed(analogRead(A0));
   
@@ -12,24 +12,26 @@ void loop() {
 
   if (counter == 160) // send the sample count and return
   {
-    Serial.println("AVERAGE_SAMPLE_COUNT");
+    Serial.print("AVERAGE_SAMPLE_COUNT\n");
     unsigned int sampcnt = random(400, 700);
-    Serial.println(sampcnt);
+    Serial.print(sampcnt);
+    Serial.print('\n');
+    Serial.print("END\n");
 
     while(true); // loop forever at end
   }
     
   if (counter == 0)
-    Serial.println("ALUMINIUM");
+    Serial.print("ALUMINIUM\n");
 
   if (counter == 40)
-    Serial.println("STEEL");
+    Serial.print("STEEL\n");
 
   if (counter == 80)
-    Serial.println("WHITE");
+    Serial.print("WHITE\n");
 
   if (counter == 120)
-    Serial.println("BLACK");
+    Serial.print("BLACK\n");
 
   unsigned int sendval = 0;
   
@@ -42,7 +44,8 @@ void loop() {
   else if (counter < 160) // black
     sendval = random(900, 1000);
 
-  Serial.println(sendval);
+  Serial.print(sendval);
+  Serial.print('\n');
   
   counter++;
   delay(50);
