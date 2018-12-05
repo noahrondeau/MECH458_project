@@ -29,7 +29,7 @@
 #define LINKED_QUEUE_MODE					(1)
 #define CIRCULAR_QUEUE_MODE					(!LINKED_QUEUE_MODE)
 
-#define TWO_PHASE_COMMUTATION_MODE			(0)
+#define TWO_PHASE_COMMUTATION_MODE			(1)
 #define ACCEL_MODE							(1)
 #define S_CURVE_MODE						(1)
 #define TRAP_MODE							(!S_CURVE_MODE)

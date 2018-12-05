@@ -105,6 +105,9 @@ int main()
 	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 	
+	//test variables
+	uint8_t lastclass = 0;
+	
 	// main loop
 	while(true)
 	{	
@@ -112,7 +115,26 @@ int main()
 		{
 		case RUN_STATE:
 			{
+				/*
+				//Tray test case
+				if(QUEUE_IsEmpty(readyQueue))
+				{
+					if(lastclass == BLACK_PLASTIC){
+						QueueElement testItem;
+						testItem.class = WHITE_PLASTIC;
+						QUEUE_Enqueue(readyQueue, testItem);
+						lastclass = WHITE_PLASTIC;
+					}
+					else if(lastclass == WHITE_PLASTIC){
+						QueueElement testItem;
+						testItem.class = BLACK_PLASTIC;
+						QUEUE_Enqueue(readyQueue, testItem);
+						lastclass = BLACK_PLASTIC;
+					}
+				}
+				*/
 				
+				//Tray Rotate if queue is not empty
 				if(!QUEUE_IsEmpty(readyQueue))
 				{
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
@@ -254,6 +276,7 @@ void PauseDisplay()
 // ISR for S1_OPTICAL
 ISR(INT1_vect)
 {
+	LED_Toggle(0);
 	// verify interrupt wasn't spurious by polling sensor
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
@@ -270,6 +293,7 @@ ISR(INT1_vect)
 // ISR for Ferro Sensor
 ISR(INT5_vect)
 {
+	LED_Toggle(4);
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
 	{
@@ -296,7 +320,7 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-
+	LED_Toggle(7);
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
@@ -361,6 +385,7 @@ ISR(INT7_vect)
 			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
 			if(fsmState.saved.beltWasRunning)
 				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+			LED_Set(0x00);
 			sei(); // reenable interrupts
 		}
 	}
@@ -406,9 +431,12 @@ ISR(ADC_vect)
 // ISR for stepper motor commutation
 ISR(TIMER1_COMPA_vect)
 {
-	TIMER1_DisableInt();
-	// reenables interrupts if necessary
-	TRAY_Process(&tray);
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		TIMER1_DisableInt();
+		// reenables interrupts if necessary
+		TRAY_Process(&tray);
+	}
 }
 
 /*
