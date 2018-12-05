@@ -348,9 +348,9 @@ ISR(INT6_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
+
 	//LED_Toggle(6);
-	TIMER3_DelayMs(20);
+
 }
 
 // ISR for PAUSE button
@@ -359,7 +359,7 @@ ISR(INT7_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
+	
 	
 	// this may need to be altered if we start doing some of the heavier computation in main
 	// what happens if here we change the state variable when a classification is pending?
@@ -389,7 +389,6 @@ ISR(INT7_vect)
 			sei(); // reenable interrupts
 		}
 	}
-	TIMER3_DelayMs(20);
 }
 
 ISR(ADC_vect)
