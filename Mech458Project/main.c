@@ -430,9 +430,12 @@ ISR(ADC_vect)
 // ISR for stepper motor commutation
 ISR(TIMER1_COMPA_vect)
 {
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		TIMER1_DisableInt();
 		// reenables interrupts if necessary
 		TRAY_Process(&tray);
+	}
 }
 
 /*

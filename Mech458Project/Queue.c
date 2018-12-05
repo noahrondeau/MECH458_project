@@ -33,6 +33,8 @@ void QUEUE_Enqueue(Queue* q, QueueElement elem)
 	newNode->data = elem;
 	newNode->next = NULL;
 	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		newNode->prev = q->back;
 
 		// if was empty
@@ -44,14 +46,15 @@ void QUEUE_Enqueue(Queue* q, QueueElement elem)
 
 		q->back = newNode;
 		q->size++;
-
+	}
 }
 
 QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 	
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		//if not empty
 		if (q->front != NULL)
 		{
@@ -67,7 +70,7 @@ QueueElement QUEUE_Dequeue(Queue* q)
 			free(node);
 			q->size--;
 		}
-
+	}
 	return retval;
 }
 
@@ -75,30 +78,34 @@ QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement elem = DEFAULT_QUEUE_ELEM;
 	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		if (q->front)
 			elem = q->front->data;
-
+	}
 	return elem;
 }
 
 uint16_t QUEUE_Size(Queue* q)
 {
 	uint16_t ret;
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		 ret = (q->size);
-
+	}
 	return ret;
 }
 
 bool QUEUE_IsEmpty(Queue* q)
 {
 	bool ret;
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		if (q->size == 0)
 			ret = true;
 		else
 			ret =  false;
-
+	}
 	return ret;
 }
 
@@ -119,9 +126,10 @@ void QUEUE_Destroy(Queue** q)
 QueueElement* QUEUE_BackPtr(Queue* q)
 {
 	QueueElement* ptr;
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		ptr = &(q->back->data);
-
+	}
 	return ptr;
 }
 
@@ -185,7 +193,8 @@ void QUEUE_Deinit(Queue* q)
 
 void QUEUE_Enqueue(Queue* q, QueueElement elem)
 {
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 			//empty case
 		if (q->back == NULL)
 		{
@@ -208,14 +217,15 @@ void QUEUE_Enqueue(Queue* q, QueueElement elem)
 			*(q->back) = elem;
 		}
 		q->size++;
-	
+	}
 }
 
 QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 	
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		if (q->front != NULL) // not empty
 		{
 			retval = *(q->front);
@@ -236,7 +246,7 @@ QueueElement QUEUE_Dequeue(Queue* q)
 
 			q->size--;
 		}
-	
+	}
 
 	return retval;
 }
@@ -245,31 +255,34 @@ QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
 	
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		if(q->front)
 			retval = *(q->front);
-	
+	}
 	return retval;
 }
 
 uint16_t QUEUE_Size(Queue* q)
 {
 	uint16_t ret;
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		ret = q->size;
-	
+	}
 	return ret;
 }
 
 bool QUEUE_IsEmpty(Queue* q)
 {
 	bool ret;
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		if (q->size == 0)
 			ret = true;
 		else
 			ret = false;
-	
+	}
 	return ret;
 }
 
@@ -290,9 +303,10 @@ void QUEUE_Destroy(Queue** q)
 QueueElement* QUEUE_BackPtr(Queue* q)
 {
 	QueueElement* ptr;
-
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
 		ptr = q->back;
-
+	}
 	return ptr;
 }
 #endif //QUEUE_MODE
