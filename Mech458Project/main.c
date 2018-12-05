@@ -29,6 +29,7 @@
 void Initialize();
 ItemClass Classify(QueueElement elem);
 void PauseDisplay();
+void RampDisplay();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -91,7 +92,7 @@ volatile struct {
 // for keeping track of whats going on in the display
 volatile struct 
 {
-	ItemClass currDispType;
+	uint8_t currDispType;
 } DisplayStatus = {
 	.currDispType = 0,
 };
@@ -144,8 +145,9 @@ int main()
 		
 		case RAMPDOWN_STATE:
 			{
-				// nothing lets us get here right now
-				return 0;
+				cli();
+				DCMOTOR_Brake(&belt);
+				RampDisplay();
 			}
 			break;
 		}
@@ -168,7 +170,6 @@ void Initialize()
 	LED_Init();
 	TIMER1_Init();
 	TIMER2_DelayInit();
-	TIMER3_DelayInit();
 	DCMOTOR_Init(&belt);
 	ADC_Init(&adc, ADC_PRESCALE_128);
 	FERRO_Init(&ferro);
@@ -223,22 +224,22 @@ ItemClass Classify(QueueElement elem)
 	}
 }
 
-void PauseDisplay()
+void RampDisplay()
 {
 	// right now, just LED, in the future could be UART
 	switch(DisplayStatus.currDispType)
 	{
-	case ALUMINIUM:
-		LED_SetBottom8(0b10000000 | (ItemStats.aluminiumCount & 0x0F));
-		break;
-	case STEEL:
-		LED_SetBottom8(0b01000000 | (ItemStats.steelCount & 0x0F));
-		break;
-	case WHITE_PLASTIC:
-		LED_SetBottom8(0b00100000 | (ItemStats.whitePlasticCount & 0x0F));
-		break;
 	case BLACK_PLASTIC:
 		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		break;		
+	case ALUMINIUM:
+		LED_SetBottom8(0b00100000 | (ItemStats.aluminiumCount & 0x0F));
+		break;
+	case WHITE_PLASTIC:
+		LED_SetBottom8(0b01000000 | (ItemStats.whitePlasticCount & 0x0F));
+		break;
+	case STEEL:
+		LED_SetBottom8(0b10000000 | (ItemStats.steelCount & 0x0F));
 		break;
 	default:
 		break;
@@ -248,6 +249,32 @@ void PauseDisplay()
 	TIMER2_DelayMs(1000);
 }
 
+void PauseDisplay()
+{
+	// right now, just LED, in the future could be UART
+	switch(DisplayStatus.currDispType)
+	{
+		case BLACK_PLASTIC:
+		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		break;
+		case ALUMINIUM:
+		LED_SetBottom8(0b00100000 | (ItemStats.aluminiumCount & 0x0F));
+		break;
+		case WHITE_PLASTIC:
+		LED_SetBottom8(0b01000000 | (ItemStats.whitePlasticCount & 0x0F));
+		break;
+		case STEEL:
+		LED_SetBottom8(0b10000000 | (ItemStats.steelCount & 0x0F));
+		break;
+		case 200:
+		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
+		default:
+		break;
+	}
+	// on next loop through, display this
+	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
+	TIMER2_DelayMs(1000);
+}
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
 
 // ISR for S1_OPTICAL
@@ -263,6 +290,10 @@ ISR(INT1_vect)
 		
 		// enqueue is atomic
 		QUEUE_Enqueue(processQueue, new_elem);
+	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		TCNT3 = 0x0000;
 	}
 }
 
@@ -323,9 +354,13 @@ ISR(INT6_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
-	LED_Toggle(6);
-	TIMER3_DelayMs(20);
+	TIMER2_DelayMs(20);
+	if(!fsmState.rampDownInitFlag)
+	{
+		TIMER3_InterruptInit();
+		fsmState.rampDownInitFlag = true;
+	}
+	TIMER2_DelayMs(20);
 }
 
 // ISR for PAUSE button
@@ -334,7 +369,7 @@ ISR(INT7_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
+	TIMER2_DelayMs(20);
 	
 	// this may need to be altered if we start doing some of the heavier computation in main
 	// what happens if here we change the state variable when a classification is pending?
@@ -363,7 +398,7 @@ ISR(INT7_vect)
 			sei(); // reenable interrupts
 		}
 	}
-	TIMER3_DelayMs(20);
+	TIMER2_DelayMs(20);
 }
 
 ISR(ADC_vect)
@@ -413,17 +448,12 @@ ISR(TIMER1_COMPA_vect)
 	}
 }
 
-/*
-ISR(TIMER3_COMPB_vect)
+
+ISR(TIMER3_COMPA_vect)
 {
-	
-	LED_Toggle(1);
-	TCNT3 = 0x0000;			//reset counter
-	TIFR3 |= _BV(OCF3B);	//Clear interrupt flag begin counting
-	
-	PORTC = 0xFF;
+	fsmState.state = RAMPDOWN_STATE;
 }
-*/
+
 
 ISR(BADISR_vect)
 {
