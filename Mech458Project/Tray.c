@@ -88,7 +88,7 @@ void TRAY_Rotate(Tray* tray)
 // get called from TIMER1_COMPA_vect ISR
 // fetches the next delay, increments the internal tray state, rotates the tray, and schedules the next step
 void TRAY_Process(Tray* tray){	
-	LED_Set(tray->currentPos);
+	//LED_Set(tray->currentPos);
 	// if tray is already in position, no turning to do, just signal that the tray is ready
 	// do not start the interrupt again 
 	if(tray->stepCounter == tray->pathDist)

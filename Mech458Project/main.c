@@ -112,8 +112,8 @@ int main()
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
-			{
-				
+			{	
+				//Tray Rotate if queue is not empty
 				if(!QUEUE_IsEmpty(readyQueue))
 				{
 					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
@@ -131,6 +131,7 @@ int main()
 							Stage3.itemReady = false;
 							QUEUE_Dequeue(readyQueue);
 							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+							TIMER2_DelayMs(30);
 						}
 					}
 				}
@@ -280,6 +281,7 @@ void PauseDisplay()
 // ISR for S1_OPTICAL
 ISR(INT1_vect)
 {
+	LED_Toggle(0);
 	// verify interrupt wasn't spurious by polling sensor
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
@@ -300,6 +302,7 @@ ISR(INT1_vect)
 // ISR for Ferro Sensor
 ISR(INT5_vect)
 {
+	LED_Toggle(4);
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
 	{
@@ -326,7 +329,7 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-
+	LED_Toggle(7);
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
@@ -351,26 +354,16 @@ ISR(INT4_vect)
 // ISR for RAMP_DOWN button
 ISR(INT6_vect)
 {
-	// Debounce
-	// We should probably set up a new different timer for this
-	// Since this one will be used for the stepper motor
-	TIMER2_DelayMs(20);
 	if(!fsmState.rampDownInitFlag)
 	{
 		TIMER3_InterruptInit();
 		fsmState.rampDownInitFlag = true;
 	}
-	TIMER2_DelayMs(20);
 }
 
 // ISR for PAUSE button
 ISR(INT7_vect)
 {
-	// Debounce
-	// We should probably set up a new different timer for this
-	// Since this one will be used for the stepper motor
-	TIMER2_DelayMs(20);
-	
 	// this may need to be altered if we start doing some of the heavier computation in main
 	// what happens if here we change the state variable when a classification is pending?
 	// save the state variable? how do we distinguish between a state currently in execution, and a state that is pending?
@@ -395,10 +388,10 @@ ISR(INT7_vect)
 			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
 			if(fsmState.saved.beltWasRunning)
 				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+				LED_Set(0x00);
 			sei(); // reenable interrupts
 		}
 	}
-	TIMER2_DelayMs(20);
 }
 
 ISR(ADC_vect)
