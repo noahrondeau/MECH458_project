@@ -85,31 +85,31 @@ int main()
 		case ALUMINIUM_STATE:
 			LED_On(0);
 			TIMER1_DelayMs(1000);
-			UART_SendString("ALUMINIUM\n");
+			UART_SendString("ALUMINIUM\r\n");
 			break;
 		case STEEL_STATE:
 			LED_On(1);
 			TIMER1_DelayMs(1000);
-			UART_SendString("STEEL\n");
+			UART_SendString("STEEL\r\n");
 			break;
 		case WHITE_STATE:
 			LED_On(2);
 			TIMER1_DelayMs(1000);
-			UART_SendString("WHITE\n");
+			UART_SendString("WHITE\r\n");
 			break;
 		case BLACK_STATE:
 			LED_On(3);
 			TIMER1_DelayMs(1000);
-			UART_SendString("BLACK\n");
+			UART_SendString("BLACK\r\n");
 			break;
 		case END_STATE:
 			Stage2.avgSampleCount = ((unsigned long accum)Stage2.sampleCount) / ((unsigned long accum)Stage2.itemCount);
 			LED_Set((uint16_t)Stage2.avgSampleCount);
-			UART_SendString("AVERAGE_SAMPLE_COUNT\n");
+			UART_SendString("AVERAGE_SAMPLE_COUNT\r\n");
 			char sendString[20];
-			sprintf(sendString, "%u\n", (uint16_t)Stage2.avgSampleCount);
+			sprintf(sendString, "%u\r\n", (uint16_t)Stage2.avgSampleCount);
 			UART_SendString(sendString);
-			UART_SendString("END\n");
+			UART_SendString("END\r\n");
 			LED_Set(0xFF);
 			TIMER1_DelayMs(1000);
 			LED_Set(0b10101010);
@@ -128,7 +128,7 @@ int main()
 				uint16_t sendval = QUEUE_Dequeue(itemQ).reflectivity;
 				//LED_Set(sendval)
 				char sendString[10]; // ten bit numbers go up to 4 digits in decimal. need fifth for '\n' char, sixth for '\0'
-				sprintf(sendString, "%u\n", sendval);
+				sprintf(sendString, "%u\r\n", sendval);
 				UART_SendString(sendString);
 			}
 		}
@@ -159,7 +159,7 @@ void Initialize()
 	ADC_Init(&adc, ADC_PRESCALE_128);
 	OPTICAL_Init(&s2_optic,S2_OPTICAL);
 	BUTTON_Init(&pauseButton, PAUSE_BUTTON);
-	UART_Init(9600);
+	UART_Init();
 	itemQ = QUEUE_Create();
 	FILTER_InitReset(1023.0K); // initialize to most likely first value;
 	// in the future, could do an ADC run and set to the average value of the background found
@@ -193,7 +193,6 @@ ISR(INT7_vect)
 	// Debounce
 	// We should probably set up a new different timer for this
 	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
 	if (MaterialState != END_STATE)
 		MaterialState++;
 		
@@ -202,7 +201,6 @@ ISR(INT7_vect)
 		breakSignal = true;
 	}
 	breakSignal = true;
-	TIMER3_DelayMs(20);
 }
 
 ISR(ADC_vect)

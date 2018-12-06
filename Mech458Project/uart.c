@@ -15,33 +15,30 @@ void uint16ToString(uint16_t byte, char* out)
 	out[15-i] = (((byte >> i) & 0x01) == 1) ? '1' : '0';
 }
 
-void UART_Init(uint32_t baud)
+void UART_Init()
 {
+	// set baud to 9600 -> UBRRn = (sysclock_f / 16*baud) - 1 = 51 = 0b00110011
 	//empty
-	/*
-	UBRRHn = (unsigned char)(baud>>8);
-	UBRRLn = (unsigned char)baud;
-	// Enable receiver and transmitter 
-	UCSRnB = (1<<RXENn)|(1<<TXENn);
-	// Set frame format: 8data, 2stop bit
-	UCSRnC = (1<<USBSn)|(3<<UCSZn0);*/
+	UBRR1 = (uint8_t)51;
+	// Enable transmitter
+	UCSR1B = (1<<TXEN1);
+	// Set frame format: 8data, 1stop bit, no parity (8N1)
+	UCSR1C = (1<<UCSZ10)| (1 << UCSZ11);
 }
 
 void UART_SendChar(char c)
 {
 	// empty
 	LED_Set((uint8_t)c);
-	/*
-	// from hardware user manual
-	//Wait for empty transmit buffer
-	while ( !( UCSRnA & (1<<UDREn)) );
-	//Put data into buffer, sends the data
-	UDRn = c;
-	*/
+	while ( !( UCSR1A & (1<<UDRE1)) );
+	UDR1 = c;
 }
 void UART_SendString(const char* s)
 {
 	unsigned int counter = 0;
 	while( s[counter] != '\0')
+	{
 		UART_SendChar(s[counter]);
+		counter++;
+	}
 }

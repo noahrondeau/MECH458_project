@@ -12,7 +12,7 @@
 #include "config.h"
 
 void uint16ToString(uint16_t byte, char* out);
-void UART_Init(uint32_t baud);
+void UART_Init();
 void UART_SendChar(char c);
 void UART_SendString( const char* s);
 
