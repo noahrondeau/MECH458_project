@@ -5,6 +5,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* ====== USER INCLUDES ======*/
 
@@ -22,6 +23,7 @@
 #include "Tray.h"
 #include "Filter.h"
 #include "time.h"
+#include "uart.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
 
@@ -30,6 +32,7 @@ void Initialize();
 ItemClass Classify(QueueElement elem);
 void PauseDisplay();
 void RampDisplay();
+void UartDisplay();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -140,7 +143,11 @@ int main()
 
 		case PAUSE_STATE:
 			{
-				PauseDisplay();
+				UartDisplay(); // display to the terminal via uart
+				while(fsmState.state == PAUSE_STATE)
+				{// keep displaying on the LEDs and looping until we are supposed to jump back
+					PauseDisplay();
+				}
 			}
 			break;
 		
@@ -148,7 +155,11 @@ int main()
 			{
 				cli();
 				DCMOTOR_Brake(&belt);
-				RampDisplay();
+				UartDisplay(); // display stats on terminal via UART
+				while(true)
+				{// loop forever and display the output stats on LED
+					RampDisplay();
+				}
 			}
 			break;
 		}
@@ -276,6 +287,57 @@ void PauseDisplay()
 	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
 	TIMER2_DelayMs(1000);
 }
+
+void UartDisplay()
+{
+	char sendbuf[50];
+	// display item stats over UART
+	if (fsmState.state == PAUSE_STATE)
+	{
+		UART_SendString("============ SYSTEM PAUSED ============\r\n\r\n");
+		UART_SendString("Total items (anywhere in system):\t");
+		sprintf(sendbuf,"%d\r\n", ItemStats.totalCount);
+		UART_SendString(sendbuf);
+	}
+	else if (fsmState.state == RAMPDOWN_STATE)
+	{
+		UART_SendString("============ SYSTEM RAMP DOWN =========\r\n\r\n");
+	}
+	
+	UART_SendString("Sorted Items:\r\n");
+	UART_SendString("\tBlack Plastic:\t");
+	sprintf(sendbuf, "%d\r\n", ItemStats.itemClassCount[BLACK_PLASTIC/50]);
+	UART_SendString(sendbuf);
+	UART_SendString("\tWhite Plastic:\t");
+	sprintf(sendbuf, "%d\r\n", ItemStats.itemClassCount[WHITE_PLASTIC/50]);
+	UART_SendString(sendbuf);
+	UART_SendString("\tSteel:\t");
+	sprintf(sendbuf, "%d\r\n", ItemStats.itemClassCount[STEEL/50]);
+	UART_SendString(sendbuf);
+	UART_SendString("\tAluminium:\t");
+	sprintf(sendbuf, "%d\r\n\r\n", ItemStats.itemClassCount[ALUMINIUM/50]);
+	UART_SendString(sendbuf);
+	
+	UART_SendString("\tUnclassified:\t");
+	sprintf(sendbuf, "%d\r\n\r\n", ItemStats.itemClassCount[4]);
+	UART_SendString(sendbuf);
+	
+	if (fsmState.state == PAUSE_STATE)
+	{
+		UART_SendString("Classified items (not yet sorted):\t");
+		sprintf(sendbuf, "%d\r\n\r\n", QUEUE_Size(readyQueue));
+		UART_SendString(sendbuf);
+		UART_SendString("Items in process (not yet classified):\t");
+		sprintf(sendbuf, "%d\r\n\r\n", QUEUE_Size(processQueue));
+		UART_SendString(sendbuf);
+	}
+	
+	UART_SendString("========================================\r\n\r\n");
+	
+	if (fsmState.state == RAMPDOWN_STATE)
+		UART_SendString("Goodbye.\r\n\r\n");
+}
+
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
 
 // ISR for S1_OPTICAL

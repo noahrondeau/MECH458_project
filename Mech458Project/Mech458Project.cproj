@@ -212,6 +212,12 @@
     <Compile Include="Tray.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="uart.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="uart.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="UnitTest.c">
       <SubType>compile</SubType>
     </Compile>
