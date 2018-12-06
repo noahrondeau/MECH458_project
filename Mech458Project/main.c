@@ -77,16 +77,10 @@ volatile struct {
 // sorting stats singleton struct
 volatile struct {
 	unsigned int totalCount;
-	unsigned int blackPlasticCount;
-	unsigned int whitePlasticCount;
-	unsigned int aluminiumCount;
-	unsigned int steelCount;
+	unsigned int itemClassCount[5];
 } ItemStats = {
 	.totalCount = 0,
-	.blackPlasticCount = 0,
-	.whitePlasticCount = 0,
-	.aluminiumCount = 0,
-	.steelCount = 0,
+	.itemClassCount = {0,0,0,0,0},
 };
 
 // for keeping track of whats going on in the display
@@ -128,8 +122,14 @@ int main()
 					{
 						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 						{
+							//reset signal flag
 							Stage3.itemReady = false;
-							QUEUE_Dequeue(readyQueue);
+							// dequeue item
+							QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+							// update item stats
+							uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
+							(ItemStats.itemClassCount[index])++;
+							// turn the motor back on in case it was off
 							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 							TIMER2_DelayMs(30);
 						}
@@ -231,16 +231,16 @@ void RampDisplay()
 	switch(DisplayStatus.currDispType)
 	{
 	case BLACK_PLASTIC:
-		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		LED_SetBottom8(0b00010000 | (ItemStats.itemClassCount[BLACK_PLASTIC/50] & 0x0F));
 		break;		
 	case ALUMINIUM:
-		LED_SetBottom8(0b00100000 | (ItemStats.aluminiumCount & 0x0F));
+		LED_SetBottom8(0b00100000 | (ItemStats.itemClassCount[ALUMINIUM/50] & 0x0F));
 		break;
 	case WHITE_PLASTIC:
-		LED_SetBottom8(0b01000000 | (ItemStats.whitePlasticCount & 0x0F));
+		LED_SetBottom8(0b01000000 | (ItemStats.itemClassCount[WHITE_PLASTIC/50] & 0x0F));
 		break;
 	case STEEL:
-		LED_SetBottom8(0b10000000 | (ItemStats.steelCount & 0x0F));
+		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL/50] & 0x0F));
 		break;
 	default:
 		break;
@@ -256,16 +256,16 @@ void PauseDisplay()
 	switch(DisplayStatus.currDispType)
 	{
 		case BLACK_PLASTIC:
-		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+		LED_SetBottom8(0b00010000 | (ItemStats.itemClassCount[BLACK_PLASTIC / 50] & 0x0F));
 		break;
 		case ALUMINIUM:
-		LED_SetBottom8(0b00100000 | (ItemStats.aluminiumCount & 0x0F));
+		LED_SetBottom8(0b00100000 | (ItemStats.itemClassCount[ALUMINIUM / 50] & 0x0F));
 		break;
 		case WHITE_PLASTIC:
-		LED_SetBottom8(0b01000000 | (ItemStats.whitePlasticCount & 0x0F));
+		LED_SetBottom8(0b01000000 | (ItemStats.itemClassCount[WHITE_PLASTIC/50] & 0x0F));
 		break;
 		case STEEL:
-		LED_SetBottom8(0b10000000 | (ItemStats.steelCount & 0x0F));
+		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL / 50] & 0x0F));
 		break;
 		case 200:
 		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
