@@ -166,7 +166,7 @@ int main()
 							QUEUE_Dequeue(readyQueue);
 							//DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 							if(HALL_IsActive(&(tray.hall)))	LED_Set(0xFF);
-							TIMER2_DelayMs(1000);
+							//TIMER2_DelayMs(1000);
 						}
 					}
 				}
