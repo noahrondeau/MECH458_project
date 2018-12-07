@@ -103,7 +103,7 @@ int main()
 	
 	Initialize();
 	TIMER2_DelayMs(2000);
-	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+	//DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 	
 	//test variables
 	uint8_t lastclass = 0;
@@ -115,7 +115,8 @@ int main()
 		{
 		case RUN_STATE:
 			{
-				/*
+				
+				if(!HALL_IsActive(&(tray.hall))) LED_Set(0x00);
 				//Tray test case
 				if(QUEUE_IsEmpty(readyQueue))
 				{
@@ -132,7 +133,7 @@ int main()
 						lastclass = BLACK_PLASTIC;
 					}
 				}
-				*/
+				
 				
 				//Tray Rotate if queue is not empty
 				if(!QUEUE_IsEmpty(readyQueue))
@@ -145,14 +146,15 @@ int main()
 						TIMER1_EnableInt();
 					}
 					
-					if (Stage3.itemReady && TRAY_IsReady(&tray))
+					if (/*Stage3.itemReady && */TRAY_IsReady(&tray))
 					{
 						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 						{
 							Stage3.itemReady = false;
 							QUEUE_Dequeue(readyQueue);
-							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-							TIMER2_DelayMs(30);
+							//DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+							if(HALL_IsActive(&(tray.hall)))	LED_Set(0xFF);
+							TIMER2_DelayMs(1000);
 						}
 					}
 				}
@@ -384,7 +386,7 @@ ISR(INT7_vect)
 		{
 			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
 			if(fsmState.saved.beltWasRunning)
-				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+				//DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 				LED_Set(0x00);
 			sei(); // reenable interrupts
 		}
