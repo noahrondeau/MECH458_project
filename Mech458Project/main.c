@@ -182,6 +182,7 @@ void Initialize()
 	LED_Init();
 	TIMER1_Init();
 	TIMER2_DelayInit();
+	UART_Init();
 	DCMOTOR_Init(&belt);
 	ADC_Init(&adc, ADC_PRESCALE_128);
 	FERRO_Init(&ferro);
