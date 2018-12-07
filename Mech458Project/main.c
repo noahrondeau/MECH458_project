@@ -159,16 +159,20 @@ int main()
 						TIMER1_EnableInt();
 					}
 					
-					if (Stage3.itemReady && TRAY_IsReady(&tray))
+					if (Stage3.itemReady && (tray.pathDist - tray.stepCounter) < 12)
 					{
-						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+						
+						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						
+						if(TRAY_IsReady(&tray))
 						{
-							Stage3.itemReady = false;
-							QUEUE_Dequeue(readyQueue);
-							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-							if(HALL_IsActive(&(tray.hall)))	LED_Set(0xFF);
-							//TIMER2_DelayMs(1000);
+							ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+							{
+								Stage3.itemReady = false;
+								QUEUE_Dequeue(readyQueue);
+							}
 						}
+						
 					}
 				}
 			}
