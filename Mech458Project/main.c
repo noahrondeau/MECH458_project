@@ -122,6 +122,18 @@ int main()
 				{
 					if(lastclass == BLACK_PLASTIC){
 						QueueElement testItem;
+						testItem.class = STEEL;
+						QUEUE_Enqueue(readyQueue, testItem);
+						lastclass = STEEL;
+					}
+					else if(lastclass == STEEL){
+						QueueElement testItem;
+						testItem.class = ALUMINIUM;
+						QUEUE_Enqueue(readyQueue, testItem);
+						lastclass = ALUMINIUM;
+					}
+					else if(lastclass == ALUMINIUM){
+						QueueElement testItem;
 						testItem.class = WHITE_PLASTIC;
 						QUEUE_Enqueue(readyQueue, testItem);
 						lastclass = WHITE_PLASTIC;
