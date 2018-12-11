@@ -38,10 +38,10 @@ try:
 		exit()
 
 	curr_item = ''
+	count = 0
 
 	while True:
-		line = ser.readline().strip().decode('utf-8')
-		print(line)
+		line = ser.readline().strip().decode('utf-8').strip('\x00')
 
 		if line == end: # we have reached the end, break out and process
 			ser.close()
@@ -49,9 +49,12 @@ try:
 
 		if line in classes or line == samp:	# the line is a name of a class, update
 			curr_item = line
+			count = 0
+			print(line)
 		else:
 			val = int(line)
-
+			count += 1
+			print('{}:\t{}'.format(count,val))
 			if curr_item == samp:
 				avgSampleCount = val
 			else:
