@@ -212,6 +212,7 @@ bool TRAY_IsReady(Tray* tray)
 }
 
 bool TRAY_inRange(Tray* tray){
-	if(abs((tray->targetPos) - (tray->currentPos)) > 12) return false;
+	if((abs((tray->targetPos) - (tray->currentPos)) > CW_Range) && tray->currDir == CW)		return false;
+	if((abs((tray->targetPos) - (tray->currentPos)) > CCW_Range) && tray->currDir == CCW)	return false;
 	else return true;
 }
