@@ -346,6 +346,7 @@ ISR(INT0_vect)
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		if(Stage3.itemReady) tray.beltLock = true;
+		
 		if(!Stage3.itemReady && !(tray.beltLock)){
 			Stage3.itemReady = true;
 			if (!TRAY_inRange(&tray)) DCMOTOR_Brake(&belt);
