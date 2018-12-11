@@ -159,15 +159,17 @@ int main()
 						TIMER1_EnableInt();
 					}
 					
-					if (Stage3.itemReady && (tray.pathDist - tray.stepCounter) < 12)
+					if (Stage3.itemReady && TRAY_inRange(&tray))
 					{
 						
-						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						if(!(tray.beltLock)) DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 						
 						if(TRAY_IsReady(&tray))
 						{
+							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 							ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 							{
+								tray.beltLock = false;
 								Stage3.itemReady = false;
 								QUEUE_Dequeue(readyQueue);
 							}
@@ -343,14 +345,13 @@ ISR(INT0_vect)
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
-		// signal that an item is ready
-		// call doesn't need to be atomic, we are in the highest priority interrupt
-		Stage3.itemReady = true;
+		if(Stage3.itemReady) tray.beltLock = true;
+		if(!Stage3.itemReady && !(tray.beltLock)){
+			Stage3.itemReady = true;
+			if (!TRAY_inRange(&tray)) DCMOTOR_Brake(&belt);
+		}
 		
-		// this is an atomic call
-		// check if the tray is in position, if not stop the belt
-		if (!TRAY_IsReady(&tray))
-			DCMOTOR_Brake(&belt);
+		
 	}
 }
 

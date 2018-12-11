@@ -23,6 +23,7 @@ void TRAY_Init(Tray* tray)
 	tray->currentPos = 0;
 	tray->targetPos = 0;
 	tray->isReady = true;
+	tray->beltLock = false;
 	tray->stepCounter = 0;
 	tray->pathDist = 0;
 	tray->currDir = CW;
@@ -208,4 +209,9 @@ bool TRAY_IsReady(Tray* tray)
 		ret = tray->isReady;
 	}
 	return ret;
+}
+
+bool TRAY_inRange(Tray* tray){
+	if(abs((tray->targetPos) - (tray->currentPos)) > 12) return false;
+	else return true;
 }
