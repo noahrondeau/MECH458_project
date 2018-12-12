@@ -30,7 +30,8 @@ typedef volatile struct PushButton
 
 void BUTTON_Init(PushButton* button, PushButtonIdentity ident);
 bool BUTTON_IsPressed(PushButton* button);
-
+void BUTTON_EnableInt();
+void BUTTON_DisableInt();
 
 
 #endif /* PUSHBUTTON_H_ */

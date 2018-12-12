@@ -203,6 +203,10 @@ void Initialize()
 	processQueue = QUEUE_Create();
 	
 	// ====== INIT CODE END   ======
+	//wait for ramp up signal
+	while(!BUTTON_IsPressed(&rampDownButton));
+	TIMER2_DelayMs(1000);
+	BUTTON_EnableInt(); // enable button press interrupts
 	sei(); // turn on interrupts
 }
 

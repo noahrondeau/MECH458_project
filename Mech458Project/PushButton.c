@@ -21,10 +21,6 @@ void BUTTON_Init(PushButton* button, PushButtonIdentity ident)
 		button->mask = (uint8_t)((1) << PAUSE_PORTPIN);
 		button->active_level = ACTIVE_LOW;
 		*(button->ddrx) &= (~(button->mask)); // set ddr as input for that pin
-		
-		// set interrupts for falling edge
-		EIMSK |= (_BV(INT7)); // enable INT7
-		EICRB |= (_BV(ISC71));  // falling edge
 		break;
 		
 	case RAMPDOWN_BUTTON:
@@ -34,10 +30,6 @@ void BUTTON_Init(PushButton* button, PushButtonIdentity ident)
 		button->mask = (uint8_t)((1) << RAMPDOWN_PORTPIN);
 		button->active_level = ACTIVE_LOW;
 		*(button->ddrx) &= (~(button->mask)); // set ddr as input for that pin
-		
-		// set interrupts for falling edge
-		EIMSK |= (_BV(INT6)); // enable INT6
-		EICRB |= (_BV(ISC61));  // falling edge
 		break;	
 	}
 }
@@ -51,4 +43,26 @@ bool BUTTON_IsPressed(PushButton* button)
 		return true;
 	else
 		return false;
+}
+
+void BUTTON_EnableInt()
+{
+	// set interrupts for falling edge pause button
+	EIMSK |= (_BV(INT7)); // enable INT7
+	EICRB |= (_BV(ISC71));  // falling edge
+			
+	// set interrupts for falling edge rampdown
+	EIMSK |= (_BV(INT6)); // enable INT6
+	EICRB |= (_BV(ISC61));  // falling edge
+}
+
+void BUTTON_DisableInt()
+{
+	// set interrupts for falling edge pause button
+	EIMSK &= ~(_BV(INT7)); // enable INT7
+	EICRB &= ~(_BV(ISC71));  // falling edge
+		
+	// set interrupts for falling edge rampdown
+	EIMSK &= ~(_BV(INT6)); // enable INT6
+	EICRB &= ~(_BV(ISC61));  // falling edge
 }
