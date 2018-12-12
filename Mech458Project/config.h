@@ -137,13 +137,13 @@ typedef volatile uint8_t  GPIOMask;
 
 #define PAUSE_PINX				(PINE_REG)
 #define PAUSE_DDRX				(DDRE_REG)
-#define PAUSE_PORTPIN			(6)
+#define PAUSE_PORTPIN			(7)
 
 /* ====== SW2 RAMP-DOWN SWITCH CONFIG ====== */
 
 #define RAMPDOWN_PINX			(PINE_REG)
 #define RAMPDOWN_DDRX			(DDRE_REG)
-#define RAMPDOWN_PORTPIN		(7)	
+#define RAMPDOWN_PORTPIN		(6)	
 
 /* ====== RL SENSOR CONFIGS ====== */
 
