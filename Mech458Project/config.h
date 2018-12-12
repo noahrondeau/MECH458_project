@@ -82,6 +82,8 @@ typedef volatile uint8_t  GPIOMask;
 #define STEPPER_DDR				(DDRA_REG)
 #define STEPPER_PORT			(PORTA_REG)
 
+#define TRAY_HOME_OFFSET		(10)		// how many steps CCW from the Hall sensor we consider to be "home"
+
 #if MODE_ENABLED(ACCEL_MODE) // use acceleration: this is for actual testing
 	
 	#define STEPPER_DELAY_MAX			(20000) // microseconds
@@ -115,7 +117,7 @@ typedef volatile uint8_t  GPIOMask;
 #define DCMOTOR_PORTX			(PORTB_REG)
 #define DCMOTOR_DDRX			(DDRB_REG)
 
-#define DCMOTOR_SPEED			(60)
+#define DCMOTOR_SPEED			(80)
 
 /* ====== HALL SENSOR CONFIG ====== */
 
