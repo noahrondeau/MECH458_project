@@ -151,32 +151,31 @@ int main()
 				//Tray Rotate if queue is not empty
 				if(!QUEUE_IsEmpty(readyQueue))
 				{
-					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-					if (nextClass != TRAY_GetTarget(&tray))
+					if(!tray.beltLock)
 					{
-						TRAY_SetTarget(&tray, nextClass);
-						TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
-						TIMER1_EnableInt();
+						ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+						if (nextClass != TRAY_GetTarget(&tray))
+						{
+							TRAY_SetTarget(&tray, nextClass);
+							TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
+							TIMER1_EnableInt();
+						}
 					}
 					
-					if (Stage3.itemReady && TRAY_inRange(&tray))
+					if( !tray.beltLock && Stage3.itemReady && TRAY_inRange(&tray))
 					{
-						
-						if(!(tray.beltLock)) DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-						
-						if(TRAY_IsReady(&tray))
+						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 						{
-							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-							ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-							{
-								tray.beltLock = false;
-								Stage3.itemReady = false;
-								QUEUE_Dequeue(readyQueue);
-							}
+							Stage3.itemReady = false;
+							QUEUE_Dequeue(readyQueue);
 						}
-						
+						if(!TRAY_IsReady(&tray)) tray.beltLock = true;
 					}
+						
 				}
+				
+				if(TRAY_IsReady(&tray)) tray.beltLock = false;
 			}
 			break;
 
@@ -345,14 +344,9 @@ ISR(INT0_vect)
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
-		if(Stage3.itemReady) tray.beltLock = true;
-		
-		if(!Stage3.itemReady && !(tray.beltLock)){
-			Stage3.itemReady = true;
-			if (!TRAY_inRange(&tray)) DCMOTOR_Brake(&belt);
-		}
-		
-		
+		Stage3.itemReady = true;
+		if(tray.beltLock) DCMOTOR_Brake(&belt);
+		else if(!TRAY_inRange(&tray)) DCMOTOR_Brake(&belt);
 	}
 }
 
