@@ -164,14 +164,14 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_WHITE_VAL			(893.0k)
 #define MAX_WHITE_VAL			(923.0k)
 #define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(897.075k)
-#define STDEV_WHITE				(4.4283k)
+#define AVG_WHITE_VAL			(838.5625k)
+#define STDEV_WHITE				(5.856k)
 
 #define MIN_BLACK_VAL			(924.0k)
 #define MAX_BLACK_VAL			(947.0k)
 #define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(919.05k)
-#define STDEV_BLACK				(5.444k)
+#define AVG_BLACK_VAL			(900.375k)
+#define STDEV_BLACK				(6.2793k)
 
 /* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
 #define IIRB0					(0.0378K)
