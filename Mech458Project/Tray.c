@@ -56,6 +56,14 @@ void TRAY_Home(Tray* tray)
 		}
 	}
 	
+	// take steps counter-clockwise because the belt ejection zone is assymetrical
+	for( int i = 0 ; i < TRAY_HOME_OFFSET; i++)
+	{
+		STEPPER_StepCCW(&(tray->stepper));
+		TIMER1_DelayUs(STEPPER_DELAY_MAX);
+	}
+	
+	// set the current pos
 	tray->currentPos = 0;
 }
 
