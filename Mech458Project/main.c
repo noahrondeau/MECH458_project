@@ -33,6 +33,7 @@ ItemClass Classify(QueueElement elem);
 void PauseDisplay();
 void RampDisplay();
 void UartDisplay();
+void TriggerPauseManual();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -65,10 +66,12 @@ volatile struct {
 	uint16_t minReflectivity;
 	uint16_t sampleCount;
 	bool adcContinueConversions;
+	bool badItemFlag;
 } Stage2 = {
 	.minReflectivity = LARGEST_UINT16_T,
 	.sampleCount = 0,
 	.adcContinueConversions = false,
+	.badItemFlag = false,
 };
 
 volatile struct {
@@ -143,7 +146,14 @@ int main()
 
 		case PAUSE_STATE:
 			{
-				UartDisplay(); // display to the terminal via uart
+				if (Stage2.badItemFlag)
+				{
+					Stage2.badItemFlag = false;
+					UART_SendString("BAD ITEM ENCOUNTERED! PLEASE REMOVE IT!\r\n");
+				}
+				else
+					UartDisplay(); // display to the terminal via uart
+					
 				while(fsmState.state == PAUSE_STATE)
 				{// keep displaying on the LEDs and looping until we are supposed to jump back
 					PauseDisplay();
@@ -221,6 +231,14 @@ ItemClass Classify(QueueElement elem)
 	
 	if( elem.isFerroMag )
 	{
+		// if a bad item is encountered (e.g. metal but not reflective enough)
+		// then signal the condition
+		if (refl > METAL_CUTOFF_REFL)
+		{
+			Stage2.badItemFlag = true;
+			return UNCLASSIFIED;
+		}
+		
 		accum z_alum  = (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
 		accum z_steel = (refl - AVG_STEEL_VAL) / STDEV_STEEL;
 		
@@ -231,6 +249,13 @@ ItemClass Classify(QueueElement elem)
 	}
 	else
 	{
+		// if not ferromagnetic check that this makes sense
+		if (refl < METAL_CUTOFF_REFL)
+		{
+			Stage2.badItemFlag = true;
+			return UNCLASSIFIED;
+		}
+		
 		accum z_white = (refl - AVG_WHITE_VAL) / STDEV_WHITE;
 		accum z_black = (refl - AVG_BLACK_VAL) / STDEV_BLACK;
 		
@@ -341,6 +366,15 @@ void UartDisplay()
 	
 	if (fsmState.state == RAMPDOWN_STATE)
 		UART_SendString("Goodbye.\r\n\r\n");
+}
+
+void TriggerPauseManual()
+{
+	// effectively, everything between now, and the next time the button is pressed, is atomic
+	fsmState.state = PAUSE_STATE;
+	// save relevant system state, right now is just the belt status in case it was stopped
+	fsmState.saved.beltWasRunning = belt.isRunning;
+	DCMOTOR_Brake(&belt);
 }
 
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
@@ -491,8 +525,18 @@ ISR(ADC_vect)
 		processedItem.sampleCount = Stage2.sampleCount;
 		//classify item and move to ready queue
 		processedItem.class = Classify(processedItem);
-		// Atomic enqueue
-		QUEUE_Enqueue(readyQueue, processedItem);	
+		
+		// verify not a bad item
+		if (Stage2.badItemFlag == true)
+		{
+			TriggerPauseManual();
+			ItemStats.totalCount--;
+		}
+		else
+		{
+			// Atomic enqueue
+			QUEUE_Enqueue(readyQueue, processedItem);
+		}
 	}
 }
 
