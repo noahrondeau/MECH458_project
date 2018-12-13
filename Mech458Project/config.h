@@ -184,8 +184,6 @@ typedef volatile uint8_t  GPIOMask;
 #define AVG_BLACK_VAL			(900.375k)
 #define STDEV_BLACK				(6.2793k)
 
-#define METAL_CUTOFF_REFL		(700.0k)
-
 /* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
 #define IIRB0					(0.0378K)
 #define IIRB1					(0.0378K)
