@@ -88,10 +88,19 @@ typedef volatile uint8_t  GPIOMask;
 	
 	#define STEPPER_DELAY_MAX			(20000) // microseconds
 	#define STEPPER_DELAY_MIN			(8000)  // microseconds
-	#define STEPPER_ACCEL_RAMP			(12) // this has to be a number of steps, not a function of two microsecond values
+	#define STEPPER_ACCEL_RAMP			(8) // this has to be a number of steps, not a function of two microsecond values
 
 	#if MODE_ENABLED(S_CURVE_MODE) // use s-curve
-		#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,} // microseconds
+		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,}   // microseconds, growth=1, 12 steps
+		//#define DELAY_PROFILE_COEFFS	{19998, 19993 ,19970 ,19868, 19430, 17811, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, growth 1.5, 12 steps
+		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, combo growth 1 & 1.5, 12 steps
+		//#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 10189, 8569, 8132, 8030, 8007,}	// Linear accel, ramp decel
+		//#define DELAY_PROFILE_COEFFS	{19714, 19038, 17962, 16638, 15562, 14914, 14238, 13162, 12514, 11838, 10762, 10114, 9438, 8363,} //linear quant, 14 steps
+		//#define DELAY_PROFILE_COEFFS	{19970, 19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132, 8030,}				// us, 10 step s profile
+		#define DELAY_PROFILE_COEFFS	{19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132,}								// us, 8 step s profile
+		//#define DELAY_PROFILE_COEFFS	{18570, 16773, 14000, 10189, 8569,}	
+		//#define DELAY_PROFILE_COEFFS	{19000, 16000, 13000, 10189, 8569, 8132,}
+			
 	#elif MODE_ENABLED(TRAP_MODE) // use trapezoid
 		#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,} // microseconds
 	#endif
