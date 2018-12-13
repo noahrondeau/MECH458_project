@@ -51,13 +51,14 @@ void DCMOTOR_Init(DcMotor* motor)
 
 void DCMOTOR_Run(DcMotor* motor, unsigned char speed)
 {
-	PWM_SetDutyCycle(speed);
 	DO_DCMOTOR_RUN(motor);
+	PWM_SetDutyCycle(speed);
 	motor->isRunning = true;
 }
 
 void DCMOTOR_Brake(DcMotor* motor)
 {
 	DO_DCMOTOR_BRAKE(motor);
+	PWM_SetDutyCycle(0);
 	motor->isRunning = false;
 }
