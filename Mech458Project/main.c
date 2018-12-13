@@ -355,7 +355,7 @@ void TriggerPauseManual()
 // ISR for S1_OPTICAL
 ISR(INT1_vect)
 {
-	LED_Toggle(0);
+	LED_On(1);
 	// verify interrupt wasn't spurious by polling sensor
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
@@ -371,12 +371,14 @@ ISR(INT1_vect)
 	{
 		TCNT3 = 0x0000;
 	}
+	
+	LED_Off(1);
 }
 
 // ISR for Ferro Sensor
 ISR(INT5_vect)
 {
-	LED_Toggle(4);
+	LED_On(2);
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
 	{
@@ -384,11 +386,13 @@ ISR(INT5_vect)
 		// call is atomic
 		QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	}
+	LED_Off(2);
 }
 
 // ISR for S2_OPTICAL
 ISR(INT2_vect)
 {
+	LED_On(3);
 	// poll sensor state to make sure not spurious
 	
 	if (OPTICAL_IsBlocked(&s2_optic))
@@ -398,15 +402,16 @@ ISR(INT2_vect)
 		FILTER_InitReset(1023.0K);
 		ADC_StartConversion(&adc);
 	}
+	LED_Off(3);
 }
 
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-	LED_Toggle(7);
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
+		LED_On(5);
 		QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 		TRAY_SetTarget(&tray,dropItem.class);
 		
@@ -415,6 +420,7 @@ ISR(INT0_vect)
 			
 		TRAY_Sort(&tray);
 		DCMOTOR_Run(&belt,DCMOTOR_SPEED);
+		LED_Off(5);
 	}
 }
 
@@ -470,8 +476,13 @@ ISR(INT7_vect)
 
 ISR(ADC_vect)
 {
+	LED_On(4);
+	LED_On(7);
 	ADC_ReadConversion(&adc);
 	Stage2.sampleCount++;
+	
+	if (Stage2.sampleCount % 100 == 0)
+		LED_On(6);
 	
 	accum fx_out = Filter((accum)(adc.result));
 	uint16_t u_out;
@@ -510,7 +521,11 @@ ISR(ADC_vect)
 			// Atomic enqueue
 			QUEUE_Enqueue(readyQueue, processedItem);
 		}
+		LED_Off(7);
 	}
+	
+	LED_Off(4);
+	LED_Off(6);
 }
 
 

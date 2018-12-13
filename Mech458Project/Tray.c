@@ -64,7 +64,6 @@ void TRAY_Home(Tray* tray)
 // called from TRAY_Process to rotate the tray
 void TRAY_Rotate(Tray* tray, MotorDirection dir)
 {
-	
 	if(dir == CW){ //CW rotation
 		//Step motor once CW
 		STEPPER_StepCW(&(tray->stepper));
@@ -83,14 +82,13 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir)
 	}
 }
 
-void TRAY_Sort(Tray* tray){	
-
+void TRAY_Sort(Tray* tray)
+{
+	LED_On(0);
 	// figure out shortest path to current target
 	int shortest_path_dist = TRAY_CalcShortestPath(tray);
-	
 	for (int step = 0; step < abs(shortest_path_dist); step++)
 	{
-	
 		// now figure out the direction and take the step
 		if(shortest_path_dist > 0) // we need to go CW, since the shortest path is positive
 			TRAY_Rotate(tray, CW);
@@ -107,12 +105,12 @@ void TRAY_Sort(Tray* tray){
 		// delay according to the calculated delay and exit
 		TIMER1_DelayUs(nextDelay);
 	}
+	LED_Off(0);
 }
 
 // calculates the shortest path to the target (distance + direction)
 // called from TRAY_SetTarget
 int TRAY_CalcShortestPath(Tray* tray){
-	
 	int shortest_path_dist;
 	
 	// check the difference between the target and current position
