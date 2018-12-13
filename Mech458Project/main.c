@@ -413,6 +413,8 @@ ISR(INT0_vect)
 	{
 		LED_On(5);
 		QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+		uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
+		(ItemStats.itemClassCount[index])++;
 		TRAY_SetTarget(&tray,dropItem.class);
 		
 		if(!TRAY_IsReady(&tray))
