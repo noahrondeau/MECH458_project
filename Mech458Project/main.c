@@ -122,7 +122,8 @@ int main()
 						if (nextClass != TRAY_GetTarget(&tray))
 						{
 							TRAY_SetTarget(&tray, nextClass);
-							TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
+							TIMER2_DelayMs(tray.moveStartDelay);
+							TIMER1_ScheduleIntUs(10000); // immediately fire an interrupt to get the tray started
 							TIMER1_EnableInt();
 						}
 					}

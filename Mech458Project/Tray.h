@@ -22,6 +22,7 @@ typedef volatile struct Tray
 	uint8_t stepCounter;
 	uint8_t pathDist;
 	MotorDirection currDir;
+	uint16_t moveStartDelay;
 	bool isReady;
 	bool beltLock;
 	
