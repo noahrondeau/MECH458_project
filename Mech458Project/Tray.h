@@ -23,6 +23,7 @@ typedef volatile struct Tray
 	uint8_t pathDist;
 	MotorDirection currDir;
 	bool isReady;
+	bool beltLock;
 	
 	HallSensor hall;
 	StepperMotor stepper;
@@ -39,6 +40,8 @@ uint8_t TRAY_GetCurrentPos(Tray* tray);
 bool TRAY_IsReady(Tray* tray);
 int TRAY_CalcShortestPath(Tray* tray);
 uint16_t TRAY_CalcStepDelay(Tray* tray, uint16_t dist);
+
+bool TRAY_inRange(Tray* tray);
 
 
 #endif /* TRAY_H_ */

@@ -116,31 +116,34 @@ int main()
 				//Tray Rotate if queue is not empty
 				if(!QUEUE_IsEmpty(readyQueue))
 				{
-					ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-					if (nextClass != TRAY_GetTarget(&tray))
+					if(!tray.beltLock)
 					{
-						TRAY_SetTarget(&tray, nextClass);
-						TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
-						TIMER1_EnableInt();
+						ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+						if (nextClass != TRAY_GetTarget(&tray))
+						{
+							TRAY_SetTarget(&tray, nextClass);
+							TIMER1_ScheduleIntUs(20000); // immediately fire an interrupt to get the tray started
+							TIMER1_EnableInt();
+						}
 					}
 					
-					if (Stage3.itemReady && TRAY_IsReady(&tray))
+					if( !tray.beltLock && Stage3.itemReady && TRAY_inRange(&tray))
 					{
+						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
 						ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 						{
 							//reset signal flag
 							Stage3.itemReady = false;
-							// dequeue item
 							QueueElement dropItem = QUEUE_Dequeue(readyQueue);
-							// update item stats
 							uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
 							(ItemStats.itemClassCount[index])++;
-							// turn the motor back on in case it was off
-							DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-							TIMER2_DelayMs(30);
 						}
+						if(!TRAY_IsReady(&tray)) tray.beltLock = true;
 					}
+						
 				}
+				
+				if(TRAY_IsReady(&tray)) tray.beltLock = false;
 			}
 			break;
 
@@ -283,11 +286,13 @@ void RampDisplay()
 	case STEEL:
 		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL/50] & 0x0F));
 		break;
-	default:
+		case 200:
+		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
+		default:
 		break;
 	}
 	// on next loop through, display this
-	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 200; 
+	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
 	TIMER2_DelayMs(1000);
 }
 
@@ -434,14 +439,9 @@ ISR(INT0_vect)
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
-		// signal that an item is ready
-		// call doesn't need to be atomic, we are in the highest priority interrupt
 		Stage3.itemReady = true;
-		
-		// this is an atomic call
-		// check if the tray is in position, if not stop the belt
-		if (!TRAY_IsReady(&tray))
-			DCMOTOR_Brake(&belt);
+		if(tray.beltLock) DCMOTOR_Brake(&belt);
+		else if(!TRAY_inRange(&tray)) DCMOTOR_Brake(&belt);
 	}
 }
 
