@@ -5,6 +5,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* ====== USER INCLUDES ======*/
 
@@ -22,6 +23,7 @@
 #include "Tray.h"
 #include "Filter.h"
 #include "time.h"
+#include "uart.h"
 
 /* ====== MAIN-LOCAL DEFINITIONS ====== */
 
@@ -29,6 +31,9 @@
 void Initialize();
 ItemClass Classify(QueueElement elem);
 void PauseDisplay();
+void RampDisplay();
+void UartDisplay();
+void TriggerPauseManual();
 
 /* ====== GLOBAL SYSTEM RESOURCES ====== */
 
@@ -61,10 +66,12 @@ volatile struct {
 	uint16_t minReflectivity;
 	uint16_t sampleCount;
 	bool adcContinueConversions;
+	bool badItemFlag;
 } Stage2 = {
 	.minReflectivity = LARGEST_UINT16_T,
 	.sampleCount = 0,
 	.adcContinueConversions = false,
+	.badItemFlag = false,
 };
 
 volatile struct {
@@ -76,31 +83,25 @@ volatile struct {
 // sorting stats singleton struct
 volatile struct {
 	unsigned int totalCount;
-	unsigned int blackPlasticCount;
-	unsigned int whitePlasticCount;
-	unsigned int aluminiumCount;
-	unsigned int steelCount;
+	unsigned int itemClassCount[5];
 } ItemStats = {
 	.totalCount = 0,
-	.blackPlasticCount = 0,
-	.whitePlasticCount = 0,
-	.aluminiumCount = 0,
-	.steelCount = 0,
+	.itemClassCount = {0,0,0,0,0},
 };
 
 // for keeping track of whats going on in the display
 volatile struct 
 {
-	ItemClass currDispType;
+	uint8_t currDispType;
 } DisplayStatus = {
 	.currDispType = 0,
 };
-
 
 /* ====== MAIN FUNCTION ====== */
 
 int main()
 {
+	
 	Initialize();
 	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
@@ -115,17 +116,33 @@ int main()
 				
 			}
 			break;
-			
+
 		case PAUSE_STATE:
 			{
-				PauseDisplay();
+				if (Stage2.badItemFlag)
+				{
+					Stage2.badItemFlag = false;
+					UART_SendString("BAD ITEM ENCOUNTERED! PLEASE REMOVE IT!\r\n");
+				}
+				else
+					UartDisplay(); // display to the terminal via uart
+					
+				while(fsmState.state == PAUSE_STATE)
+				{// keep displaying on the LEDs and looping until we are supposed to jump back
+					PauseDisplay();
+				}
 			}
 			break;
 		
 		case RAMPDOWN_STATE:
 			{
-				// nothing lets us get here right now
-				return 0;
+				cli();
+				DCMOTOR_Brake(&belt);
+				UartDisplay(); // display stats on terminal via UART
+				while(true)
+				{// loop forever and display the output stats on LED
+					RampDisplay();
+				}
 			}
 			break;
 		}
@@ -146,9 +163,9 @@ void Initialize()
 	// Initialize all required resources and peripherals
 	SYSCLK_Init();
 	LED_Init();
-	TIMER1_DelayInit();
+	TIMER1_Init();
 	TIMER2_DelayInit();
-	TIMER3_DelayInit();
+	UART_Init();
 	DCMOTOR_Init(&belt);
 	ADC_Init(&adc, ADC_PRESCALE_128);
 	FERRO_Init(&ferro);
@@ -169,6 +186,10 @@ void Initialize()
 	processQueue = QUEUE_Create();
 	
 	// ====== INIT CODE END   ======
+	//wait for ramp up signal
+	while(!BUTTON_IsPressed(&rampDownButton));
+	TIMER2_DelayMs(1000);
+	BUTTON_EnableInt(); // enable button press interrupts
 	sei(); // turn on interrupts
 }
 
@@ -183,6 +204,14 @@ ItemClass Classify(QueueElement elem)
 	
 	if( elem.isFerroMag )
 	{
+		// if a bad item is encountered (e.g. metal but not reflective enough)
+		// then signal the condition
+		if (refl > METAL_CUTOFF_REFL)
+		{
+			Stage2.badItemFlag = true;
+			return UNCLASSIFIED;
+		}
+		
 		accum z_alum  = (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
 		accum z_steel = (refl - AVG_STEEL_VAL) / STDEV_STEEL;
 		
@@ -193,6 +222,13 @@ ItemClass Classify(QueueElement elem)
 	}
 	else
 	{
+		// if not ferromagnetic check that this makes sense
+		if (refl < METAL_CUTOFF_REFL)
+		{
+			Stage2.badItemFlag = true;
+			return UNCLASSIFIED;
+		}
+		
 		accum z_white = (refl - AVG_WHITE_VAL) / STDEV_WHITE;
 		accum z_black = (refl - AVG_BLACK_VAL) / STDEV_BLACK;
 		
@@ -203,22 +239,22 @@ ItemClass Classify(QueueElement elem)
 	}
 }
 
-void PauseDisplay()
+void RampDisplay()
 {
 	// right now, just LED, in the future could be UART
 	switch(DisplayStatus.currDispType)
 	{
+	case BLACK_PLASTIC:
+		LED_SetBottom8(0b00010000 | (ItemStats.itemClassCount[BLACK_PLASTIC/50] & 0x0F));
+		break;		
 	case ALUMINIUM:
-		LED_SetBottom8(0b10000000 | (ItemStats.aluminiumCount & 0x0F));
-		break;
-	case STEEL:
-		LED_SetBottom8(0b01000000 | (ItemStats.steelCount & 0x0F));
+		LED_SetBottom8(0b00100000 | (ItemStats.itemClassCount[ALUMINIUM/50] & 0x0F));
 		break;
 	case WHITE_PLASTIC:
-		LED_SetBottom8(0b00100000 | (ItemStats.whitePlasticCount & 0x0F));
+		LED_SetBottom8(0b01000000 | (ItemStats.itemClassCount[WHITE_PLASTIC/50] & 0x0F));
 		break;
-	case BLACK_PLASTIC:
-		LED_SetBottom8(0b00010000 | (ItemStats.blackPlasticCount & 0x0F));
+	case STEEL:
+		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL/50] & 0x0F));
 		break;
 	default:
 		break;
@@ -228,11 +264,98 @@ void PauseDisplay()
 	TIMER2_DelayMs(1000);
 }
 
+void PauseDisplay()
+{
+	// right now, just LED, in the future could be UART
+	switch(DisplayStatus.currDispType)
+	{
+		case BLACK_PLASTIC:
+		LED_SetBottom8(0b00010000 | (ItemStats.itemClassCount[BLACK_PLASTIC / 50] & 0x0F));
+		break;
+		case ALUMINIUM:
+		LED_SetBottom8(0b00100000 | (ItemStats.itemClassCount[ALUMINIUM / 50] & 0x0F));
+		break;
+		case WHITE_PLASTIC:
+		LED_SetBottom8(0b01000000 | (ItemStats.itemClassCount[WHITE_PLASTIC/50] & 0x0F));
+		break;
+		case STEEL:
+		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL / 50] & 0x0F));
+		break;
+		case 200:
+		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
+		default:
+		break;
+	}
+	// on next loop through, display this
+	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
+	TIMER2_DelayMs(1000);
+}
+
+void UartDisplay()
+{
+	char sendbuf[50];
+	// display item stats over UART
+	if (fsmState.state == PAUSE_STATE)
+	{
+		UART_SendString("============ SYSTEM PAUSED ============\r\n\r\n");
+		UART_SendString("Total items (anywhere in system):\t");
+		sprintf(sendbuf,"%d\r\n", ItemStats.totalCount);
+		UART_SendString(sendbuf);
+	}
+	else if (fsmState.state == RAMPDOWN_STATE)
+	{
+		UART_SendString("============ SYSTEM RAMP DOWN =========\r\n\r\n");
+	}
+	
+	UART_SendString("Sorted Items:\r\n");
+	UART_SendString("\tBlack Plastic:\t");
+	sprintf(sendbuf, "%d\r\n", ItemStats.itemClassCount[BLACK_PLASTIC/50]);
+	UART_SendString(sendbuf);
+	UART_SendString("\tWhite Plastic:\t");
+	sprintf(sendbuf, "%d\r\n", ItemStats.itemClassCount[WHITE_PLASTIC/50]);
+	UART_SendString(sendbuf);
+	UART_SendString("\tSteel:\t");
+	sprintf(sendbuf, "%d\r\n", ItemStats.itemClassCount[STEEL/50]);
+	UART_SendString(sendbuf);
+	UART_SendString("\tAluminium:\t");
+	sprintf(sendbuf, "%d\r\n\r\n", ItemStats.itemClassCount[ALUMINIUM/50]);
+	UART_SendString(sendbuf);
+	
+	UART_SendString("\tUnclassified:\t");
+	sprintf(sendbuf, "%d\r\n\r\n", ItemStats.itemClassCount[4]);
+	UART_SendString(sendbuf);
+	
+	if (fsmState.state == PAUSE_STATE)
+	{
+		UART_SendString("Classified items (not yet sorted):\t");
+		sprintf(sendbuf, "%d\r\n\r\n", QUEUE_Size(readyQueue));
+		UART_SendString(sendbuf);
+		UART_SendString("Items in process (not yet classified):\t");
+		sprintf(sendbuf, "%d\r\n\r\n", QUEUE_Size(processQueue));
+		UART_SendString(sendbuf);
+	}
+	
+	UART_SendString("========================================\r\n\r\n");
+	
+	if (fsmState.state == RAMPDOWN_STATE)
+		UART_SendString("Goodbye.\r\n\r\n");
+}
+
+void TriggerPauseManual()
+{
+	// effectively, everything between now, and the next time the button is pressed, is atomic
+	fsmState.state = PAUSE_STATE;
+	// save relevant system state, right now is just the belt status in case it was stopped
+	fsmState.saved.beltWasRunning = belt.isRunning;
+	DCMOTOR_Brake(&belt);
+}
+
 /* ====== INTERRUPT SERVICE ROUTINES ====== */
 
 // ISR for S1_OPTICAL
 ISR(INT1_vect)
 {
+	LED_Toggle(0);
 	// verify interrupt wasn't spurious by polling sensor
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
@@ -244,11 +367,16 @@ ISR(INT1_vect)
 		// enqueue is atomic
 		QUEUE_Enqueue(processQueue, new_elem);
 	}
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		TCNT3 = 0x0000;
+	}
 }
 
 // ISR for Ferro Sensor
 ISR(INT5_vect)
 {
+	LED_Toggle(4);
 	// verify interrupt wasn't spurious by polling sensor
 	if (FERRO_Read(&ferro))
 	{
@@ -275,7 +403,7 @@ ISR(INT2_vect)
 // ISR for EXIT_OPTICAL
 ISR(INT0_vect)
 {
-
+	LED_Toggle(7);
 	// verify not spurious
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
@@ -300,22 +428,16 @@ ISR(INT4_vect)
 // ISR for RAMP_DOWN button
 ISR(INT6_vect)
 {
-	// Debounce
-	// We should probably set up a new different timer for this
-	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
-	LED_Toggle(6);
-	TIMER3_DelayMs(20);
+	if(!fsmState.rampDownInitFlag)
+	{
+		TIMER3_InterruptInit();
+		fsmState.rampDownInitFlag = true;
+	}
 }
 
 // ISR for PAUSE button
 ISR(INT7_vect)
 {
-	// Debounce
-	// We should probably set up a new different timer for this
-	// Since this one will be used for the stepper motor
-	TIMER3_DelayMs(20);
-	
 	// this may need to be altered if we start doing some of the heavier computation in main
 	// what happens if here we change the state variable when a classification is pending?
 	// save the state variable? how do we distinguish between a state currently in execution, and a state that is pending?
@@ -340,10 +462,10 @@ ISR(INT7_vect)
 			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
 			if(fsmState.saved.beltWasRunning)
 				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
+				LED_Set(0x00);
 			sei(); // reenable interrupts
 		}
 	}
-	TIMER3_DelayMs(20);
 }
 
 ISR(ADC_vect)
@@ -376,22 +498,27 @@ ISR(ADC_vect)
 		processedItem.sampleCount = Stage2.sampleCount;
 		//classify item and move to ready queue
 		processedItem.class = Classify(processedItem);
-		// Atomic enqueue
-		QUEUE_Enqueue(readyQueue, processedItem);	
+		
+		// verify not a bad item
+		if (Stage2.badItemFlag == true)
+		{
+			TriggerPauseManual();
+			ItemStats.totalCount--;
+		}
+		else
+		{
+			// Atomic enqueue
+			QUEUE_Enqueue(readyQueue, processedItem);
+		}
 	}
 }
 
-/*
-ISR(TIMER3_COMPB_vect)
+
+ISR(TIMER3_COMPA_vect)
 {
-	
-	LED_Toggle(1);
-	TCNT3 = 0x0000;			//reset counter
-	TIFR3 |= _BV(OCF3B);	//Clear interrupt flag begin counting
-	
-	PORTC = 0xFF;
+	fsmState.state = RAMPDOWN_STATE;
 }
-*/
+
 
 ISR(BADISR_vect)
 {

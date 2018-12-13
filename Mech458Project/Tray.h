@@ -1,11 +1,3 @@
-/*
- * Tray.h
- *
- * Created: 2018-11-21 2:04:01 PM
- *  Author: ntron
- */ 
-
-
 #ifndef TRAY_H_
 #define TRAY_H_
 

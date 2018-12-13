@@ -12,9 +12,11 @@
 #include "Timer.h"
 #include "LedBank.h"
 
-// accel/deccel profile delay timings
-static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
-
+#if MODE_ENABLED(ACCEL_MODE)
+	// accel/deccel profile delay timings
+	static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
+	
+#endif
 
 void TRAY_Init(Tray* tray)
 {
@@ -26,6 +28,9 @@ void TRAY_Init(Tray* tray)
 	HALL_Init(&(tray->hall));
 }
 
+// used to home the tray during system initialization
+// if already over the hall effect sensor (position 0) then move a set amount to home the stepper
+// otherwise turn all the way until we are in position 0
 void TRAY_Home(Tray* tray)
 {
 	
@@ -41,7 +46,6 @@ void TRAY_Home(Tray* tray)
 			TIMER1_DelayUs(STEPPER_DELAY_MAX);	
 		}
 		STEPPER_StepCCW(&(tray->stepper));
-		//tray->lastDir = CCW;
 	}
 	else
 	{
@@ -50,14 +54,16 @@ void TRAY_Home(Tray* tray)
 			STEPPER_StepCW(&(tray->stepper));
 			TIMER1_DelayUs(STEPPER_DELAY_MAX);
 		}
-		//tray->lastDir = CW;
 	}
 	
 	tray->currentPos = 0;
-	tray->beltPos = BLACK_PLASTIC;
 }
 
-void TRAY_Rotate(Tray* tray, MotorDirection dir){
+
+// rotates the stepper in the direction known the to tray object
+// called from TRAY_Process to rotate the tray
+void TRAY_Rotate(Tray* tray, MotorDirection dir)
+{
 	
 	if(dir == CW){ //CW rotation
 		//Step motor once CW
@@ -66,8 +72,8 @@ void TRAY_Rotate(Tray* tray, MotorDirection dir){
 		//update current position
 		tray->currentPos = (tray->currentPos + 1) % 200;
 	}
-	
-	if(dir == CCW){ //CCW rotation
+	else
+	{ //CCW rotation
 		//Step motor once CCW	
 		STEPPER_StepCCW(&(tray->stepper));
 		
@@ -103,13 +109,14 @@ void TRAY_Sort(Tray* tray){
 	}
 }
 
-
+// calculates the shortest path to the target (distance + direction)
+// called from TRAY_SetTarget
 int TRAY_CalcShortestPath(Tray* tray){
 	
 	int shortest_path_dist;
 	
 	// check the difference between the target and current position
-	int dist = (tray->targetPos) - (tray->currentPos);
+	int dist = (int)(tray->targetPos) - (int)(tray->currentPos);
 	
 	// a positive distance corresponds to |dist| steps in the CW direction
 	// e.g., 50 is 50 steps CW
@@ -139,16 +146,6 @@ int TRAY_CalcShortestPath(Tray* tray){
 
 void TRAY_SetTarget(Tray* tray, uint8_t target)
 {
-	//if target is unclassified do nothing and return
-	//if ( (target == UNCLASSIFIED) || (tray->targetPos == target))
-	//{
-	//	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-	//	{
-	//		tray->isReady = true;
-	//	}
-	//	return; // return if there is nothing to do
-	//}
-	
 	if ( target != tray->targetPos) // new target and old target differ
 	{
 		ATOMIC_BLOCK(ATOMIC_RESTORESTATE)

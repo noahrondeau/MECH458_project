@@ -29,7 +29,7 @@
 #define LINKED_QUEUE_MODE					(1)
 #define CIRCULAR_QUEUE_MODE					(!LINKED_QUEUE_MODE)
 
-#define TWO_PHASE_COMMUTATION_MODE			(0)
+#define TWO_PHASE_COMMUTATION_MODE			(1)
 #define ACCEL_MODE							(1)
 #define S_CURVE_MODE						(1)
 #define TRAP_MODE							(!S_CURVE_MODE)
@@ -137,13 +137,13 @@ typedef volatile uint8_t  GPIOMask;
 
 #define PAUSE_PINX				(PINE_REG)
 #define PAUSE_DDRX				(DDRE_REG)
-#define PAUSE_PORTPIN			(6)
+#define PAUSE_PORTPIN			(7)
 
 /* ====== SW2 RAMP-DOWN SWITCH CONFIG ====== */
 
 #define RAMPDOWN_PINX			(PINE_REG)
 #define RAMPDOWN_DDRX			(DDRE_REG)
-#define RAMPDOWN_PORTPIN		(7)	
+#define RAMPDOWN_PORTPIN		(6)	
 
 /* ====== RL SENSOR CONFIGS ====== */
 
@@ -152,26 +152,28 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_ALUMINIUM_VAL		(10.0k)
 #define MAX_ALUMINIUM_VAL		(34.0k)
 #define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL - MIN_ALUMINIUM_VAL)
-#define AVG_ALUMINIUM_VAL		(15.8181k)
-#define STDEV_ALUMINIUM			(6.6606)
+#define AVG_ALUMINIUM_VAL		(36.55k)
+#define STDEV_ALUMINIUM			(5.22k)
 
 #define MIN_STEEL_VAL			(558.0k)
 #define MAX_STEEL_VAL			(664.0k)
 #define RANGE_STEEL				(MAX_STEEL_VAL - MIN_STEEL_VAL)
-#define AVG_STEEL_VAL			(625.1818k)
-#define STDEV_STEEL				(39.7563k)
+#define AVG_STEEL_VAL			(433.925k)
+#define STDEV_STEEL				(66.7492k)
 
 #define MIN_WHITE_VAL			(893.0k)
 #define MAX_WHITE_VAL			(923.0k)
 #define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(908.8181k)
-#define STDEV_WHITE				(9.4743k)
+#define AVG_WHITE_VAL			(838.5625k)
+#define STDEV_WHITE				(5.856k)
 
 #define MIN_BLACK_VAL			(924.0k)
 #define MAX_BLACK_VAL			(947.0k)
 #define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(908.8181k)
-#define STDEV_BLACK				(7.5546k)
+#define AVG_BLACK_VAL			(900.375k)
+#define STDEV_BLACK				(6.2793k)
+
+#define METAL_CUTOFF_REFL		(700.0k)
 
 /* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
 #define IIRB0					(0.0378K)

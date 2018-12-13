@@ -18,18 +18,26 @@
 #define LED_RIGHT_END (0b00000011)
 #define LED_LEFT_END (0b11000000)
 
-void TIMER1_DelayInit(void)
+/* ====== TIMER1 functions ======*/
+// TIMER 1 is used for millisecond timing
+// it can be used either for delay or for interrupt-driven operation, but not simultaneously
+
+// initlializes timer 1
+void TIMER1_Init(void)
 {
 	//prescale to 1/8 to tick at a 1MHz rate
 	TCCR1B |= _BV(CS11);
+	// Set Waveform Gen Mode to CTC mode
+	TCCR1B |= _BV(WGM12);
 }
 
+// delay for a certain number of milliseconds
 void TIMER1_DelayUs(uint16_t us)
 {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
-		// Set Waveform Gen Mode to CTC mode
-		TCCR1B |= _BV(WGM12);
+		// turn off interrupts if they are on:
+		TIMSK1 &= ~(1<<OCIE1A);
 		// Set output compare register to count "us" cycles
 		OCR1A = us;
 		// Reset the timer
@@ -42,9 +50,41 @@ void TIMER1_DelayUs(uint16_t us)
 	while ((TIFR1 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
 }
 
+void TIMER1_EnableInt(void)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// turn on interrupts
+		TIMSK1 |= (1<<OCIE1A);
+	}
+}
+void TIMER1_DisableInt(void)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// turn off interrupts
+		TIMSK1 &= ~(1<<OCIE1A);	
+	}
+}
+
+// interrupt on output match A after a given number of microseconds
+void TIMER1_ScheduleIntUs(uint16_t us)
+{
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		// Set output compare register to count "us" cycles
+		OCR1A = us;
+		// Reset the timer
+		TCNT1 = 0x0000;
+	}
+}
+
+/* ====== TIMER2 Functions ====== */
+// timer 2 is used exclusively for the millisecond delays
+
 void TIMER2_DelayInit(void)
 {
-	TCCR2B |= _BV(CS21);
+	TCCR2B |= _BV(CS21); // 1MH clock rate
 }
 
 void TIMER2_DelayMs(uint16_t ms){
@@ -79,47 +119,19 @@ void TIMER2_DelayMs(uint16_t ms){
 	}
 }
 
-void TIMER3_DelayInit(void)
+void TIMER3_InterruptInit(void)
 {
-	//prescale to 1/8 to tick at a 1MHz rate
-	TCCR3B |= _BV(CS31);
 
-	
-}
-
-void TIMER3_DelayMs(int ms)
-{
-	// Index for loop
-	int i = 0;
-	// Set Waveform Gen Mode to CTC mode
-	TCCR3B |= _BV(WGM32);
-	// Set output compare register to count 1000 cycles = 1ms
-	OCR3A = 0x03e8;
-	// Reset the timer
+	//Scale by 1024, set WGM32 = 1 for CTC comp at OCR3A
+	TCCR3B |= _BV(CS32) | _BV(CS30) | _BV(WGM32);
+	//Enable Output compare comp A interrupt
+	TIMSK3 |= _BV(OCIE3A);
+	//clear counter
 	TCNT3 = 0x0000;
-
-	// clear interrupt flag and begin counting
+	//Set compare to 62500 -> timer for 8s
+	OCR3A = 0xF424;
+	//Start counting
 	TIFR3 |= _BV(OCF3A);
-
-	// loop "ms" times, each loop iteration is one millisecond
-	while (i < ms)
-	{
-		// wait for the timer to be reached
-		while ((TIFR3 & TIMER_COUNT_REACHED) != TIMER_COUNT_REACHED);
-		// increment loop counter
-		i++;
-		// clear interrupt flag and begin counting
-		TIFR3 |= _BV(OCF3A);
-	}
-}
-
-void TIMER3_InterruptInit()
-{
-	TCCR3B |= _BV(CS32); //set prescale to 1/256
-	TCCR3B |= _BV(WGM32); //CTC mode
-	TIMSK3 |= _BV(OCIE3B); //set enable interrupt on output compare B
-	OCR3B = 0x7A12;  //set to 1s compare - 31250 clock ticks
-	TCNT3 = 0x0000;
-	TIFR3 |= _BV(OCF3B); //Clear interrupt flag begin counting
 	
 }
+
