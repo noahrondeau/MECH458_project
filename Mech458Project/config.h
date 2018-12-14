@@ -84,7 +84,7 @@ typedef volatile uint8_t  GPIOMask;
 
 #define TRAY_HOME_OFFSET				(10)		// how many steps CCW from the Hall sensor we consider to be "home"
 
-#define TRAY_INTERRUPT_INIT_DELAY		(10000)		//us
+#define TRAY_INTERRUPT_INIT_DELAY		(500)		//us
 #define FIRST_ITEM_IN_QUEUE_DELAY		(0)			//ms
 #define ITEM_READY_BEFORE_TRAY_DELAY	(0)			//ms
 #define TRAY_READY_BEFORE_ITEM_DELAY	(100)		//ms
