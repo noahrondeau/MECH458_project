@@ -156,6 +156,10 @@ int main()
 					}
 						
 				}
+				else
+				{
+					tray.moveStartDelay = FIRST_ITEM_IN_QUEUE_DELAY;
+				}
 				
 				if(TRAY_IsReady(&tray)) tray.beltLock = false;
 			}

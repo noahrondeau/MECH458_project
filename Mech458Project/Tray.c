@@ -27,7 +27,7 @@ void TRAY_Init(Tray* tray)
 	tray->stepCounter = 0;
 	tray->pathDist = 0;
 	tray->currDir = CW;
-	tray->moveStartDelay = TRAY_READY_BEFORE_ITEM_DELAY; // this will be true for the first item
+	tray->moveStartDelay = FIRST_ITEM_IN_QUEUE_DELAY; // this will be true for the first item
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
