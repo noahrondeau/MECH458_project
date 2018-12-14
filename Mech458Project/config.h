@@ -77,16 +77,17 @@ typedef volatile uint8_t  GPIOMask;
 #define DDRF_REG		((GPIOReg)((0x10) + (__SFR_OFFSET)))
 #define PORTF_REG		((GPIOReg)((0x11) + (__SFR_OFFSET)))
 
-/* ====== STEPPER MOTOR CONFIG ====== */
+/* ====== TRAY and STEPPER MOTOR CONFIG ====== */
 
 #define STEPPER_DDR				(DDRA_REG)
 #define STEPPER_PORT			(PORTA_REG)
 
 #define TRAY_HOME_OFFSET				(10)		// how many steps CCW from the Hall sensor we consider to be "home"
 
-#define FIRST_ITEM_IN_QUEUE_DELAY		(0)
-#define ITEM_READY_BEFORE_TRAY_DELAY	(0)
-#define TRAY_READY_BEFORE_ITEM_DELAY	(100)
+#define TRAY_INTERRUPT_INIT_DELAY		(10000)		//us
+#define FIRST_ITEM_IN_QUEUE_DELAY		(0)			//ms
+#define ITEM_READY_BEFORE_TRAY_DELAY	(0)			//ms
+#define TRAY_READY_BEFORE_ITEM_DELAY	(100)		//ms
 
 #if MODE_ENABLED(ACCEL_MODE) // use acceleration: this is for actual testing
 	
