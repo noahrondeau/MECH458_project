@@ -28,8 +28,6 @@ void UART_Init()
 
 void UART_SendChar(char c)
 {
-	// empty
-	LED_Set((uint8_t)c);
 	while ( !( UCSR1A & (1<<UDRE1)) );
 	UDR1 = c;
 }

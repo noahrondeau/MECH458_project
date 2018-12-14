@@ -149,6 +149,7 @@ int main()
 
 		case PAUSE_STATE:
 			{
+				LED_Set(0b000011000011);
 				if (Stage2.badItemFlag)
 				{
 					Stage2.badItemFlag = false;
@@ -157,10 +158,9 @@ int main()
 				else
 					UartDisplay(); // display to the terminal via uart
 					
-				while(fsmState.state == PAUSE_STATE)
-				{// keep displaying on the LEDs and looping until we are supposed to jump back
-					PauseDisplay();
-				}
+				while(fsmState.state == PAUSE_STATE); // wait while still in pause
+				
+				LED_Set(0x00);
 			}
 			break;
 		
