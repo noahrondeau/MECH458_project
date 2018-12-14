@@ -86,8 +86,8 @@ typedef volatile uint8_t  GPIOMask;
 
 #define TRAY_INTERRUPT_INIT_DELAY		(500)		//us
 #define FIRST_ITEM_IN_QUEUE_DELAY		(0)			//ms
-#define ITEM_READY_BEFORE_TRAY_DELAY	(5)			//ms
-#define TRAY_READY_BEFORE_ITEM_DELAY	(90)		//ms
+#define ITEM_READY_BEFORE_TRAY_DELAY	(0)			//ms
+#define TRAY_READY_BEFORE_ITEM_DELAY	(130)		//ms
 
 #if MODE_ENABLED(ACCEL_MODE) // use acceleration: this is for actual testing
 	
