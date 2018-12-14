@@ -250,41 +250,41 @@ ItemClass Classify(QueueElement elem)
 	// NOTE: accum is unsigned
 	accum refl = (accum)(elem.reflectivity);
 	
-	if( elem.isFerroMag )
+	accum z_scores[4];
+	z_scores[BLACK_PLASTIC/50]	= absk( (refl - AVG_BLACK_VAL) / STDEV_BLACK );
+	z_scores[WHITE_PLASTIC/50]	= absk( (refl - AVG_WHITE_VAL) / STDEV_WHITE );
+	z_scores[STEEL/50]			= absk( (refl - AVG_STEEL_VAL) / STDEV_STEEL );
+	z_scores[ALUMINIUM/50]		= absk( (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM );
+	
+	uint8_t minZindex = 0;
+	for (int i = 0; i < 4; i++)
 	{
-		// if a bad item is encountered (e.g. metal but not reflective enough)
-		// then signal the condition
-		if (refl > METAL_CUTOFF_REFL)
+		if (z_scores[i] < z_scores[minZindex])
+			minZindex = i;
+	}
+	
+	ItemClass itemClass = 50*minZindex;
+	
+	// check for bad item
+	if (elem.isFerroMag)
+	{
+		if (itemClass == WHITE_PLASTIC || itemClass == BLACK_PLASTIC)
 		{
 			Stage2.badItemFlag = true;
 			return UNCLASSIFIED;
 		}
-		
-		accum z_alum  = (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
-		accum z_steel = (refl - AVG_STEEL_VAL) / STDEV_STEEL;
-		
-		if( absk(z_alum) <= absk(z_steel) )
-			return ALUMINIUM;
-		else
-			return STEEL;
 	}
 	else
 	{
-		// if not ferromagnetic check that this makes sense
-		if (refl < METAL_CUTOFF_REFL)
+		if (itemClass == ALUMINIUM || itemClass == STEEL)
 		{
 			Stage2.badItemFlag = true;
 			return UNCLASSIFIED;
 		}
-		
-		accum z_white = (refl - AVG_WHITE_VAL) / STDEV_WHITE;
-		accum z_black = (refl - AVG_BLACK_VAL) / STDEV_BLACK;
-		
-		if( absk(z_white) <= absk(z_black) )
-			return WHITE_PLASTIC;
-		else
-			return BLACK_PLASTIC;
 	}
+	
+	// no problem
+	return itemClass;
 }
 
 void RampDisplay()
