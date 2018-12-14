@@ -77,20 +77,25 @@ typedef volatile uint8_t  GPIOMask;
 #define DDRF_REG		((GPIOReg)((0x10) + (__SFR_OFFSET)))
 #define PORTF_REG		((GPIOReg)((0x11) + (__SFR_OFFSET)))
 
-/* ====== STEPPER MOTOR CONFIG ====== */
+/* ====== TRAY and STEPPER MOTOR CONFIG ====== */
 
 #define STEPPER_DDR				(DDRA_REG)
 #define STEPPER_PORT			(PORTA_REG)
 
-#define TRAY_HOME_OFFSET		(10)		// how many steps CCW from the Hall sensor we consider to be "home"
+#define TRAY_HOME_OFFSET				(10)		// how many steps CCW from the Hall sensor we consider to be "home"
+
+#define TRAY_INTERRUPT_INIT_DELAY		(500)		//us
+#define FIRST_ITEM_IN_QUEUE_DELAY		(0)			//ms
+#define ITEM_READY_BEFORE_TRAY_DELAY	(5)			//ms
+#define TRAY_READY_BEFORE_ITEM_DELAY	(90)		//ms
 
 #if MODE_ENABLED(ACCEL_MODE) // use acceleration: this is for actual testing
 	
 	#define STEPPER_DELAY_MAX			(20000) // microseconds
 	#define STEPPER_DELAY_MIN			(7500)  // microseconds
 	#define STEPPER_ACCEL_RAMP			(6) // this has to be a number of steps, not a function of two microsecond values
-	#define CCW_Range					(25)
-	#define	CW_Range					(25)
+	#define CCW_Range					(35)
+	#define	CW_Range					(35)
 	#if MODE_ENABLED(S_CURVE_MODE) // use s-curve
 		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,}   // microseconds, growth=1, 12 steps
 		//#define DELAY_PROFILE_COEFFS	{19998, 19993 ,19970 ,19868, 19430, 17811, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, growth 1.5, 12 steps
@@ -117,7 +122,7 @@ typedef volatile uint8_t  GPIOMask;
 #define DCMOTOR_PORTX			(PORTB_REG)
 #define DCMOTOR_DDRX			(DDRB_REG)
 
-#define DCMOTOR_SPEED			(80)
+#define DCMOTOR_SPEED			(90)
 
 /* ====== HALL SENSOR CONFIG ====== */
 
