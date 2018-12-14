@@ -18,17 +18,21 @@
 #include <stdfix.h>
 
 /* ====== BUILD MODE CONFIG ====== */
-#define PROGRAM_MODE	(1)
-#define UNITTEST_MODE	(!PROGRAM_MODE)
-#define DEBUG_MODE 		(0)
-
-#define LINKED_QUEUE_MODE	(1)
-#define CIRCULAR_QUEUE_MODE	(!LINKED_QUEUE_MODE)
-
-#define TWO_PHASE_COMMUTATION_MODE (1)
 
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
+
+#define PROGRAM_MODE						(1)
+#define UNITTEST_MODE						(!PROGRAM_MODE)
+#define DEBUG_MODE 							(0)
+
+#define LINKED_QUEUE_MODE					(1)
+#define CIRCULAR_QUEUE_MODE					(!LINKED_QUEUE_MODE)
+
+#define TWO_PHASE_COMMUTATION_MODE			(1)
+#define ACCEL_MODE							(1)
+#define S_CURVE_MODE						(1)
+#define TRAP_MODE							(!S_CURVE_MODE)
 
 #if MODE_ENABLED(DEBUG_MODE)
 #include <stdio.h>
@@ -73,17 +77,52 @@ typedef volatile uint8_t  GPIOMask;
 #define DDRF_REG		((GPIOReg)((0x10) + (__SFR_OFFSET)))
 #define PORTF_REG		((GPIOReg)((0x11) + (__SFR_OFFSET)))
 
-/* ====== STEPPER MOTOR CONFIG ====== */
+/* ====== TRAY and STEPPER MOTOR CONFIG ====== */
 
 #define STEPPER_DDR				(DDRA_REG)
 #define STEPPER_PORT			(PORTA_REG)
+
+#define TRAY_HOME_OFFSET				(10)		// how many steps CCW from the Hall sensor we consider to be "home"
+
+#define TRAY_INTERRUPT_INIT_DELAY		(500)		//us
+#define FIRST_ITEM_IN_QUEUE_DELAY		(0)			//ms
+#define ITEM_READY_BEFORE_TRAY_DELAY	(0)			//ms
+#define TRAY_READY_BEFORE_ITEM_DELAY	(130)		//ms
+
+#if MODE_ENABLED(ACCEL_MODE) // use acceleration: this is for actual testing
+	
+	#define STEPPER_DELAY_MAX			(20000) // microseconds
+	#define STEPPER_DELAY_MIN			(7500)  // microseconds
+	#define STEPPER_ACCEL_RAMP			(6) // this has to be a number of steps, not a function of two microsecond values
+	#define CCW_Range					(35)
+	#define	CW_Range					(35)
+	#if MODE_ENABLED(S_CURVE_MODE) // use s-curve
+		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,}   // microseconds, growth=1, 12 steps
+		//#define DELAY_PROFILE_COEFFS	{19998, 19993 ,19970 ,19868, 19430, 17811, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, growth 1.5, 12 steps
+		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, combo growth 1 & 1.5, 12 steps
+		//#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 10189, 8569, 8132, 8030, 8007,}	// Linear accel, ramp decel
+		//#define DELAY_PROFILE_COEFFS	{19714, 19038, 17962, 16638, 15562, 14914, 14238, 13162, 12514, 11838, 10762, 10114, 9438, 8363,} //linear quant, 14 steps
+		//#define DELAY_PROFILE_COEFFS	{19970, 19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132, 8030,}				// us, 10 step s profile
+		//#define DELAY_PROFILE_COEFFS	{19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132,}								// us, 8 step s profile
+		//#define DELAY_PROFILE_COEFFS	{18570, 16773, 14000, 10189, 8569,}													//Sometimes works
+		#define DELAY_PROFILE_COEFFS	{19000, 16000, 13000, 10189, 8569, 8132,}											//us, 6 step profile, eventaully becomes out of sync
+			
+	#elif MODE_ENABLED(TRAP_MODE) // use trapezoid
+		#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,} // microseconds
+	#endif
+#else // MODE_DISABLED(ACCEL_MODE) // mostly for testing stuff
+	#define STEPPER_DELAY_MAX			(20000) // microseconds
+#endif
+
+
+#define MS_TO_US(__ms__) (1000*(__ms__))
 
 /* ====== DC MOTOR CONFIG ====== */
 
 #define DCMOTOR_PORTX			(PORTB_REG)
 #define DCMOTOR_DDRX			(DDRB_REG)
 
-#define DCMOTOR_SPEED			(60)
+#define DCMOTOR_SPEED			(90)
 
 /* ====== HALL SENSOR CONFIG ====== */
 
@@ -115,13 +154,13 @@ typedef volatile uint8_t  GPIOMask;
 
 #define PAUSE_PINX				(PINE_REG)
 #define PAUSE_DDRX				(DDRE_REG)
-#define PAUSE_PORTPIN			(6)
+#define PAUSE_PORTPIN			(7)
 
 /* ====== SW2 RAMP-DOWN SWITCH CONFIG ====== */
 
 #define RAMPDOWN_PINX			(PINE_REG)
 #define RAMPDOWN_DDRX			(DDRE_REG)
-#define RAMPDOWN_PORTPIN		(7)	
+#define RAMPDOWN_PORTPIN		(6)	
 
 /* ====== RL SENSOR CONFIGS ====== */
 
@@ -130,26 +169,28 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_ALUMINIUM_VAL		(10.0k)
 #define MAX_ALUMINIUM_VAL		(34.0k)
 #define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL - MIN_ALUMINIUM_VAL)
-#define AVG_ALUMINIUM_VAL		(15.8181k)
-#define STDEV_ALUMINIUM			(6.6606)
+#define AVG_ALUMINIUM_VAL		(36.55k)
+#define STDEV_ALUMINIUM			(5.22k)
 
 #define MIN_STEEL_VAL			(558.0k)
 #define MAX_STEEL_VAL			(664.0k)
 #define RANGE_STEEL				(MAX_STEEL_VAL - MIN_STEEL_VAL)
-#define AVG_STEEL_VAL			(625.1818k)
-#define STDEV_STEEL				(39.7563k)
+#define AVG_STEEL_VAL			(433.925k)
+#define STDEV_STEEL				(66.7492k)
 
 #define MIN_WHITE_VAL			(893.0k)
 #define MAX_WHITE_VAL			(923.0k)
 #define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(908.8181k)
-#define STDEV_WHITE				(9.4743k)
+#define AVG_WHITE_VAL			(838.5625k)
+#define STDEV_WHITE				(5.856k)
 
 #define MIN_BLACK_VAL			(924.0k)
 #define MAX_BLACK_VAL			(947.0k)
 #define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(908.8181k)
-#define STDEV_BLACK				(7.5546k)
+#define AVG_BLACK_VAL			(900.375k)
+#define STDEV_BLACK				(6.2793k)
+
+#define METAL_CUTOFF_REFL		(700.0k)
 
 /* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
 #define IIRB0					(0.0378K)
@@ -186,9 +227,9 @@ typedef volatile struct FiniteStateMachine
 typedef enum ItemClass
 {
 	UNCLASSIFIED = 255, // bogus value, need to check everywhere!!!
-	STEEL = 50,
+	STEEL = 150,
 	WHITE_PLASTIC = 100,
-	ALUMINIUM = 150,
+	ALUMINIUM = 50,
 	BLACK_PLASTIC = 0,
 }ItemClass;
 
