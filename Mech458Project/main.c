@@ -139,7 +139,20 @@ int main()
 							uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
 							(ItemStats.itemClassCount[index])++;
 						}
-						if(!TRAY_IsReady(&tray)) tray.beltLock = true;
+						// if the tray isn't at target yet i.e. we dropped the item when the tray was in range
+						if(!TRAY_IsReady(&tray))
+						{
+							// we need to lockout the belt so that that Exit ISR know to brake if we aren't at target yet
+							tray.beltLock = true;
+							
+							// also set the appropriate timing delay
+							tray.moveStartDelay = ITEM_READY_BEFORE_TRAY_DELAY;
+						}
+						else // if the tray is at its target, i.e. the tray was ready before the item arrived at Exit Gate
+						{
+							// set the appropriate delay
+							tray.moveStartDelay = TRAY_READY_BEFORE_ITEM_DELAY;
+						}
 					}
 						
 				}

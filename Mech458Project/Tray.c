@@ -27,7 +27,7 @@ void TRAY_Init(Tray* tray)
 	tray->stepCounter = 0;
 	tray->pathDist = 0;
 	tray->currDir = CW;
-	tray->moveStartDelay = SAME_DIR_DELAY;
+	tray->moveStartDelay = TRAY_READY_BEFORE_ITEM_DELAY; // this will be true for the first item
 	STEPPER_Init(&(tray->stepper));
 	HALL_Init(&(tray->hall));
 }
@@ -184,19 +184,7 @@ void TRAY_SetTarget(Tray* tray, uint8_t target)
 			tray->isReady = false;
 			tray->targetPos = target;
 			int shortest_path_dist = TRAY_CalcShortestPath(tray);
-			MotorDirection nextDir = (shortest_path_dist >= 0) ? CW : CCW;
-			
-			// figure out startup delay:
-			// this prevents the tray from moving too fast for a piece to fall off
-			// works in tandem with the CW_RANGE and CCW_RANGE
-			if (tray->currDir == nextDir)
-				tray->moveStartDelay = SAME_DIR_DELAY;
-			else if ( tray->currDir == CW) // not the same and we were going clockwise -> we are changing to CCW
-				tray->moveStartDelay = CW_TO_CCW_DELAY;
-			else if (tray->currDir == CCW)
-				tray->moveStartDelay = CCW_TO_CW_DELAY;
-			
-			tray->currDir = nextDir;
+			tray->currDir = (shortest_path_dist >= 0) ? CW : CCW;
 			tray->pathDist = abs(shortest_path_dist);
 		}
 	}
