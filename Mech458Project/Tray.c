@@ -233,8 +233,8 @@ bool TRAY_IsReady(Tray* tray)
 }
 
 bool TRAY_inRange(Tray* tray){
-	if(tray->currDir == CW  && (abs((tray->targetPos) - (tray->currentPos)) > CW_Range))	return false;
-	if(tray->currDir == CCW && (abs((tray->targetPos) - (tray->currentPos)) > CCW_Range))	return false;
+	if(tray->currDir == CW  && ((tray->pathDist - tray->stepCounter) > CW_Range ))	return false;
+	if(tray->currDir == CCW && ((tray->pathDist - tray->stepCounter) > CCW_Range))	return false;
 	
 	return true;
 }
