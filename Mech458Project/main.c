@@ -118,10 +118,33 @@ int main()
 				{
 					if(!tray.beltLock)
 					{
-						ItemClass nextClass = QUEUE_Peak(readyQueue).class;
-						if (nextClass != TRAY_GetTarget(&tray))
+						// we can reset this here because it only matters if the belt is locked:
+						// we only need this on to signal not to beltLock, once that is accomplished it won't matter
+						tray.consecutiveItemsIdentical = false;
+						// check what's in the queue, we will rotate to this if not already there
+						ItemClass firstClass = QUEUE_Peak(readyQueue).class;
+						
+						// check the second item in the queue if it exists
+						// we can alter our patter with this info
+						ItemClass secondClass = UNCLASSIFIED;
+						if (QUEUE_Size(readyQueue) > 1)
 						{
-							TRAY_SetTarget(&tray, nextClass);
+							secondClass = QUEUE_PeakSecond(readyQueue).class;
+							
+							if (firstClass == secondClass)
+								tray.consecutiveItemsIdentical = true;		
+						}
+						
+						// =====temporary=====
+						/*
+						char sendString[50];
+						sprintf(sendString, "#1: %u,\t#2: %u\r\n", (uint8_t)firstClass, (uint8_t)secondClass);
+						UART_SendString(sendString);
+						// =====*/
+						
+						if (firstClass != TRAY_GetTarget(&tray))
+						{
+							TRAY_SetTarget(&tray, firstClass);
 							TIMER2_DelayMs(tray.moveStartDelay);
 							TIMER1_ScheduleIntUs(TRAY_INTERRUPT_INIT_DELAY); // immediately fire an interrupt to get the tray started
 							TIMER1_EnableInt();
@@ -143,7 +166,11 @@ int main()
 						if(!TRAY_IsReady(&tray))
 						{
 							// we need to lockout the belt so that that Exit ISR know to brake if we aren't at target yet
-							tray.beltLock = true;
+							// but only if the next item isn't the same
+							if(!tray.consecutiveItemsIdentical)
+							{
+								tray.beltLock = true;
+							}
 							
 							// also set the appropriate timing delay
 							tray.moveStartDelay = ITEM_READY_BEFORE_TRAY_DELAY;
@@ -298,9 +325,9 @@ void Welcome()
 	UART_SendString("Matt and Noah would also like to thank Patrick Chang for all the help\r\n");
 	UART_SendString("he has provided over the course of this project.\r\n\r\nEnjoy!\r\n\r\n");
 	UART_SendString("=================================== SYSTEM READY =================================\r\n\r\n");
-	UART_SendString("\t\tTO BEGIN: press the RIGHT BUTTON\r\n");
-	UART_SendString("\t\tTO PAUSE and UNPAUSE: press the LEFT BUTTON\r\n");
-	UART_SendString("TO END: press the RIGHT BUTTON again (system must be started)\r\n\r\n");
+	UART_SendString("\tTO BEGIN: press the RIGHT BUTTON\r\n");
+	UART_SendString("\tTO PAUSE and UNPAUSE: press the LEFT BUTTON\r\n");
+	UART_SendString("\tTO END: press the RIGHT BUTTON again (system must be started)\r\n\r\n");
 	UART_SendString("==================================================================================\r\n\r\n");
 	
 }

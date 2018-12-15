@@ -17,15 +17,22 @@
 
 typedef volatile struct Tray
 {
+	// targeting info
 	uint8_t currentPos;
 	uint8_t targetPos;
 	uint8_t stepCounter;
 	uint8_t pathDist;
 	MotorDirection currDir;
 	uint16_t moveStartDelay;
+	
+	// signaling flags
 	bool isReady;
 	bool beltLock;
 	
+	// behaviour flags
+	bool consecutiveItemsIdentical;
+	
+	// resources
 	HallSensor hall;
 	StepperMotor stepper;
 } Tray;
