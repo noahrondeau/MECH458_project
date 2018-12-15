@@ -187,7 +187,6 @@ int main()
 				UartDisplay(); // display stats on terminal via UART
 				while(true)
 				{// loop forever and display the output stats on LED
-					RampDisplay();
 				}
 			}
 			break;
