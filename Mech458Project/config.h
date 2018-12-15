@@ -169,31 +169,30 @@ typedef volatile uint8_t  GPIOMask;
 #define MIN_ALUMINIUM_VAL		(10.0k)
 #define MAX_ALUMINIUM_VAL		(34.0k)
 #define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL - MIN_ALUMINIUM_VAL)
-#define AVG_ALUMINIUM_VAL		(25.7917k)
-#define STDEV_ALUMINIUM			(2.2214k)
+#define AVG_ALUMINIUM_VAL		(24.996k)
+#define STDEV_ALUMINIUM			(9.7944k) // max 88
 
 #define MIN_STEEL_VAL			(558.0k)
 #define MAX_STEEL_VAL			(664.0k)
 #define RANGE_STEEL				(MAX_STEEL_VAL - MIN_STEEL_VAL)
-#define AVG_STEEL_VAL			(405.6458k)
-#define STDEV_STEEL				(67.1773k)
+#define AVG_STEEL_VAL			(381.3667k)
+#define STDEV_STEEL				(67.1773k) // max 558 min 194
 
 #define MIN_WHITE_VAL			(893.0k)
 #define MAX_WHITE_VAL			(923.0k)
 #define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(951.3958k)
-#define STDEV_WHITE				(13.5768k)
+#define AVG_WHITE_VAL			(934.0972k)
+#define STDEV_WHITE				(19.2933k) // max 963 min 899
 
 #define MIN_BLACK_VAL			(924.0k)
 #define MAX_BLACK_VAL			(947.0k)
 #define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(1005.6042k)
-#define STDEV_BLACK				(7.2896k)
+#define AVG_BLACK_VAL			(988.4819k)
+#define STDEV_BLACK				(5.7411k) // max 1008 // min 974
 
-#define METAL_CUTOFF_REFL		(700.0k)
-
-#define STEEL_ALUMINIUM_CUTOFF	(190)
-#define BLACK_WHITE_CUTOFF		(970)
+#define METAL_CUTOFF_REFL		(700)
+#define STEEL_ALUMINIUM_CUTOFF	(141)
+#define BLACK_WHITE_CUTOFF		(968)
 
 /* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
 #define IIRB0					(0.0015K)
