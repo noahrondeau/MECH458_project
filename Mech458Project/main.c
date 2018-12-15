@@ -317,10 +317,17 @@ ItemClass Classify(QueueElement elem)
 			return UNCLASSIFIED;
 		}*/
 		
+		/*
 		accum z_white = (refl - AVG_WHITE_VAL) / STDEV_WHITE;
 		accum z_black = (refl - AVG_BLACK_VAL) / STDEV_BLACK;
 		
 		if( absk(z_white) <= absk(z_black) )
+			return WHITE_PLASTIC;
+		else
+			return BLACK_PLASTIC;
+			*/
+		
+		if (elem.reflectivity < BLACK_WHITE_CUTOFF)
 			return WHITE_PLASTIC;
 		else
 			return BLACK_PLASTIC;
