@@ -293,11 +293,16 @@ ItemClass Classify(QueueElement elem)
 			Stage2.badItemFlag = true;
 			return UNCLASSIFIED;
 		}*/
-		
+		/*
 		accum z_alum  = (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
 		accum z_steel = (refl - AVG_STEEL_VAL) / STDEV_STEEL;
 		
 		if( absk(z_alum) <= absk(z_steel) )
+			return ALUMINIUM;
+		else
+			return STEEL;
+			*/
+		if (elem.reflectivity < STEEL_ALUMINIUM_CUTOFF)
 			return ALUMINIUM;
 		else
 			return STEEL;
