@@ -339,9 +339,9 @@ ItemClass Classify(QueueElement elem)
 		
 		if (elem.reflectivity < BLACK_WHITE_CUTOFF)
 		{
-			//if (elem.reflectivity < METAL_CUTOFF_REFL)
-			//	return STEEL
-			//else
+			if (elem.reflectivity < METAL_CUTOFF_REFL)
+				return STEEL;
+			else
 				return WHITE_PLASTIC;
 		}
 		else

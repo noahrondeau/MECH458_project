@@ -128,8 +128,8 @@ void TIMER3_InterruptInit(void)
 	TIMSK3 |= _BV(OCIE3A);
 	//clear counter
 	TCNT3 = 0x0000;
-	//Set compare to 62500 -> timer for 8s
-	OCR3A = 0xF424;
+	//Set compare ->  4s
+	OCR3A = (uint16_t)(31250);
 	//Start counting
 	TIFR3 |= _BV(OCF3A);
 	
