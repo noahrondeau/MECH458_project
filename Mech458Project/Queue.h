@@ -77,6 +77,7 @@ void QUEUE_Deinit(Queue* q);
 void QUEUE_Enqueue(Queue* q, QueueElement elem);
 QueueElement QUEUE_Dequeue(Queue* q);
 QueueElement QUEUE_Peak(Queue* q);
+QueueElement QUEUE_PeakSecond(Queue* q);
 uint16_t QUEUE_Size(Queue* q);
 bool QUEUE_IsEmpty(Queue* q);
 Queue* QUEUE_Create(void);

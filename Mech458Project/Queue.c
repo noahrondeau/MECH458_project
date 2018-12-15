@@ -86,6 +86,18 @@ QueueElement QUEUE_Peak(Queue* q)
 	return elem;
 }
 
+QueueElement QUEUE_PeakSecond(Queue* q)
+{
+	QueueElement elem = DEFAULT_QUEUE_ELEM;
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		if (q->front && q->front->next)
+			elem = q->front->next->data;
+	}
+	return elem;
+}
+
 uint16_t QUEUE_Size(Queue* q)
 {
 	uint16_t ret;
@@ -259,6 +271,24 @@ QueueElement QUEUE_Peak(Queue* q)
 	{
 		if(q->front)
 			retval = *(q->front);
+	}
+	return retval;
+}
+
+QueueElement QUEUE_PeakSecond(Queue* q)
+{
+	QueueElement retval = DEFAULT_QUEUE_ELEM;
+	
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+	{
+		if(q->size > 1)
+		{
+			if (q->front == q->array_end)
+				retval = *(q->array_start);
+			else if( q->front >= q->array_start)
+				retval = *(q->front + 1);
+				
+		}
 	}
 	return retval;
 }
