@@ -30,6 +30,8 @@
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
 ItemClass Classify(QueueElement elem);
+
+void Welcome();
 void UartDisplay();
 void TriggerPauseManual();
 
@@ -231,9 +233,10 @@ void Initialize()
 	processQueue = QUEUE_Create();
 	
 	// ====== INIT CODE END   ======
+	Welcome();
 	//wait for ramp up signal
 	while(!BUTTON_IsPressed(&rampDownButton));
-	TIMER2_DelayMs(1000);
+	TIMER2_DelayMs(500);
 	BUTTON_EnableInt(); // enable button press interrupts
 	sei(); // turn on interrupts
 }
@@ -284,6 +287,22 @@ ItemClass Classify(QueueElement elem)
 		else
 			return BLACK_PLASTIC;
 	}
+}
+
+void Welcome()
+{
+	UART_SendString("Hello! Welcome to Matt&Noah's nifty thingy that does things!\r\n\r\n");
+	UART_SendString("The things this thingy does are pretty tight\r\n");
+	UART_SendString("The makers of this thing hope very much that you enjoy how awesomely it does things,\r\n");
+	UART_SendString("though we somewhat suspect it won't be that impressive...\r\n\r\n");
+	UART_SendString("Matt and Noah would also like to thank Patrick Chang for all the help\r\n");
+	UART_SendString("he has provided over the course of this project.\r\n\r\nEnjoy!\r\n\r\n");
+	UART_SendString("=================================== SYSTEM READY =================================\r\n\r\n");
+	UART_SendString("\t\tTO BEGIN: press the RIGHT BUTTON\r\n");
+	UART_SendString("\t\tTO PAUSE and UNPAUSE: press the LEFT BUTTON\r\n");
+	UART_SendString("TO END: press the RIGHT BUTTON again (system must be started)\r\n\r\n");
+	UART_SendString("==================================================================================\r\n\r\n");
+	
 }
 
 void UartDisplay()
