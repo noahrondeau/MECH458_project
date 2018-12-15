@@ -86,16 +86,16 @@ typedef volatile uint8_t  GPIOMask;
 
 #define TRAY_INTERRUPT_INIT_DELAY		(500)		//us
 #define FIRST_ITEM_IN_QUEUE_DELAY		(0)			//ms
-#define ITEM_READY_BEFORE_TRAY_DELAY	(0)			//ms
-#define TRAY_READY_BEFORE_ITEM_DELAY	(130)		//ms
+#define ITEM_READY_BEFORE_TRAY_DELAY	(5)			//ms
+#define TRAY_READY_BEFORE_ITEM_DELAY	(100)		//ms
 
 #if MODE_ENABLED(ACCEL_MODE) // use acceleration: this is for actual testing
 	
 	#define STEPPER_DELAY_MAX			(20000) // microseconds
 	#define STEPPER_DELAY_MIN			(7500)  // microseconds
 	#define STEPPER_ACCEL_RAMP			(6) // this has to be a number of steps, not a function of two microsecond values
-	#define CCW_Range					(35)
-	#define	CW_Range					(35)
+	#define CCW_Range					(30)
+	#define	CW_Range					(30)
 	#if MODE_ENABLED(S_CURVE_MODE) // use s-curve
 		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,}   // microseconds, growth=1, 12 steps
 		//#define DELAY_PROFILE_COEFFS	{19998, 19993 ,19970 ,19868, 19430, 17811, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, growth 1.5, 12 steps
