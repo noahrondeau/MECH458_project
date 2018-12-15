@@ -298,9 +298,9 @@ void Welcome()
 	UART_SendString("Matt and Noah would also like to thank Patrick Chang for all the help\r\n");
 	UART_SendString("he has provided over the course of this project.\r\n\r\nEnjoy!\r\n\r\n");
 	UART_SendString("=================================== SYSTEM READY =================================\r\n\r\n");
-	UART_SendString("\t\tTO BEGIN: press the RIGHT BUTTON\r\n");
-	UART_SendString("\t\tTO PAUSE and UNPAUSE: press the LEFT BUTTON\r\n");
-	UART_SendString("TO END: press the RIGHT BUTTON again (system must be started)\r\n\r\n");
+	UART_SendString("\tTO BEGIN: press the RIGHT BUTTON\r\n");
+	UART_SendString("\tTO PAUSE and UNPAUSE: press the LEFT BUTTON\r\n");
+	UART_SendString("\tTO END: press the RIGHT BUTTON again (system must be started)\r\n\r\n");
 	UART_SendString("==================================================================================\r\n\r\n");
 	
 }
