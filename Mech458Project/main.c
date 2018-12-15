@@ -161,6 +161,12 @@ int main()
 							QueueElement dropItem = QUEUE_Dequeue(readyQueue);
 							uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
 							(ItemStats.itemClassCount[index])++;
+							
+							/* // for debugging purposes
+							char sendbuf[20];
+							sprintf(sendbuf, "%u\r\n", dropItem.sampleCount);
+							UART_SendString(sendbuf);
+							*/
 						}
 						// if the tray isn't at target yet i.e. we dropped the item when the tray was in range
 						if(!TRAY_IsReady(&tray))

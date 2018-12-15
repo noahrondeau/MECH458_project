@@ -193,9 +193,11 @@ typedef volatile uint8_t  GPIOMask;
 #define METAL_CUTOFF_REFL		(700.0k)
 
 /* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
-#define IIRB0					(0.0378K)
-#define IIRB1					(0.0378K)
-#define IIRA1					(0.9244K)
+#define IIRB0					(0.0055K)
+#define IIRB1					(0.0111K)
+#define IIRB2					(0.0055K)
+#define IIRA1					(1.7786K)
+#define IIRA2					(0.8008k)
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 

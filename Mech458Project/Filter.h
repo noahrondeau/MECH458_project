@@ -13,7 +13,7 @@
 #include "config.h"
 
 void FILTER_InitReset(accum padVal);
-accum Filter(accum new_input);
+accum Filter(accum xn);
 
 
 #endif /* INCFILE1_H_ */

@@ -12,21 +12,27 @@
 // circular buffer inputs and outputs
 
 // Utility functions forward declare
-static volatile accum last_input;
-static volatile accum last_output;
+static volatile accum xn_1;
+static volatile accum xn_2;
+static volatile accum yn_1;
+static volatile accum yn_2;
 
 // public functions
 void FILTER_InitReset(accum padVal)
 {	
-	last_input = padVal;
-	last_output = padVal;
+	xn_1 = padVal;
+	yn_1 = padVal;
+	xn_2 = padVal;
+	yn_2 = padVal;
 }
 
-accum Filter(accum new_input)
+accum Filter(accum xn)
 {
-	accum new_output = (IIRA1*last_output) + (IIRB0*new_input) + (IIRB1*last_input);
-	last_input = new_input;
-	last_output = new_output;
-	return new_output;
+	accum yn = (IIRA1*yn_1) + (IIRA2*yn_2) + (IIRB0*xn) + (IIRB1*xn_1) + (IIRB2*xn_2);
+	xn_2 = xn_1;
+	xn_1 = xn;
+	yn_2 = yn_1;
+	yn_1 = yn;
+	return yn;
 	
 }
