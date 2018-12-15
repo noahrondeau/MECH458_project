@@ -26,7 +26,7 @@
 #define UNITTEST_MODE						(!PROGRAM_MODE)
 #define DEBUG_MODE 							(0)
 
-#define LINKED_QUEUE_MODE					(1)
+#define LINKED_QUEUE_MODE					(0)
 #define CIRCULAR_QUEUE_MODE					(!LINKED_QUEUE_MODE)
 
 #define TWO_PHASE_COMMUTATION_MODE			(1)
