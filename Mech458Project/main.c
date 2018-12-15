@@ -30,8 +30,6 @@
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
 ItemClass Classify(QueueElement elem);
-void PauseDisplay();
-void RampDisplay();
 void UartDisplay();
 void TriggerPauseManual();
 
@@ -287,60 +285,6 @@ ItemClass Classify(QueueElement elem)
 		else
 			return BLACK_PLASTIC;
 	}
-}
-
-void RampDisplay()
-{
-	// right now, just LED, in the future could be UART
-	switch(DisplayStatus.currDispType)
-	{
-	case BLACK_PLASTIC:
-		LED_SetBottom8(0b00010000 | (ItemStats.itemClassCount[BLACK_PLASTIC/50] & 0x0F));
-		break;		
-	case ALUMINIUM:
-		LED_SetBottom8(0b00100000 | (ItemStats.itemClassCount[ALUMINIUM/50] & 0x0F));
-		break;
-	case WHITE_PLASTIC:
-		LED_SetBottom8(0b01000000 | (ItemStats.itemClassCount[WHITE_PLASTIC/50] & 0x0F));
-		break;
-	case STEEL:
-		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL/50] & 0x0F));
-		break;
-		case 200:
-		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
-		default:
-		break;
-	}
-	// on next loop through, display this
-	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
-	TIMER2_DelayMs(1000);
-}
-
-void PauseDisplay()
-{
-	// right now, just LED, in the future could be UART
-	switch(DisplayStatus.currDispType)
-	{
-		case BLACK_PLASTIC:
-		LED_SetBottom8(0b00010000 | (ItemStats.itemClassCount[BLACK_PLASTIC / 50] & 0x0F));
-		break;
-		case ALUMINIUM:
-		LED_SetBottom8(0b00100000 | (ItemStats.itemClassCount[ALUMINIUM / 50] & 0x0F));
-		break;
-		case WHITE_PLASTIC:
-		LED_SetBottom8(0b01000000 | (ItemStats.itemClassCount[WHITE_PLASTIC/50] & 0x0F));
-		break;
-		case STEEL:
-		LED_SetBottom8(0b10000000 | (ItemStats.itemClassCount[STEEL / 50] & 0x0F));
-		break;
-		case 200:
-		LED_SetBottom8(0b10010000 | (((uint8_t)QUEUE_Size(readyQueue) + (uint8_t)QUEUE_Size(processQueue)) & 0x0F));
-		default:
-		break;
-	}
-	// on next loop through, display this
-	DisplayStatus.currDispType = (DisplayStatus.currDispType + 50) % 250;
-	TIMER2_DelayMs(1000);
 }
 
 void UartDisplay()
