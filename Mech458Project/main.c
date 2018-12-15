@@ -281,10 +281,15 @@ ItemClass Classify(QueueElement elem)
 	// this method works best if we have lots of data
 	// use fixed-point arithmetic types supported by avr-gcc for this
 	// NOTE: accum is unsigned
-	accum refl = (accum)(elem.reflectivity);
+	
+	//accum refl = (accum)(elem.reflectivity);
 	
 	if( elem.isFerroMag )
 	{
+		
+		//accum refl = (accum)(elem.reflectivity);
+		
+		
 		// if a bad item is encountered (e.g. metal but not reflective enough)
 		// then signal the condition
 		/*
@@ -306,9 +311,14 @@ ItemClass Classify(QueueElement elem)
 			return ALUMINIUM;
 		else
 			return STEEL;
+		
 	}
 	else
 	{
+		
+		//accum refl = (accum)(elem.reflectivity);
+		
+		
 		// if not ferromagnetic check that this makes sense
 		/*
 		if (refl < METAL_CUTOFF_REFL)
@@ -328,7 +338,12 @@ ItemClass Classify(QueueElement elem)
 			*/
 		
 		if (elem.reflectivity < BLACK_WHITE_CUTOFF)
-			return WHITE_PLASTIC;
+		{
+			//if (elem.reflectivity < METAL_CUTOFF_REFL)
+			//	return STEEL
+			//else
+				return WHITE_PLASTIC;
+		}
 		else
 			return BLACK_PLASTIC;
 	}
