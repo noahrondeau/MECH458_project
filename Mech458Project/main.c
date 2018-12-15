@@ -19,7 +19,7 @@
 #include "OpticalSensor.h"
 #include "Timer.h"
 #include "PushButton.h"
-#include "Queue.h"
+#include "fifo.h"
 #include "Tray.h"
 #include "Filter.h"
 #include "time.h"
@@ -29,7 +29,7 @@
 
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
-ItemClass Classify(QueueElement elem);
+ItemClass Classify(FifoElem elem);
 void UartDisplay();
 void TriggerPauseManual();
 
@@ -55,9 +55,9 @@ FiniteStateMachine fsmState = {
 };
 
 // queue for items *already* processed
-Queue* readyQueue;
+Fifo readyFifo;
 // queue for items *being* processed
-Queue* processQueue;
+Fifo processFifo;
 
 // sensor stage 2 stats singleton struct
 volatile struct {
@@ -112,11 +112,11 @@ int main()
 		case RUN_STATE:
 			{	
 				//Tray Rotate if queue is not empty
-				if(!QUEUE_IsEmpty(readyQueue))
+				if(!FIFO_IsEmpty(&readyFifo))
 				{
 					if(!tray.beltLock)
 					{
-						ItemClass nextClass = QUEUE_Peak(readyQueue).class;
+						ItemClass nextClass = FIFO_Peak(&readyFifo).class;
 						if (nextClass != TRAY_GetTarget(&tray))
 						{
 							TRAY_SetTarget(&tray, nextClass);
@@ -133,7 +133,7 @@ int main()
 						{
 							//reset signal flag
 							Stage3.itemReady = false;
-							QueueElement dropItem = QUEUE_Dequeue(readyQueue);
+							FifoElem dropItem = FIFO_Pop(&readyFifo);
 							uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
 							(ItemStats.itemClassCount[index])++;
 						}
@@ -227,8 +227,8 @@ void Initialize()
 	// perhaps in an ADC_Calibrate function
 	
 	// initialize both queues
-	readyQueue = QUEUE_Create();
-	processQueue = QUEUE_Create();
+	FIFO_Init(&readyFifo);
+	FIFO_Init(&processFifo);
 	
 	// ====== INIT CODE END   ======
 	//wait for ramp up signal
@@ -238,7 +238,7 @@ void Initialize()
 	sei(); // turn on interrupts
 }
 
-ItemClass Classify(QueueElement elem)
+ItemClass Classify(FifoElem elem)
 {	
 	// calculate the z_scores of the object in each class' normal distribution
 	// the smaller z_score indicates higher likelihood of the object type
@@ -323,10 +323,10 @@ void UartDisplay()
 	if (fsmState.state == PAUSE_STATE)
 	{
 		UART_SendString("Classified items (not yet sorted):\t");
-		sprintf(sendbuf, "%d\r\n\r\n", QUEUE_Size(readyQueue));
+		sprintf(sendbuf, "%d\r\n\r\n", FIFO_Size(&readyFifo));
 		UART_SendString(sendbuf);
 		UART_SendString("Items in process (not yet classified):\t");
-		sprintf(sendbuf, "%d\r\n\r\n", QUEUE_Size(processQueue));
+		sprintf(sendbuf, "%d\r\n\r\n", FIFO_Size(&processFifo));
 		UART_SendString(sendbuf);
 	}
 	
@@ -355,12 +355,12 @@ ISR(INT1_vect)
 	// this is critical as it helps to avoid enqueuing fictitious items
 	if (OPTICAL_IsBlocked(&s1_optic))
 	{	
-		QueueElement new_elem = DEFAULT_QUEUE_ELEM;
+		FifoElem new_elem = DEFAULT_FIFO_ELEM;
 		// increment total stat count and tag item with its count ID
 		new_elem.counter = ++(ItemStats.totalCount);
 		
 		// enqueue is atomic
-		QUEUE_Enqueue(processQueue, new_elem);
+		FIFO_Push(&processFifo, new_elem);
 	}
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
@@ -377,7 +377,7 @@ ISR(INT5_vect)
 	{
 		// don't need to check if queue is populated because it must be if we are here
 		// call is atomic
-		QUEUE_BackPtr(processQueue)->isFerroMag = true;
+		FIFO_BackPtr(&processFifo)->isFerroMag = true;
 	}
 }
 
@@ -482,7 +482,7 @@ ISR(ADC_vect)
 		//move item from the "process Queue", classify, and move to the "ready" Queue
 		// dequeue -- no need to check if we can, because we must if we got the interrupt
 		// call is atomic
-		QueueElement processedItem = QUEUE_Dequeue(processQueue);
+		FifoElem processedItem = FIFO_Pop(&processFifo);
 		// store minimum reflectivity and sample count in item
 		processedItem.reflectivity = Stage2.minReflectivity;
 		processedItem.sampleCount = Stage2.sampleCount;
@@ -498,7 +498,7 @@ ISR(ADC_vect)
 		else
 		{
 			// Atomic enqueue
-			QUEUE_Enqueue(readyQueue, processedItem);
+			FIFO_Push(&readyFifo, processedItem);
 		}
 	}
 }
