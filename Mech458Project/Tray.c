@@ -14,30 +14,30 @@
 
 #if MODE_ENABLED(ACCEL_MODE)
 	// accel/deccel profile delay timings
-	static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS; // see config.h for definition
+	static volatile uint16_t delayProfile[STEPPER_ACCEL_RAMP] = DELAY_PROFILE_COEFFS;
 	
 #endif
 
+// initialize the tray with default values
 void TRAY_Init(Tray* tray)
 {
-	tray->currentPos = 0;
-	tray->targetPos = 0;
-	tray->isReady = true;
-	tray->beltLock = false;
-	tray->stepCounter = 0;
-	tray->pathDist = 0;
-	tray->currDir = CW;
+	tray->currentPos = 0; // start in position 0
+	tray->targetPos = 0; // start with target at current position
+	tray->isReady = true;	// tray starts out ready
+	tray->beltLock = false;	// we have not even begun a rotation, no belt lock yet
+	tray->stepCounter = 0; // we haven't started moving, so not step counter
+	tray->pathDist = 0; // there is no target, so there is not path distance to target yet
+	tray->currDir = CW; // by default, we move CW because the motor prefers that
 	tray->moveStartDelay = FIRST_ITEM_IN_QUEUE_DELAY; // this will be true for the first item
-	STEPPER_Init(&(tray->stepper));
-	HALL_Init(&(tray->hall));
+	STEPPER_Init(&(tray->stepper)); // initialize the stepper
+	HALL_Init(&(tray->hall)); // initialize the hall sensor
 }
 
 // used to home the tray during system initialization
-// if already over the hall effect sensor (position 0) then move a set amount to home the stepper
-// otherwise turn all the way until we are in position 0
+// if already over the hall effect sensor then move a set amount to home the stepper
+// otherwise turn all the way until we are in position 0, then turn for offset
 void TRAY_Home(Tray* tray)
 {
-	
 	if(HALL_IsActive(&(tray->hall))){
 		for(int i = 0; i<25; i++)
 		{
@@ -60,7 +60,8 @@ void TRAY_Home(Tray* tray)
 		}
 	}
 	
-	// take steps counter-clockwise because the belt ejection zone is assymetrical
+	// take steps counter-clockwise because the belt ejection zone is asymetric
+	// we home to an offseted position from the Hall sensor
 	for( int i = 0 ; i < TRAY_HOME_OFFSET; i++)
 	{
 		STEPPER_StepCCW(&(tray->stepper));
@@ -96,10 +97,12 @@ void TRAY_Rotate(Tray* tray)
 }
 
 // get called from TIMER1_COMPA_vect ISR
-// fetches the next delay, increments the internal tray state, rotates the tray, and schedules the next step
+// fetches the next delay, increments the internal tray state,
+// rotates the tray, and schedules the next step
 void TRAY_Process(Tray* tray){	
-	//LED_Set(tray->currentPos);
-	// if tray is already in position, no turning to do, just signal that the tray is ready
+	
+	// if tray is already in position, no turning to do
+	// just signal that the tray is ready
 	// do not start the interrupt again 
 	if(tray->stepCounter == tray->pathDist)
 	{
@@ -210,6 +213,7 @@ uint8_t TRAY_GetCurrentPos(Tray* tray)
 	return ret;
 }
 
+// check if the tray is at its target position
 bool TRAY_IsReady(Tray* tray)
 {
 	bool ret;
@@ -220,9 +224,16 @@ bool TRAY_IsReady(Tray* tray)
 	return ret;
 }
 
-bool TRAY_inRange(Tray* tray){
-	if(tray->currDir == CW  && ((tray->pathDist - tray->stepCounter) > CW_Range ))	return false;
-	if(tray->currDir == CCW && ((tray->pathDist - tray->stepCounter) > CCW_Range))	return false;
+// check if the tray is close enough to the target position that an item dropped from the belt
+// would land comfortably in the quadrant
+bool TRAY_inRange(Tray* tray)
+{
+	// return false if we are outside, in either direction
+	if(tray->currDir == CW  && ((tray->pathDist - tray->stepCounter) > CW_Range ))
+		return false;
+	if(tray->currDir == CCW && ((tray->pathDist - tray->stepCounter) > CCW_Range))
+		return false;
 	
+	// fall through is true
 	return true;
 }

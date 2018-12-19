@@ -5,6 +5,7 @@
  *  Author: ntron
  */ 
 
+/* Module implements reading from the Hall Sensor */
 
 #ifndef HALLSENSOR_H_
 #define HALLSENSOR_H_

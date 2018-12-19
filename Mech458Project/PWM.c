@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include "PWM.h"
 
-
+// initialize with a particular clock prescaler
 void PWM_Init(unsigned char clockScale){
 
 	//Clear OC0A on comp Match
@@ -19,22 +19,20 @@ void PWM_Init(unsigned char clockScale){
 	TCCR0A |= 0b10000011;
 	TCCR0A |= _BV(COM0A1);
 	
-	//Prescale Clock to clock prescaler -> Fclk = 125kHz
+	//Prescale Clock to clock prescaler
 	TCCR0B |= clockScale;
-
-	//DONT DO THIS!!!!!
-	//Enables Timer/Counter 0 Match A & Overflow interrupts
-	//TIMSK0 |= 0b00000011;
 	
 	DDRB |= (1<<7); 		//sets PB7 to output
 	
-	PWM_SetDutyCycle(0);// start off
+	PWM_SetDutyCycle(0);// start off with no duty cycle
 }
 
+// set duty cycle
 void PWM_SetDutyCycle(unsigned char dutyCycle){
 	OCR0A = dutyCycle;
 }
 
+// stop the PWM by setting the duty cycle to 0
 void PWM_Stop()
 {
 	PWM_SetDutyCycle(0);

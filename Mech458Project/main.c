@@ -25,8 +25,6 @@
 #include "time.h"
 #include "uart.h"
 
-/* ====== MAIN-LOCAL DEFINITIONS ====== */
-
 /* ====== FUNCTION PROTOTYPES ====== */
 void Initialize();
 ItemClass Classify(QueueElement elem);
@@ -62,6 +60,7 @@ Queue* readyQueue;
 Queue* processQueue;
 
 // sensor stage 2 stats singleton struct
+// to hold temp values used for sensor stage 2
 volatile struct {
 	uint16_t minReflectivity;
 	uint16_t sampleCount;
@@ -74,6 +73,7 @@ volatile struct {
 	.badItemFlag = false,
 };
 
+// stage 3 flags
 volatile struct {
 	bool itemReady;
 } Stage3 = {
@@ -81,6 +81,7 @@ volatile struct {
 };
 
 // sorting stats singleton struct
+// holds the tallies the different item classes
 volatile struct {
 	unsigned int totalCount;
 	unsigned int itemClassCount[5];
@@ -89,43 +90,41 @@ volatile struct {
 	.itemClassCount = {0,0,0,0,0},
 };
 
-// for keeping track of whats going on in the display
-volatile struct 
-{
-	uint8_t currDispType;
-} DisplayStatus = {
-	.currDispType = 0,
-};
-
 /* ====== MAIN FUNCTION ====== */
 
 int main()
 {
-	
+	// initial sequence
 	Initialize();
 	TIMER2_DelayMs(2000);
 	DCMOTOR_Run(&belt,DCMOTOR_SPEED);
 	
 	// main loop
 	while(true)
-	{	
+	{
 		switch(fsmState.state)
 		{
 		case RUN_STATE:
 			{	
-				//Tray Rotate if queue is not empty
+				// In the Run State, the stepper motor target setting logic
+				// and the the synchronization between the stepper motor and the rest of system
+				
+				// Only need to do anything if there are items to be processed
 				if(!QUEUE_IsEmpty(readyQueue))
 				{
+					// belt lock means that that the tray is still rotating the previous item
+					// this is because we drop the item when the tray is in range, not in position
+					// if the belt is not locked we can acquire a new target
 					if(!tray.beltLock)
 					{
-						// we can reset this here because it only matters if the belt is locked:
-						// we only need this on to signal not to beltLock, once that is accomplished it won't matter
+						// reset flag that indicates two idential items follow eachother
 						tray.consecutiveItemsIdentical = false;
+						
 						// check what's in the queue, we will rotate to this if not already there
 						ItemClass firstClass = QUEUE_Peak(readyQueue).class;
 						
 						// check the second item in the queue if it exists
-						// we can alter our patter with this info
+						// we can alter our rotation pattern with this info
 						ItemClass secondClass = UNCLASSIFIED;
 						if (QUEUE_Size(readyQueue) > 1)
 						{
@@ -135,22 +134,17 @@ int main()
 								tray.consecutiveItemsIdentical = true;		
 						}
 						
-						// =====temporary=====
-						/*
-						char sendString[50];
-						sprintf(sendString, "#1: %u,\t#2: %u\r\n", (uint8_t)firstClass, (uint8_t)secondClass);
-						UART_SendString(sendString);
-						// =====*/
-						
+						// acquire a new target if necessary, and begin the rotation by starting timer
 						if (firstClass != TRAY_GetTarget(&tray))
 						{
 							TRAY_SetTarget(&tray, firstClass);
 							TIMER2_DelayMs(tray.moveStartDelay);
-							TIMER1_ScheduleIntUs(TRAY_INTERRUPT_INIT_DELAY); // immediately fire an interrupt to get the tray started
+							TIMER1_ScheduleIntUs(TRAY_INTERRUPT_INIT_DELAY); // interrupt later
 							TIMER1_EnableInt();
 						}
 					}
 					
+					// if it is safe to drop an item (in range, item ready, and operation is valid for that item)
 					if( !tray.beltLock && Stage3.itemReady && TRAY_inRange(&tray))
 					{
 						DCMOTOR_Run(&belt, DCMOTOR_SPEED);
@@ -162,16 +156,13 @@ int main()
 							uint8_t index = (dropItem.class == UNCLASSIFIED) ? 4 : (dropItem.class / 50);
 							(ItemStats.itemClassCount[index])++;
 							
-							/* // for debugging purposes
-							char sendbuf[20];
-							sprintf(sendbuf, "%u\r\n", dropItem.sampleCount);
-							UART_SendString(sendbuf);
-							*/
 						}
+						
 						// if the tray isn't at target yet i.e. we dropped the item when the tray was in range
 						if(!TRAY_IsReady(&tray))
 						{
-							// we need to lockout the belt so that that Exit ISR know to brake if we aren't at target yet
+							// we need to lockout the belt so that that Exit ISR know to
+							// brake if we aren't at target yet
 							// but only if the next item isn't the same
 							if(!tray.consecutiveItemsIdentical)
 							{
@@ -181,7 +172,9 @@ int main()
 							// also set the appropriate timing delay
 							tray.moveStartDelay = ITEM_READY_BEFORE_TRAY_DELAY;
 						}
-						else // if the tray is at its target, i.e. the tray was ready before the item arrived at Exit Gate
+						else
+						// if the tray is at its target, i.e. the tray was ready before
+						// the item arrived at Exit Gate
 						{
 							// set the appropriate delay
 							tray.moveStartDelay = TRAY_READY_BEFORE_ITEM_DELAY;
@@ -191,15 +184,18 @@ int main()
 				}
 				else
 				{
+					// if there was nothing in the queue, set the appropriate timing delay
 					tray.moveStartDelay = FIRST_ITEM_IN_QUEUE_DELAY;
 				}
 				
+				// once the tray is ready, we need to signal that in any case
 				if(TRAY_IsReady(&tray)) tray.beltLock = false;
 			}
 			break;
 
 		case PAUSE_STATE:
 			{
+				// We enter the Pause State from the INT7 interrupt
 				LED_Set(0b000011000011);
 				if (Stage2.badItemFlag)
 				{
@@ -217,11 +213,13 @@ int main()
 		
 		case RAMPDOWN_STATE:
 			{
+				// we enter ramp-down once the timer 3 interrupt has triggered
 				cli();
 				DCMOTOR_Brake(&belt);
 				UartDisplay(); // display stats on terminal via UART
 				while(true)
-				{// loop forever and display the output stats on LED
+				{
+					// loop forever and display the output stats on LED
 				}
 			}
 			break;
@@ -232,6 +230,7 @@ int main()
 	return 0;
 }
 
+// initialization sequence for all peripherals
 void Initialize()
 {
 	cli(); // turn off interrupts
@@ -274,39 +273,16 @@ void Initialize()
 	sei(); // turn on interrupts
 }
 
+
+// classification algorithm for items
 ItemClass Classify(QueueElement elem)
 {	
-	// calculate the z_scores of the object in each class' normal distribution
-	// the smaller z_score indicates higher likelihood of the object type
-	// this method works best if we have lots of data
-	// use fixed-point arithmetic types supported by avr-gcc for this
-	// NOTE: accum is unsigned
+	// choose the item based on whether it is metal or not,
+	// and which range it falls into
 	
-	//accum refl = (accum)(elem.reflectivity);
 	
 	if( elem.isFerroMag )
 	{
-		
-		//accum refl = (accum)(elem.reflectivity);
-		
-		
-		// if a bad item is encountered (e.g. metal but not reflective enough)
-		// then signal the condition
-		/*
-		if (refl > METAL_CUTOFF_REFL)
-		{
-			Stage2.badItemFlag = true;
-			return UNCLASSIFIED;
-		}*/
-		/*
-		accum z_alum  = (refl - AVG_ALUMINIUM_VAL) / STDEV_ALUMINIUM;
-		accum z_steel = (refl - AVG_STEEL_VAL) / STDEV_STEEL;
-		
-		if( absk(z_alum) <= absk(z_steel) )
-			return ALUMINIUM;
-		else
-			return STEEL;
-			*/
 		if (elem.reflectivity < STEEL_ALUMINIUM_CUTOFF)
 			return ALUMINIUM;
 		else
@@ -314,31 +290,12 @@ ItemClass Classify(QueueElement elem)
 		
 	}
 	else
-	{
-		
-		//accum refl = (accum)(elem.reflectivity);
-		
-		
-		// if not ferromagnetic check that this makes sense
-		/*
-		if (refl < METAL_CUTOFF_REFL)
-		{
-			Stage2.badItemFlag = true;
-			return UNCLASSIFIED;
-		}*/
-		
-		/*
-		accum z_white = (refl - AVG_WHITE_VAL) / STDEV_WHITE;
-		accum z_black = (refl - AVG_BLACK_VAL) / STDEV_BLACK;
-		
-		if( absk(z_white) <= absk(z_black) )
-			return WHITE_PLASTIC;
-		else
-			return BLACK_PLASTIC;
-			*/
-		
+	{	
 		if (elem.reflectivity < BLACK_WHITE_CUTOFF)
 		{
+			// it can happen that a steel piece might not seem metal
+			// if it was really close to another steel piece
+			// if thats the case, correct that
 			if (elem.reflectivity < METAL_CUTOFF_REFL)
 				return STEEL;
 			else
@@ -349,6 +306,7 @@ ItemClass Classify(QueueElement elem)
 	}
 }
 
+// welcome screen displayed to serial terminal
 void Welcome()
 {
 	UART_SendString("Hello! Welcome to Matt&Noah's nifty thingy that does things!\r\n\r\n");
@@ -365,6 +323,7 @@ void Welcome()
 	
 }
 
+/// display for during pause and ramp-down to the terminal
 void UartDisplay()
 {
 	char sendbuf[50];
@@ -415,6 +374,7 @@ void UartDisplay()
 		UART_SendString("Goodbye.\r\n\r\n");
 }
 
+// allows triggerring pause from within code
 void TriggerPauseManual()
 {
 	// effectively, everything between now, and the next time the button is pressed, is atomic
@@ -441,6 +401,10 @@ ISR(INT1_vect)
 		// enqueue is atomic
 		QUEUE_Enqueue(processQueue, new_elem);
 	}
+	
+	// reset the TIMER 3 counter register
+	// this is for ramp-down sequence
+	// so that if a new item arrives the count is reset
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
 		TCNT3 = 0x0000;
@@ -456,6 +420,7 @@ ISR(INT5_vect)
 	{
 		// don't need to check if queue is populated because it must be if we are here
 		// call is atomic
+		// get pointer to back of queue and assign metal identity
 		QUEUE_BackPtr(processQueue)->isFerroMag = true;
 	}
 }
@@ -482,17 +447,13 @@ ISR(INT0_vect)
     if(OPTICAL_IsBlocked(&exit_optic))
 	{
 		Stage3.itemReady = true;
+		
+		// brake the belt if the tray is still rotating for the previous object
+		// or if the tray is not in range
 		if(tray.beltLock) DCMOTOR_Brake(&belt);
 		else if(!TRAY_inRange(&tray)) DCMOTOR_Brake(&belt);
 	}
 }
-
-/*
-// ISR for HALL Sensor UNUSED
-ISR(INT4_vect)
-{
-	
-}*/
 
 // ISR for RAMP_DOWN button
 ISR(INT6_vect)
@@ -507,31 +468,26 @@ ISR(INT6_vect)
 // ISR for PAUSE button
 ISR(INT7_vect)
 {
-	// this may need to be altered if we start doing some of the heavier computation in main
-	// what happens if here we change the state variable when a classification is pending?
-	// save the state variable? how do we distinguish between a state currently in execution, and a state that is pending?
-	// maybe always keep track of what the next state should be?
-	//
-	// also note that as it stands, the motor control in main will complete its move to target
-	// before we enter the pause state loop
-	// this will get optimized out
-	if (fsmState.state != RAMPDOWN_STATE)
+	if (fsmState.state != RAMPDOWN_STATE) // can't pause if in rampdown
 	{	
-		if (fsmState.state != PAUSE_STATE)
+		if (fsmState.state != PAUSE_STATE) // if we aren't already in pause
 		{
-			cli(); // immediately turn off interrupts so that nothing can change the state variable
-			// effectively, everything between now, and the next time the button is pressed, is atomic
+			cli();
 			fsmState.state = PAUSE_STATE;
-			// save relevant system state, right now is just the belt status in case it was stopped
+			// save relevant system state
+			// right now is just the belt status in case it was stopped
 			fsmState.saved.beltWasRunning = belt.isRunning;
 			DCMOTOR_Brake(&belt);
 		}
 		else
 		{
-			fsmState.state = RUN_STATE; // see comment above, may need to make it some saved value
+			fsmState.state = RUN_STATE;
+			
+			// restore belt state
 			if(fsmState.saved.beltWasRunning)
 				DCMOTOR_Run(&belt, DCMOTOR_SPEED);
-				LED_Set(0x00);
+			
+			LED_Set(0x00);
 			sei(); // reenable interrupts
 		}
 	}
@@ -539,19 +495,25 @@ ISR(INT7_vect)
 
 ISR(ADC_vect)
 {
+	// store result of adc conversion
 	ADC_ReadConversion(&adc);
 	Stage2.sampleCount++;
 	
+	// filter the result of the ADC conversion
 	accum fx_out = Filter((accum)(adc.result));
 	uint16_t u_out;
 	
+	// bound the result beween 0 and 1023 and convert to integer
+	// (computations done in fixed point)
 	if ( fx_out < 0.0K ) u_out = 0;
 	else if (fx_out > 1023.0K) u_out = 1023;
 	else u_out = (uint16_t)fx_out;
 	
+	// track minimum reflectivity
 	if (u_out < Stage2.minReflectivity)
 	Stage2.minReflectivity = u_out;
 	
+	// if the item is still in front of the sensor, start another conversion
 	if (OPTICAL_IsBlocked(&s2_optic))
 	{
 		ADC_StartConversion(&adc);
@@ -559,13 +521,11 @@ ISR(ADC_vect)
 	else // last ADC sample, process and dequeue
 	{
 		//move item from the "process Queue", classify, and move to the "ready" Queue
-		// dequeue -- no need to check if we can, because we must if we got the interrupt
-		// call is atomic
 		QueueElement processedItem = QUEUE_Dequeue(processQueue);
 		// store minimum reflectivity and sample count in item
 		processedItem.reflectivity = Stage2.minReflectivity;
 		processedItem.sampleCount = Stage2.sampleCount;
-		//classify item and move to ready queue
+		
 		processedItem.class = Classify(processedItem);
 		
 		// verify not a bad item
@@ -589,12 +549,14 @@ ISR(TIMER1_COMPA_vect)
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 	{
 		TIMER1_DisableInt();
+		
+		// simply steps the motor and figures out the next delay
 		// reenables interrupts if necessary
 		TRAY_Process(&tray);
 	}
 }
 
-
+// ISR for entering ramp down once all processing is finished
 ISR(TIMER3_COMPA_vect)
 {
 	fsmState.state = RAMPDOWN_STATE;

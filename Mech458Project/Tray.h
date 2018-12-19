@@ -5,6 +5,10 @@
  *  Author: ntron
  */ 
 
+/* This module encapsulates the business logic of the tray
+ * Calling these functions is split between main and the ISR
+ * for TIMER1_COMPA_vect, and the ISR for INT0_vect
+ */
 
 #ifndef TRAY_H_
 #define TRAY_H_

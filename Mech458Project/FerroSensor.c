@@ -9,6 +9,7 @@
 
 #include "FerroSensor.h"
 
+// init sensor from config
 void FERRO_Init(FerroSensor* ferro)
 {
 	ferro->pinx = FERRO_PINX;
@@ -21,6 +22,7 @@ void FERRO_Init(FerroSensor* ferro)
 	EICRB |= (_BV(ISC51));  // falling edge
 }
 
+// read sensor: mask out the PINX register and check it is same as the active level
 bool FERRO_Read(FerroSensor* ferro)
 {
 	if ( (*(ferro->pinx) & (ferro->mask)) == ferro->active_level )

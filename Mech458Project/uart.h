@@ -5,6 +5,7 @@
  *  Author: ntron
  */ 
 
+/* This module enables sending ASCII via UART */
 
 #ifndef UART_H_
 #define UART_H_

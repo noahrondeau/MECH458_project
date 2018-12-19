@@ -5,6 +5,7 @@
  *  Author: Matthew
  */ 
 
+// this module sets the system clock to 8MHz
 
 #ifndef SYSCLK_H_
 #define SYSCLK_H_

@@ -10,7 +10,7 @@
 #include "Timer.h"
 #include "StepperMotor.h"
 
-
+//Initialize the stepper
 void STEPPER_Init(StepperMotor* motor)
 {
 	//rotating tray motor defs
@@ -27,13 +27,18 @@ void STEPPER_Init(StepperMotor* motor)
 	motor->portx = STEPPER_PORT;
 }
 
+// to step, we give the stepper the correct order of pulses
+// these are stored in the commutation step array
+// the motor struct keeps track of which step it is on
+
+
 void STEPPER_Step(	StepperMotor* motor,
-MotorDirection dir)
+					MotorDirection dir)
 {
 	if (dir == CW)
-	STEPPER_StepCW(motor);
+		STEPPER_StepCW(motor);
 	else if (dir == CCW)
-	STEPPER_StepCCW(motor);
+		STEPPER_StepCCW(motor);
 }
 
 void STEPPER_StepCW(StepperMotor* motor)

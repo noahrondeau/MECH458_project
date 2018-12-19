@@ -11,6 +11,7 @@
 #include "config.h"
 #include "HallSensor.h"
 
+// standard initialization according to the configuration
 void HALL_Init(HallSensor* hall)
 {
 	hall->pinx = HALL_PINX;
@@ -21,6 +22,8 @@ void HALL_Init(HallSensor* hall)
 	*(hall->ddrx) &= (~(hall->mask)); // set ddr as input for that pin
 }
 
+// check if the Hall is active
+// if the logic level is low,return true, else return false
 bool HALL_IsActive(HallSensor* hall)
 {
 	//active low

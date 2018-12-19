@@ -5,6 +5,19 @@
  *  Author: ntron
  */ 
 
+/* THIS DOCUMENT IMPLEMENTS TWO DIFFERENT QUEUES
+ *
+ * To select which you want to use, go to config.h and set the build mode
+ * Options are Circular Queue or Linked Queue
+ *
+ * this is self-explanatory. The interface is the same, but the implementations
+ * are different.
+ * One uses a linked list structure, and the other a circular buffer structure
+ * The circular buffer was ultimately chosen.
+ * 
+ * This library uses the stdatomic.h library, making calls to these functions
+ * uninterruptible from main. They will execute atomically.
+ */
 
 #ifndef QUEUE_H_
 #define QUEUE_H_

@@ -10,6 +10,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+// initialize the button according to configs and which button it is
 void BUTTON_Init(PushButton* button, PushButtonIdentity ident)
 {
 	switch(ident)
@@ -34,7 +35,7 @@ void BUTTON_Init(PushButton* button, PushButtonIdentity ident)
 	}
 }
 
-
+// check if the button is pressed
 bool BUTTON_IsPressed(PushButton* button)
 {
 	//active low
@@ -44,6 +45,9 @@ bool BUTTON_IsPressed(PushButton* button)
 	else
 		return false;
 }
+
+// for the pushbuttons, we want to enable and disable
+// interupts separately from initialization
 
 void BUTTON_EnableInt()
 {

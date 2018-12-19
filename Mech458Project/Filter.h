@@ -5,7 +5,11 @@
  *  Author: ntron
  */ 
 
-
+/* this module implements a 2nd order IIR butterworth filter.
+ * it uses the AVR-GCC native fixed point library for efficiency and accuracy
+ * instead of inefficient floating point calculations.
+ * Coefficients for the filter are found in config.h
+ */
 
 #ifndef FILTER_H
 #define FILTER_H
