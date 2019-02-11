@@ -15,6 +15,7 @@
 
 #include "config.h"
 
+// enum representing which optical sensor we are dealing with
 typedef enum OpticalSensorIdentity
 {
 	S1_OPTICAL,
@@ -22,6 +23,7 @@ typedef enum OpticalSensorIdentity
 	EXIT_OPTICAL,
 } OpticalSensorIdentity;
 
+// struct representing an optical sensor's configurations
 typedef volatile struct OpticalSensor
 {
 	ActiveLevel active_level;

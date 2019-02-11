@@ -5,7 +5,7 @@
 *  Author: ntron
 */
 
-
+/* Implements a common interface for all three optical sensors */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -14,6 +14,7 @@
 #include "config.h"
 #include "OpticalSensor.h"
 
+// initialize an optical sensor object for its identity
 void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 {
 	switch(ident)
@@ -56,6 +57,7 @@ void OPTICAL_Init(OpticalSensor* opt, OpticalSensorIdentity ident)
 	}
 }
 
+// poll an optical sensor
 bool OPTICAL_IsBlocked(OpticalSensor* opt)
 {
 	return ( (*(opt->pinx) & (opt->mask)) == ((opt->active_level) << (opt->portpin)) );

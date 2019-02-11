@@ -5,6 +5,7 @@
  *  Author: ntron
  */ 
 
+/* Interface for the pushbuttons */
 
 #ifndef PUSHBUTTON_H_
 #define PUSHBUTTON_H_
@@ -13,12 +14,14 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+// enum representing which button we are dealing with
 typedef enum PushButtonIdentity
 {
 	PAUSE_BUTTON,
 	RAMPDOWN_BUTTON,
 } PushButtonIdentity;
 
+// struct representing pushbutton configs
 typedef volatile struct PushButton
 {
 	ActiveLevel active_level;

@@ -5,6 +5,10 @@
  *  Author: ntron
  */ 
 
+/* Module enables writing seemlessly to all 10 LEDs in system
+ * INCLUDING the on board LEDs, in one go
+ */
+
 #ifndef LEDBANK_H_
 #define LEDBANK_H_
 

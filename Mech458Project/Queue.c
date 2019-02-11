@@ -11,6 +11,7 @@
 #include "config.h"
 
 #if MODE_ENABLED(LINKED_QUEUE_MODE)
+/* LINKED QUEUE IMPLEMENTATIONS */
 
 void QUEUE_Init(Queue* q)
 {
@@ -146,6 +147,7 @@ QueueElement* QUEUE_BackPtr(Queue* q)
 }
 
 #elif MODE_ENABLED(CIRCULAR_QUEUE_MODE)
+/* CIRCULAR QUEUE IMPLEMENTTIONS */
 
 #define CIRCULAR_QUEUE_INIT_SIZE (50)
 
@@ -194,7 +196,7 @@ void QUEUE_Init(Queue* q)
 	q->back = NULL;
 	q->size = 0;
 }
-
+// reset queue
 void QUEUE_Deinit(Queue* q)
 {
 	while (q->front != NULL)
@@ -203,6 +205,7 @@ void QUEUE_Deinit(Queue* q)
 	}
 }
 
+// enqueue an item
 void QUEUE_Enqueue(Queue* q, QueueElement elem)
 {
 	ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -232,6 +235,7 @@ void QUEUE_Enqueue(Queue* q, QueueElement elem)
 	}
 }
 
+// dequeu an item
 QueueElement QUEUE_Dequeue(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
@@ -263,6 +267,7 @@ QueueElement QUEUE_Dequeue(Queue* q)
 	return retval;
 }
 
+// peak at the first item without dequeueing
 QueueElement QUEUE_Peak(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
@@ -275,6 +280,7 @@ QueueElement QUEUE_Peak(Queue* q)
 	return retval;
 }
 
+// peak at the second item
 QueueElement QUEUE_PeakSecond(Queue* q)
 {
 	QueueElement retval = DEFAULT_QUEUE_ELEM;
@@ -293,6 +299,7 @@ QueueElement QUEUE_PeakSecond(Queue* q)
 	return retval;
 }
 
+// get the size of the queue
 uint16_t QUEUE_Size(Queue* q)
 {
 	uint16_t ret;
@@ -303,6 +310,7 @@ uint16_t QUEUE_Size(Queue* q)
 	return ret;
 }
 
+// check if the queue is empty
 bool QUEUE_IsEmpty(Queue* q)
 {
 	bool ret;
@@ -316,6 +324,7 @@ bool QUEUE_IsEmpty(Queue* q)
 	return ret;
 }
 
+// factory function for a new queue
 Queue* QUEUE_Create(void)
 {
 	Queue* newQ = (Queue*)malloc(sizeof(Queue));
@@ -323,6 +332,7 @@ Queue* QUEUE_Create(void)
 	return newQ;
 }
 
+// Destructor for the queue
 void QUEUE_Destroy(Queue** q)
 {
 	QUEUE_Deinit(*q);
@@ -330,6 +340,7 @@ void QUEUE_Destroy(Queue** q)
 	*q = NULL;
 }
 
+// get a pointer to the back of the queue
 QueueElement* QUEUE_BackPtr(Queue* q)
 {
 	QueueElement* ptr;

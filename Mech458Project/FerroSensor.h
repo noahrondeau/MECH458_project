@@ -5,6 +5,7 @@
  *  Author: ntron
  */ 
 
+/* Module to represent inductive sensor */
 
 #ifndef FERROSENSOR_H_
 #define FERROSENSOR_H_

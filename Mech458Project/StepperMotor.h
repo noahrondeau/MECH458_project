@@ -5,14 +5,15 @@
  *  Author: ntron
  */ 
 
+/* Module responsible for the business logic of stepping the motor */
 
 #ifndef STEPPERMOTOR_H_
 #define STEPPERMOTOR_H_
 
-
-
 #include "config.h"
 
+// there are two ways to step: single phase or 2 phase
+// two phase is better, but we leave the option here (see config.h build modes)
 #if MODE_ENABLED(TWO_PHASE_COMMUTATION_MODE)
 	#define NUM_COMMUTATION_STEPS (4)
 	#define STEP0 (0b110110)

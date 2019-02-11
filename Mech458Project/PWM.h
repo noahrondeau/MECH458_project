@@ -5,10 +5,12 @@
  *  Author: ntron
  */ 
 
+/* Enables PWM */
 
 #ifndef PWM_H_
 #define PWM_H_
 
+// prescale for PWM
 #define	Scale_0		(0x01) //CS00
 #define	Scale_8 	(0x02) //CS01
 #define	Scale_64 	(0x03) //CS01 & CS00

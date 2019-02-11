@@ -119,6 +119,10 @@ void TIMER2_DelayMs(uint16_t ms){
 	}
 }
 
+/* ====== TIMER 3 Functions ====== */
+// timer 3 is used for the ramp down interrupt
+// it is set to interupt 4 seconds after this function is called
+// The vector is in main.c: ISR(TIMER3_COMPA_vect)
 void TIMER3_InterruptInit(void)
 {
 
@@ -128,8 +132,8 @@ void TIMER3_InterruptInit(void)
 	TIMSK3 |= _BV(OCIE3A);
 	//clear counter
 	TCNT3 = 0x0000;
-	//Set compare to 62500 -> timer for 8s
-	OCR3A = 0xF424;
+	//Set compare ->  4s
+	OCR3A = (uint16_t)(31250);
 	//Start counting
 	TIFR3 |= _BV(OCF3A);
 	

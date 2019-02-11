@@ -5,6 +5,11 @@
  *  Author: ntron
  */ 
 
+/* This is a configuration file which is shared everywhere in the system.
+ * It contains literal values for many parameters in the system.
+ * It also provides definitions for various globally useful types
+ * This file allows configurations to be changed in one place only.
+ */
 
 #ifndef CONFIG_H_
 #define CONFIG_H_
@@ -18,6 +23,8 @@
 #include <stdfix.h>
 
 /* ====== BUILD MODE CONFIG ====== */
+
+// these pre-processor definitions allow multiple build modes to be enabled or disabled
 
 #define MODE_ENABLED(__mode__)	((__mode__) == 1)
 #define MODE_DISABLED(__mode__)	((__mode__) == 0)
@@ -93,22 +100,14 @@ typedef volatile uint8_t  GPIOMask;
 	
 	#define STEPPER_DELAY_MAX			(20000) // microseconds
 	#define STEPPER_DELAY_MIN			(7500)  // microseconds
-	#define STEPPER_ACCEL_RAMP			(6) // this has to be a number of steps, not a function of two microsecond values
+	#define STEPPER_ACCEL_RAMP			(6)		// step length
 	#define CCW_Range					(30)
 	#define	CW_Range					(30)
+	
 	#if MODE_ENABLED(S_CURVE_MODE) // use s-curve
-		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 11227, 9430, 8569, 8216, 8080,}   // microseconds, growth=1, 12 steps
-		//#define DELAY_PROFILE_COEFFS	{19998, 19993 ,19970 ,19868, 19430, 17811, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, growth 1.5, 12 steps
-		//#define DELAY_PROFILE_COEFFS	{19970, 19920, 19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132, 8030, 8007,}	// microseconds, combo growth 1 & 1.5, 12 steps
-		//#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 10189, 8569, 8132, 8030, 8007,}	// Linear accel, ramp decel
-		//#define DELAY_PROFILE_COEFFS	{19714, 19038, 17962, 16638, 15562, 14914, 14238, 13162, 12514, 11838, 10762, 10114, 9438, 8363,} //linear quant, 14 steps
-		//#define DELAY_PROFILE_COEFFS	{19970, 19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132, 8030,}				// us, 10 step s profile
-		//#define DELAY_PROFILE_COEFFS	{19784, 19431, 18570, 16773, 14000, 10189, 8569, 8132,}								// us, 8 step s profile
-		//#define DELAY_PROFILE_COEFFS	{18570, 16773, 14000, 10189, 8569,}													//Sometimes works
-		#define DELAY_PROFILE_COEFFS	{19000, 16000, 13000, 10189, 8569, 8132,}											//us, 6 step profile, eventaully becomes out of sync
-			
+		#define DELAY_PROFILE_COEFFS	{19000, 16000, 13000, 10189, 8569, 8132,}
 	#elif MODE_ENABLED(TRAP_MODE) // use trapezoid
-		#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,} // microseconds
+		#define DELAY_PROFILE_COEFFS	{20000, 19000, 18000, 17000, 16000, 15000, 14000, 13000, 12000, 11000, 10000, 9000,} // microsec
 	#endif
 #else // MODE_DISABLED(ACCEL_MODE) // mostly for testing stuff
 	#define STEPPER_DELAY_MAX			(20000) // microseconds
@@ -166,33 +165,23 @@ typedef volatile uint8_t  GPIOMask;
 
 #define LARGEST_UINT16_T ((uint16_t)(0xFFFF))
 
-#define MIN_ALUMINIUM_VAL		(10.0k)
-#define MAX_ALUMINIUM_VAL		(34.0k)
-#define RANGE_ALUMINIUM			(MAX_ALUMINIUM_VAL - MIN_ALUMINIUM_VAL)
-#define AVG_ALUMINIUM_VAL		(25.7917k)
-#define STDEV_ALUMINIUM			(2.2214k)
+#define AVG_ALUMINIUM_VAL		(24.996k)
+#define STDEV_ALUMINIUM			(9.7944k) // max 88
 
-#define MIN_STEEL_VAL			(558.0k)
-#define MAX_STEEL_VAL			(664.0k)
-#define RANGE_STEEL				(MAX_STEEL_VAL - MIN_STEEL_VAL)
-#define AVG_STEEL_VAL			(405.6458k)
-#define STDEV_STEEL				(67.1773k)
+#define AVG_STEEL_VAL			(381.3667k)
+#define STDEV_STEEL				(67.1773k) // max 558 min 194
 
-#define MIN_WHITE_VAL			(893.0k)
-#define MAX_WHITE_VAL			(923.0k)
-#define RANGE_WHITE				(MAX_WHITE_VAL - MIN_WHITE_VAL)
-#define AVG_WHITE_VAL			(951.3958k)
-#define STDEV_WHITE				(13.5768k)
+#define AVG_WHITE_VAL			(934.0972k)
+#define STDEV_WHITE				(19.2933k) // max 963 min 899
 
-#define MIN_BLACK_VAL			(924.0k)
-#define MAX_BLACK_VAL			(947.0k)
-#define RANGE_BLACK				(MAX_BLACK_VAL - MIN_BLACK_VAL)
-#define AVG_BLACK_VAL			(1005.6042k)
-#define STDEV_BLACK				(7.2896k)
+#define AVG_BLACK_VAL			(988.4819k)
+#define STDEV_BLACK				(5.7411k) // max 1008 // min 974
 
-#define METAL_CUTOFF_REFL		(700.0k)
+#define METAL_CUTOFF_REFL		(700)
+#define STEEL_ALUMINIUM_CUTOFF	(141)
+#define BLACK_WHITE_CUTOFF		(968)
 
-/* ====== FIRST ORDER BUTTERWORTH FILTER COEFFS ====== */
+/* ====== SECOND ORDER BUTTERWORTH FILTER COEFFS ====== */
 #define IIRB0					(0.0015K)
 #define IIRB1					(0.0029K)
 #define IIRB2					(0.0015K)
@@ -201,13 +190,14 @@ typedef volatile uint8_t  GPIOMask;
 
 /* ====== GLOBALLY USEFUL TYPEDEFS ====== */
 
-
+// whether a sensor is actie low or high
 typedef enum ActiveLevel
 {
 	ACTIVE_LOW = 0x00,
 	ACTIVE_HIGH = 0x01,
 } ActiveLevel;
 
+// the state of a Finite state machine
 typedef enum FsmState
 {
 	 RUN_STATE,
@@ -215,10 +205,11 @@ typedef enum FsmState
 	 RAMPDOWN_STATE, 
 } FsmState;
 
+// type for holding state data
 typedef volatile struct FiniteStateMachine
 {
-	FsmState state;
-	struct {
+	FsmState state;				// current state
+	struct {					// saved state
 		bool beltWasRunning;
 		FsmState returnToState;
 	} saved;
@@ -226,6 +217,9 @@ typedef volatile struct FiniteStateMachine
 	bool rampDownEndFlag;
 } FiniteStateMachine;
 
+// type representing different materials
+// the numeric values are used directly for tray targetting,
+// indexing, and other numeric things to simplify logic
 typedef enum ItemClass
 {
 	UNCLASSIFIED = 255, // bogus value, need to check everywhere!!!

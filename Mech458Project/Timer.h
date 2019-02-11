@@ -5,6 +5,9 @@
  *  Author: ntron
  */ 
 
+/* This module defines the various timer functions
+ * according to their inteded purpose
+ */
 
 #ifndef TIMER_H_
 #define TIMER_H_

@@ -26,11 +26,14 @@ void UART_Init()
 	UCSR1C = (1<<UCSZ10)| (1 << UCSZ11);
 }
 
+// send a single ascii character
 void UART_SendChar(char c)
 {
 	while ( !( UCSR1A & (1<<UDRE1)) );
 	UDR1 = c;
 }
+
+// send a null-char terminated string over ascii
 void UART_SendString(const char* s)
 {
 	unsigned int counter = 0;

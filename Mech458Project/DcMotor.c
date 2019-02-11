@@ -15,19 +15,9 @@
 #include "Timer.h"
 #include "DcMotor.h"
 
-// we don't really need all these, just one
-// since we aren't actually changing direction
-
-#define IS_DCMOTOR_CW(__m__) \
-((*((__m__)->portx) & 0b00000011) == 0b00000010)
-#define IS_DCMOTOR_CCW(__m__) \
-(( *((__m__)->portx) & 0b00000011) == 0b00000001)
+// macros for simplifying readability
 
 #define DO_DCMOTOR_SET_CW(__m__) \
-*((__m__)->portx) = \
-(*((__m__)->portx) & 0b10000000) | 0b00000010
-
-#define DO_DCMOTOR_SET_CCW(__m__) \
 *((__m__)->portx) = \
 (*((__m__)->portx) & 0b10000000) | 0b00000010
 
@@ -35,10 +25,9 @@
 *((__m__)->portx) = ( *((__m__)->portx) & 0b10000000 )
 
 
-// this is the only one we need
 #define DO_DCMOTOR_RUN(__m__) (DO_DCMOTOR_SET_CW(__m__))
 
-
+// initialize motor
 void DCMOTOR_Init(DcMotor* motor)
 {
 	motor->portx = DCMOTOR_PORTX;
@@ -46,9 +35,9 @@ void DCMOTOR_Init(DcMotor* motor)
 	*(motor->ddrx) = 0xFF;
 	PWM_Init(Scale_64);
 	motor->isRunning = false;
-
 }
 
+// start motor: unbrake and set PWM
 void DCMOTOR_Run(DcMotor* motor, unsigned char speed)
 {
 	DO_DCMOTOR_RUN(motor);
@@ -56,6 +45,7 @@ void DCMOTOR_Run(DcMotor* motor, unsigned char speed)
 	motor->isRunning = true;
 }
 
+// brake motor: brake to VCC and 0 duty cycle
 void DCMOTOR_Brake(DcMotor* motor)
 {
 	DO_DCMOTOR_BRAKE(motor);
